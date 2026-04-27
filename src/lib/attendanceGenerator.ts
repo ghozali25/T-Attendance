@@ -110,8 +110,12 @@ export const generateAttendancePeriod = (
             if (dateStr > todayStr) {
                 status = 'future';
             } else if (dateStr === todayStr) {
-                // Today with no record yet -> Pending (Display as Future to avoid premature Absent)
-                status = 'future';
+                // Today with no record yet -> Mark as absent (alpha) if not weekend
+                if (isWeekend) {
+                    status = 'weekend';
+                } else {
+                    status = 'alpha'; // Use 'alpha' for today's unclocked employees
+                }
             } else if (isWeekend) {
                 status = 'weekend';
             } else {

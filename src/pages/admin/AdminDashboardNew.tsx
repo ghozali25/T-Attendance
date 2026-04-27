@@ -249,8 +249,8 @@ const AdminDashboardNew = () => {
                         </div>
                         <div>
                             <h2 className="text-lg font-bold text-white dark:text-white tracking-tight flex items-center gap-2 mb-1">
-                                Insight Bisnis Hari Ini
-                                <Badge className="bg-blue-500/20 text-blue-100 hover:bg-blue-500/20 border-blue-400/30 text-[10px] uppercase font-bold tracking-wider rounded-md px-2 py-0.5">Live</Badge>
+                                Attendance Overview
+                                {/* <Badge className="bg-blue-500/20 text-blue-100 hover:bg-blue-500/20 border-blue-400/30 text-[10px] uppercase font-bold tracking-wider rounded-md px-2 py-0.5">Live</Badge> */}
                             </h2>
                             <div className="flex flex-wrap items-center gap-2 mt-2">
                                 {/* Insight 1 */}

@@ -37,7 +37,7 @@ export interface RealTimeEmployee {
     clock_in: string;
     clock_out: string | null;
     status: string;
-    liveStatus: "online" | "present" | "late" | "inactive" | "idle";
+    liveStatus: "online" | "present" | "late" | "inactive" | "idle" | "absent" | "leave" | "weekend";
     shift: string;
 }
 
@@ -179,7 +179,12 @@ export const useDashboardStats = (karyawanUserIds: Set<string> | undefined) => {
                 ]);
 
                 const targetProfiles = profiles.filter((p: any) => filterIds.has(p.id));
-                const absent = targetProfiles.filter((p: any) => !accountedForUserIds.has(p.id)).length;
+                
+                // Check if today is weekend (Saturday = 6, Sunday = 0)
+                const isWeekend = today.getDay() === 0 || today.getDay() === 6;
+                
+                // Only count as absent if it's not a weekend
+                const absent = isWeekend ? 0 : targetProfiles.filter((p: any) => !accountedForUserIds.has(p.id)).length;
 
                 const onTimeRate = present > 0 ? Math.round((onTime / present) * 100) : 0;
                 const uniqueDepartments = new Set(
@@ -383,6 +388,9 @@ export const useRealTimeMonitoring = (karyawanUserIds: Set<string> | undefined) 
                 let status = "absent";
                 let liveStatus: "online" | "present" | "late" | "inactive" | "idle" | "absent" | "leave" = "absent";
 
+                // Check if today is weekend (Saturday = 6, Sunday = 0)
+                const isWeekend = today.getDay() === 0 || today.getDay() === 6;
+
                 if (record) {
                     status = record.status;
                     const clockOutTime = record.clock_out ? new Date(record.clock_out) : null;
@@ -397,6 +405,10 @@ export const useRealTimeMonitoring = (karyawanUserIds: Set<string> | undefined) 
                 } else if (leave) {
                     status = "leave";
                     liveStatus = "leave";
+                } else if (isWeekend) {
+                    // On weekends, mark as weekend instead of absent
+                    status = "weekend";
+                    liveStatus = "inactive";
                 }
 
                 return {
