@@ -74,6 +74,7 @@ CREATE TABLE attendance (
     period_month VARCHAR(7),
     status VARCHAR(50) DEFAULT 'present',
     notes TEXT,
+    deleted_at TIMESTAMP NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
