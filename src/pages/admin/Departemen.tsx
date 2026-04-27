@@ -74,9 +74,24 @@ const Departemen = () => {
         return;
       }
 
+      // Fetch departments from departments table
+      const departmentsFromDB = await db.query('SELECT name FROM departments') as any[];
+      const deptNamesFromDB = new Set(departmentsFromDB?.map((d: any) => d.name) || []);
+
       const roleMap = new Map(profiles.map((p: any) => [p.id, p.role]) || []);
       const deptMap = new Map<string, Department>();
 
+      // Add departments from database first
+      deptNamesFromDB.forEach(deptName => {
+        deptMap.set(deptName, {
+          name: deptName,
+          employeeCount: 0,
+          managerCount: 0,
+          employees: []
+        });
+      });
+
+      // Add departments from profiles (for backward compatibility)
       profiles.forEach((p: any) => {
         if (!p.department) return;
 
@@ -122,6 +137,11 @@ const Departemen = () => {
         'UPDATE profiles SET department = ? WHERE department = ?',
         [data.name, editingDepartment]
       );
+      // Also update in departments table
+      await db.query(
+        'UPDATE departments SET name = ? WHERE name = ?',
+        [data.name, editingDepartment]
+      );
       toast({ title: "Departemen Diperbarui", description: `Nama departemen berahisl diubah menjadi ${data.name}` });
       setDialogOpen(false);
       setEditingDepartment(null);
@@ -130,9 +150,17 @@ const Departemen = () => {
       if (departments.some(d => d.name.toLowerCase() === data.name.toLowerCase())) {
         toast({ variant: "destructive", title: "Gagal", description: "Departemen sudah terdaftar didalam sistem." });
       } else {
+        // Insert new department into departments table
+        const crypto = (await import('crypto')).default;
+        const id = crypto.randomUUID();
+        await db.query(
+          'INSERT INTO departments (id, name) VALUES (?, ?)',
+          [id, data.name]
+        );
         toast({ title: "Departemen Tersimpan", description: `Struktur divisi "${data.name}" siap digunakan.` });
         toast({ title: "Info Integrasi", description: "Silakan tetapkan karyawan ke departemen ini agar muncul di daftar metrik." });
         setDialogOpen(false);
+        fetchDepartments();
       }
     }
     setIsSubmitting(false);

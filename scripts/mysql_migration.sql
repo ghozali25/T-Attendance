@@ -59,6 +59,15 @@ CREATE TABLE attendance_periods (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- ============ 6.5. CREATE departments TABLE ============
+CREATE TABLE departments (
+    id CHAR(36) PRIMARY KEY,
+    name VARCHAR(191) NOT NULL UNIQUE,
+    description TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
 -- ============ 7. CREATE attendance TABLE ============
 CREATE TABLE attendance (
     id CHAR(36) PRIMARY KEY,
