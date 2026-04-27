@@ -83,19 +83,26 @@ export const useEmployeeIds = () => {
         queryKey: ["employeeIds"],
         queryFn: async () => {
             try {
+                console.log('[useEmployeeIds] Fetching employee IDs...');
                 // Use API to get users
                 const users = await profilesApi.getAll();
+                console.log('[useEmployeeIds] Users fetched:', users?.length);
+                console.log('[useEmployeeIds] Users data:', users);
                 
                 if (!users || !Array.isArray(users)) return new Set<string>();
 
                 // Filter by role
                 const roleArray = [...ABSENSI_WAJIB_ROLE];
+                console.log('[useEmployeeIds] ABSENSI_WAJIB_ROLE:', roleArray);
                 const filteredUsers = users.filter((u: any) => 
                     roleArray.includes(u.role)
                 );
+                console.log('[useEmployeeIds] Users after role filter:', filteredUsers.length);
+                console.log('[useEmployeeIds] Filtered users:', filteredUsers);
 
                 if (filteredUsers.length === 0) {
                     // Fallback: get all users
+                    console.log('[useEmployeeIds] No users matched role filter, using all users');
                     return new Set(users.map((u: any) => u.id));
                 }
 
@@ -105,10 +112,16 @@ export const useEmployeeIds = () => {
                     const nameLower = u.full_name.toLowerCase();
                     return !EXCLUDED_USER_NAMES.some(excluded => nameLower.includes(excluded.toLowerCase()));
                 });
+                console.log('[useEmployeeIds] Users after name filter:', validUsers.length);
+                console.log('[useEmployeeIds] Valid users:', validUsers);
 
-                return new Set(validUsers.map((u: any) => u.id));
+                // Use user_id instead of id for profiles
+                const result = new Set(validUsers.map((u: any) => u.user_id || u.id));
+                console.log('[useEmployeeIds] Returning employee IDs:', result.size);
+                console.log('[useEmployeeIds] Employee IDs:', Array.from(result));
+                return result;
             } catch (error) {
-                console.error('Error fetching employee IDs:', error);
+                console.error('[useEmployeeIds] Error:', error);
                 return new Set<string>();
             }
         },
@@ -146,7 +159,8 @@ export const useDashboardStats = (karyawanUserIds: Set<string> | undefined) => {
                         const nameLower = p.full_name.toLowerCase();
                         return !EXCLUDED_USER_NAMES.some(excluded => nameLower.includes(excluded.toLowerCase()));
                     });
-                    filterIds = new Set(validProfiles.map((p: any) => p.id));
+                    // Use user_id instead of id for profiles
+                    filterIds = new Set(validProfiles.map((p: any) => p.user_id || p.id));
                 }
 
                 const totalEmployees = filterIds.size > 0 ? filterIds.size : profiles.length;
@@ -192,6 +206,10 @@ export const useDashboardStats = (karyawanUserIds: Set<string> | undefined) => {
                 // Only count as absent if it's not a weekend
                 const absent = isWeekend ? 0 : targetProfiles.filter((p: any) => !accountedForUserIds.has(p.id)).length;
                 console.log('[useDashboardStats] Absent count:', absent);
+
+                // Calculate daily attendance rate (present / total employees)
+                const dailyAttendanceRate = totalEmployees > 0 ? Math.round((present / totalEmployees) * 100) : 0;
+                console.log('[useDashboardStats] Daily attendance rate:', dailyAttendanceRate);
 
                 const onTimeRate = present > 0 ? Math.round((onTime / present) * 100) : 0;
                 const uniqueDepartments = new Set(
@@ -245,7 +263,7 @@ export const useDashboardStats = (karyawanUserIds: Set<string> | undefined) => {
                     newEmployeesThisMonth: newEmployees,
                     approvedLeaveThisMonth: relevantApprovedLeaves.length,
                     attendanceThisMonth: attendanceThisMonthCount,
-                    attendanceRate: Math.min(100, attendanceRate)
+                    attendanceRate: dailyAttendanceRate // Use daily rate instead of monthly
                 };
                 console.log('[useDashboardStats] Returning stats:', result);
                 return result;
