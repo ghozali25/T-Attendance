@@ -196,6 +196,42 @@ SELECT id, 'admin' FROM users WHERE email = 'admin@talenta.com';
 INSERT INTO profiles (user_id, full_name, email, department, position) 
 SELECT id, 'Super Admin', 'admin@talenta.com', 'Board of Directors', 'Administrator' FROM users WHERE email = 'admin@talenta.com';
 
+-- ============ 13.5. INSERT DEMO EMPLOYEE ACCOUNTS ============
+-- Password for all demo accounts: 'password' (hashed with bcrypt)
+INSERT INTO users (id, email, full_name, password_hash) 
+VALUES 
+(UUID(), 'karyawan1@talenta.com', 'Budi Santoso', '$2b$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy'),
+(UUID(), 'karyawan2@talenta.com', 'Siti Aminah', '$2b$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy'),
+(UUID(), 'karyawan3@talenta.com', 'Ahmad Wijaya', '$2b$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy'),
+(UUID(), 'karyawan4@talenta.com', 'Dewi Kartika', '$2b$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy'),
+(UUID(), 'karyawan5@talenta.com', 'Rudi Hartono', '$2b$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy');
+
+-- Insert employee roles
+INSERT INTO user_roles (user_id, role) 
+SELECT id, 'employee' FROM users WHERE email LIKE 'karyawan%@talenta.com';
+
+-- Insert employee profiles
+INSERT INTO profiles (user_id, full_name, email, department, position) 
+SELECT 
+    u.id, 
+    u.full_name, 
+    u.email, 
+    CASE u.email
+        WHEN 'karyawan1@talenta.com' THEN 'Engineering'
+        WHEN 'karyawan2@talenta.com' THEN 'Marketing'
+        WHEN 'karyawan3@talenta.com' THEN 'Finance'
+        WHEN 'karyawan4@talenta.com' THEN 'HR'
+        WHEN 'karyawan5@talenta.com' THEN 'Operations'
+    END,
+    CASE u.email
+        WHEN 'karyawan1@talenta.com' THEN 'Software Engineer'
+        WHEN 'karyawan2@talenta.com' THEN 'Marketing Specialist'
+        WHEN 'karyawan3@talenta.com' THEN 'Accountant'
+        WHEN 'karyawan4@talenta.com' THEN 'HR Specialist'
+        WHEN 'karyawan5@talenta.com' THEN 'Operations Manager'
+    END
+FROM users u WHERE u.email LIKE 'karyawan%@talenta.com';
+
 -- ============ 14. INSERT INITIAL ATTENDANCE PERIOD ============
 INSERT INTO attendance_periods (id, start_date, is_active)
 VALUES (UUID(), CURDATE(), TRUE);

@@ -104,19 +104,29 @@ Script migrasi akan membuat:
 - **users** - Tabel pengguna dengan autentikasi
 - **user_roles** - Tabel role (admin, manager, employee)
 - **profiles** - Tabel profil karyawan
+- **departments** - Tabel departemen
 - **attendance** - Tabel data absensi
 - **attendance_periods** - Tabel periode absensi
 - **work_journals** - Tabel jurnal kerja
 - **audit_logs** - Tabel log audit
 - **v_attendance_summary** - View untuk ringkasan absensi
 
-### 5. Default Admin User
+### 5. Default Users
 
-Script migrasi akan otomatis membuat user admin default:
+Script migrasi akan otomatis membuat user default:
 
-**Default Admin Credentials:**
+**Admin Credentials:**
 - **Email**: admin@talenta.com
 - **Password**: AdminPassword123!
+
+**Demo Employee Accounts:**
+- **karyawan1@talenta.com** - Budi Santoso (Engineering - Software Engineer)
+- **karyawan2@talenta.com** - Siti Aminah (Marketing - Marketing Specialist)
+- **karyawan3@talenta.com** - Ahmad Wijaya (Finance - Accountant)
+- **karyawan4@talenta.com** - Dewi Kartika (HR - HR Specialist)
+- **karyawan5@talenta.com** - Rudi Hartono (Operations - Operations Manager)
+
+**Password untuk semua demo accounts**: `password`
 
 ⚠️ **Penting**: Ganti password admin default setelah login pertama untuk keamanan.
 
@@ -175,6 +185,35 @@ t-absensi/
 - Role-based access control
 - Dark mode support
 - Responsive design (mobile-friendly)
+- Manajemen departemen
+- Reset password karyawan
+- Real-time monitoring absensi
+
+## Update Terbaru
+
+### Database Schema Updates
+- Tambah kolom `status` pada tabel `attendance` untuk tracking status kehadiran
+- Tambah kolom `deleted_at` pada tabel `attendance` untuk soft delete
+- Tambah tabel `departments` untuk manajemen departemen
+
+### API Endpoints
+- `POST /api/auth/me` - Verifikasi token dan dapatkan user saat ini
+- `POST /api/auth/check-db` - Diagnostik koneksi database dan role
+- `POST /api/db/query` - Eksekusi query SQL SELECT (untuk query kompleks)
+- `POST /api/db/execute` - Eksekusi DML operations (INSERT, UPDATE, DELETE)
+- `GET /api/attendance` - Query absensi dengan filter tanggal dan user
+- `GET /api/attendance?start_date=&end_date=` - Query range tanggal absensi
+
+### MySQL Client Proxy
+- Implementasi shim MySQL client yang proxy ke backend API
+- Mendukung query SQL kompleks melalui endpoint `/api/db/query`
+- Kompatibilitas untuk kode legacy yang menggunakan `db.query`
+
+### Frontend Updates
+- Perbaikan tampilan dashboard di light mode
+- Perbaikan React key warnings di komponen
+- Implementasi fitur tambah departemen
+- Implementasi reset password admin
 
 ## Dokumentasi Tambahan
 
