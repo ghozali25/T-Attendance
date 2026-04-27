@@ -248,20 +248,20 @@ const AdminDashboardNew = () => {
                             <Sparkles className="w-6 h-6 text-blue-200" />
                         </div>
                         <div>
-                            <h2 className="text-lg font-bold text-white tracking-tight flex items-center gap-2 mb-1">
+                            <h2 className="text-lg font-bold text-white dark:text-white tracking-tight flex items-center gap-2 mb-1">
                                 Insight Bisnis Hari Ini
                                 <Badge className="bg-blue-500/20 text-blue-100 hover:bg-blue-500/20 border-blue-400/30 text-[10px] uppercase font-bold tracking-wider rounded-md px-2 py-0.5">Live</Badge>
                             </h2>
                             <div className="flex flex-wrap items-center gap-2 mt-2">
                                 {/* Insight 1 */}
                                 {absenteesPercentage > 50 && (
-                                    <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-white dark:bg-slate-900/10 border border-white/10 rounded-full text-xs font-medium text-white shadow-sm">
+                                    <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-white/20 dark:bg-slate-900/10 border border-white/30 dark:border-white/10 rounded-full text-xs font-medium text-white dark:text-white shadow-sm">
                                         <AlertCircle className="w-3.5 h-3.5 text-amber-300" />
                                         {absenteesPercentage}% belum absensi
                                     </span>
                                 )}
                                 {/* Insight 2 */}
-                                <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-white dark:bg-slate-900/10 border border-white/10 rounded-full text-xs font-medium text-white shadow-sm">
+                                <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-white/20 dark:bg-slate-900/10 border border-white/30 dark:border-white/10 rounded-full text-xs font-medium text-white dark:text-white shadow-sm">
                                     {hasLate ? (
                                         <><Timer className="w-3.5 h-3.5 text-rose-300" /> {stats.lateToday} orang datang terlambat</>
                                     ) : (
@@ -270,7 +270,7 @@ const AdminDashboardNew = () => {
                                 </span>
                                 {/* Insight 3 */}
                                 {pendingReviewCount > 0 && (
-                                    <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-white dark:bg-slate-900/10 border border-white/10 rounded-full text-xs font-medium text-white shadow-sm">
+                                    <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-white/20 dark:bg-slate-900/10 border border-white/30 dark:border-white/10 rounded-full text-xs font-medium text-white dark:text-white shadow-sm">
                                         <BookOpen className="w-3.5 h-3.5 text-blue-200" /> {pendingReviewCount} jurnal butuh review
                                     </span>
                                 )}
