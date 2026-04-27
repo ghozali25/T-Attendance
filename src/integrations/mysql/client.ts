@@ -54,6 +54,29 @@ const auth = {
   },
   logout: () => {
     console.warn('[DEPRECATED] Use api.clearToken() from @/lib/api instead');
+  },
+  updatePassword: async (userId: string, newPassword: string) => {
+    // Import bcrypt for password hashing
+    const bcrypt = (await import('bcryptjs')).default;
+    const passwordHash = await bcrypt.hash(newPassword, 10);
+    
+    const response = await fetch(`${API_BASE}/db/execute`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        sql: 'UPDATE users SET password_hash = ? WHERE id = ?',
+        params: [passwordHash, userId]
+      })
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to update password');
+    }
+    
+    const result = await response.json();
+    return result;
   }
 };
 

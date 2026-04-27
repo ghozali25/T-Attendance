@@ -195,7 +195,7 @@ const ResetPassword = () => {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-1 p-3">
               {filteredEmployees.map((employee) => (
-                <div key={employee.id} className="p-4 md:p-6 rounded-[24px] bg-white dark:bg-slate-900/40 hover:bg-slate-50 dark:hover:bg-white/[0.04] border border-transparent hover:border-slate-200 dark:hover:border-white/5 transition-all group flex flex-col justify-between h-full shadow-sm hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
+                <div key={employee.user_id || employee.id} className="p-4 md:p-6 rounded-[24px] bg-white dark:bg-slate-900/40 hover:bg-slate-50 dark:hover:bg-white/[0.04] border border-transparent hover:border-slate-200 dark:hover:border-white/5 transition-all group flex flex-col justify-between h-full shadow-sm hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
 
                   <div className="flex items-start justify-between mb-8">
                     <div className="flex items-center gap-4">
