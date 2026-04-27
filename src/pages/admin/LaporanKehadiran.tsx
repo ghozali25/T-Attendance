@@ -380,7 +380,8 @@ const LaporanKehadiran = () => {
                     dateRange.to || dateRange.from,
                     empAtt,
                     empLeaves,
-                    employee.created_at
+                    employee.created_at,
+                    []
                 );
 
                 const details: DailyAttendanceStatus[] = normalized.map(day => {

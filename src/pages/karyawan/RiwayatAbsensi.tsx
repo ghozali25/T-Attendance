@@ -101,7 +101,8 @@ const RiwayatAbsensi = () => {
         end,
         attendanceData || [],
         leaveData || [],
-        profileData?.created_at
+        profileData?.created_at,
+        []
       );
       setAttendanceList(normalized);
     } catch (error) {

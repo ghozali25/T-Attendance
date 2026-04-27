@@ -142,4 +142,23 @@ export const usersApi = {
     api.put<{ message: string }>(`/users/${id}/password`, { password }),
 };
 
+// Holidays API
+export const holidaysApi = {
+  getAll: (params?: { year?: number }) => {
+    const urlParams = new URLSearchParams();
+    if (params?.year) urlParams.append('year', params.year.toString());
+    return api.get<any[]>(`/holidays?${urlParams.toString()}`);
+  },
+  getById: (id: string) =>
+    api.get<any>(`/holidays/${id}`),
+  create: (data: any) =>
+    api.post<{ message: string; id: string }>('/holidays', data),
+  update: (id: string, data: any) =>
+    api.put<{ message: string }>(`/holidays/${id}`, data),
+  delete: (id: string) =>
+    api.delete<{ message: string }>(`/holidays/${id}`),
+  checkDate: (date: string) =>
+    api.get<{ isHoliday: boolean; holiday?: any }>(`/holidays/check?date=${date}`),
+};
+
 export default api;

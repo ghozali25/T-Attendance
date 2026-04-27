@@ -22,7 +22,7 @@ export interface LeaveRecord {
 
 /**
  * Generates a complete list of daily attendance statuses for a given period.
- * Automatically fills in missing dates with 'absent', 'weekend', 'future', or 'leave' statuses.
+ * Automatically fills in missing dates with 'absent', 'weekend', 'future', 'leave', or 'holiday' statuses.
  * USES ASIA/JAKARTA TIMEZONE for comparison.
  */
 export const generateAttendancePeriod = (
@@ -30,7 +30,8 @@ export const generateAttendancePeriod = (
     endDate: Date,
     records: any[],
     leaves: LeaveRecord[] = [],
-    joinDate?: string | Date
+    joinDate?: string | Date,
+    holidays: any[] = []
 ): DailyAttendanceStatus[] => {
     const normalized: DailyAttendanceStatus[] = [];
 
@@ -47,6 +48,8 @@ export const generateAttendancePeriod = (
             joinDateStr = d.toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' });
         }
     }
+
+    const holidaySet = new Set(holidays.map((h: any) => h.date));
 
     let currentDate = new Date(startDate);
     currentDate.setHours(0, 0, 0, 0);
@@ -96,6 +99,9 @@ export const generateAttendancePeriod = (
             return dateStr >= l.start_date && dateStr <= l.end_date;
         });
 
+        // 3. Check if it's a holiday
+        const holiday = holidays.find((h: any) => h.date === dateStr);
+
         let status: DailyAttendanceStatus['status'] = 'absent';
         const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
 
@@ -105,6 +111,8 @@ export const generateAttendancePeriod = (
             status = (record.status as any) || 'present';
         } else if (leave) {
             status = 'leave';
+        } else if (holiday) {
+            status = 'holiday';
         } else {
             // Comparison: dateStr vs todayStr
             if (dateStr > todayStr) {
@@ -119,7 +127,7 @@ export const generateAttendancePeriod = (
             } else if (isWeekend) {
                 status = 'weekend';
             } else {
-                // Past day (strictly < today), no record, not qualified leave, not weekend -> ABSENT
+                // Past day (strictly < today), no record, not qualified leave, not weekend, not holiday -> ABSENT
                 status = 'absent';
             }
         }
@@ -132,7 +140,7 @@ export const generateAttendancePeriod = (
             clockIn: record?.clock_in || null,
             clockOut: record?.clock_out || null,
             recordId: record?.id || null,
-            notes: record?.notes || (leave ? `Cuti: ${leave.leave_type}` : null),
+            notes: record?.notes || (leave ? `Cuti: ${leave.leave_type}` : (holiday ? `Libur: ${holiday.name}` : null)),
             isWeekend
         });
 

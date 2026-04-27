@@ -164,7 +164,8 @@ export default function MobileDashboardView({ role }: { role: "admin" | "manager
             monthEnd,
             monthData || [],
             filteredMonthLeaves || [],
-            profileData?.created_at
+            profileData?.created_at,
+            []
         );
 
         if (normalizedMonth) {

@@ -379,7 +379,8 @@ const ManagerLaporan = () => {
           dateRange.to || dateRange.from!,
           empAttendance,
           empLeaves,
-          emp.created_at
+          emp.created_at,
+          []
         );
 
         let totalLateMinutes = 0;

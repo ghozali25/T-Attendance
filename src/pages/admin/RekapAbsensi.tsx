@@ -196,7 +196,7 @@ const RekapAbsensi = () => {
         const empLeaves = leaveData?.filter((l: any) => l.user_id === employee.id) || [];
 
         // Generate daily details using shared logic
-        const normalized = generateAttendancePeriod(start, end, empRecords, empLeaves, employee.created_at);
+        const normalized = generateAttendancePeriod(start, end, empRecords, empLeaves, employee.created_at, []);
 
         const s: MonthlyStats = {
           user_id: employee.id,
