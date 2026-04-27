@@ -51,6 +51,7 @@ import { startOfMonth, endOfMonth, format, addDays, subDays, getDaysInMonth, get
 import * as XLSX from "xlsx";
 import { id } from "date-fns/locale";
 import { DateRange } from "react-day-picker";
+import { getJakartaDate, getJakartaStartOfDayISO, getJakartaEndOfDayISO } from "@/lib/dateUtils";
 import StatCard from "@/components/ui/stat-card"; // Reusing generic stat card if avail, or build custom
 
 interface MonthlyStats {
@@ -121,8 +122,16 @@ const RekapAbsensi = () => {
       start = startOfDay(dateRange?.from || new Date());
       end = endOfDay(dateRange?.to || new Date());
     } else if (viewMode === "monthly") {
-      start = startOfMonth(selectedMonth);
-      end = endOfMonth(selectedMonth);
+      // Use Jakarta timezone for monthly range
+      const jakartaDate = getJakartaDate();
+      const jakartaMonth = selectedMonth ? getJakartaDate() : selectedMonth;
+      start = startOfMonth(jakartaMonth);
+      end = endOfMonth(jakartaMonth);
+      // Convert to ISO strings with Jakarta timezone
+      const startStr = getJakartaStartOfDayISO(start);
+      const endStr = getJakartaEndOfDayISO(end);
+      start = new Date(startStr);
+      end = new Date(endStr);
     } else {
       // Daily: Create Strict Jakarta Range
       // filterDate is "YYYY-MM-DD"
