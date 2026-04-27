@@ -72,6 +72,7 @@ CREATE TABLE attendance (
     clock_out_lng DOUBLE,
     work_hours DECIMAL(10, 2),
     period_month VARCHAR(7),
+    status VARCHAR(50) DEFAULT 'present',
     notes TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

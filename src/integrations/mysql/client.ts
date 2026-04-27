@@ -15,20 +15,26 @@ const db = {
       console.log('[MySQL Client] Executing query:', sql);
       console.log('[MySQL Client] Params:', params);
       
+      // Get token from localStorage
+      const token = localStorage.getItem('token');
+      
       // For now, proxy to backend API endpoint that can execute raw SQL
       const response = await fetch(`${API_BASE}/db/query`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...(token && { 'Authorization': `Bearer ${token}` })
         },
         body: JSON.stringify({ sql, params })
       });
       
       if (!response.ok) {
-        throw new Error(`Database query failed: ${response.statusText}`);
+        const error = await response.json().catch(() => ({ error: response.statusText }));
+        throw new Error(`Database query failed: ${error.error || error.details || response.statusText}`);
       }
       
       const data = await response.json();
+      console.log('[MySQL Client] Query result:', data);
       return data || [];
     } catch (error) {
       console.error('[MySQL Client] Error:', error);
