@@ -123,6 +123,7 @@ export const useDashboardStats = (karyawanUserIds: Set<string> | undefined) => {
         queryKey: ["dashboardStats", Array.from(karyawanUserIds || []).length],
         queryFn: async (): Promise<DashboardStats | null> => {
             try {
+                console.log('[useDashboardStats] Fetching stats with user IDs:', karyawanUserIds?.size);
                 const today = getJakartaDate();
                 const startIso = getJakartaStartOfDayISO(today);
                 const endIso = getJakartaEndOfDayISO(today);
@@ -132,6 +133,7 @@ export const useDashboardStats = (karyawanUserIds: Set<string> | undefined) => {
 
                 // Use API to get profiles
                 const profiles = await profilesApi.getAll();
+                console.log('[useDashboardStats] Profiles fetched:', profiles?.length);
                 if (!profiles || !Array.isArray(profiles)) return null;
 
                 // Filter profiles by karyawanUserIds if provided
@@ -148,12 +150,14 @@ export const useDashboardStats = (karyawanUserIds: Set<string> | undefined) => {
                 }
 
                 const totalEmployees = filterIds.size > 0 ? filterIds.size : profiles.length;
+                console.log('[useDashboardStats] Total employees:', totalEmployees);
 
                 // Get attendance data using db.query for now (no API endpoint for complex queries)
                 const attendance = await db.query(
                     'SELECT user_id, status FROM attendance WHERE clock_in >= ? AND clock_in <= ?',
                     [startIso, endIso]
                 ) as any[];
+                console.log('[useDashboardStats] Attendance records:', attendance?.length);
 
                 const relevantAttendance = attendance?.filter((a: any) =>
                     filterIds.size === 0 || filterIds.has(a.user_id)
@@ -168,6 +172,7 @@ export const useDashboardStats = (karyawanUserIds: Set<string> | undefined) => {
                     'SELECT user_id FROM leave_requests WHERE status = ? AND start_date <= ? AND end_date >= ?',
                     ['approved', today.toISOString().split('T')[0], today.toISOString().split('T')[0]]
                 ) as any[];
+                console.log('[useDashboardStats] Approved leaves today:', approvedLeavesToday?.length);
 
                 const relevantLeavesToday = approvedLeavesToday?.filter((l: any) =>
                     filterIds.size === 0 || filterIds.has(l.user_id)
@@ -182,9 +187,11 @@ export const useDashboardStats = (karyawanUserIds: Set<string> | undefined) => {
                 
                 // Check if today is weekend (Saturday = 6, Sunday = 0)
                 const isWeekend = today.getDay() === 0 || today.getDay() === 6;
+                console.log('[useDashboardStats] Is weekend:', isWeekend);
                 
                 // Only count as absent if it's not a weekend
                 const absent = isWeekend ? 0 : targetProfiles.filter((p: any) => !accountedForUserIds.has(p.id)).length;
+                console.log('[useDashboardStats] Absent count:', absent);
 
                 const onTimeRate = present > 0 ? Math.round((onTime / present) * 100) : 0;
                 const uniqueDepartments = new Set(
@@ -227,7 +234,7 @@ export const useDashboardStats = (karyawanUserIds: Set<string> | undefined) => {
                     ? Math.round((attendanceThisMonthCount / expectedAttendance) * 100)
                     : 0;
 
-                return {
+                const result = {
                     totalEmployees,
                     presentToday: present,
                     lateToday: late,
@@ -240,8 +247,10 @@ export const useDashboardStats = (karyawanUserIds: Set<string> | undefined) => {
                     attendanceThisMonth: attendanceThisMonthCount,
                     attendanceRate: Math.min(100, attendanceRate)
                 };
+                console.log('[useDashboardStats] Returning stats:', result);
+                return result;
             } catch (error) {
-                console.error('Error fetching dashboard stats:', error);
+                console.error('[useDashboardStats] Error:', error);
                 return null;
             }
         },
