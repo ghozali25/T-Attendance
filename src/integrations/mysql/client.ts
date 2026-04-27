@@ -1,0 +1,54 @@
+/**
+ * MySQL Client - Direct Backend Connection
+ * 
+ * This module provides a db.query interface that connects to the backend database.
+ * For complex queries that can't be handled by API endpoints.
+ * 
+ * NOTE: This is a transitional solution. New code should use @/lib/api directly.
+ */
+
+const API_BASE = '/api';
+
+const db = {
+  query: async (sql: string, params?: any[]): Promise<any[]> => {
+    try {
+      console.log('[MySQL Client] Executing query:', sql);
+      console.log('[MySQL Client] Params:', params);
+      
+      // For now, proxy to backend API endpoint that can execute raw SQL
+      const response = await fetch(`${API_BASE}/db/query`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ sql, params })
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Database query failed: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      return data || [];
+    } catch (error) {
+      console.error('[MySQL Client] Error:', error);
+      throw error;
+    }
+  }
+};
+
+const auth = {
+  getCurrentUser: () => null,
+  verifyToken: (token: string) => false,
+  login: async (email: string, password: string) => {
+    throw new Error('Use authApi.login from @/lib/api instead');
+  },
+  register: async (email: string, password: string, fullName: string) => {
+    throw new Error('Use authApi.register from @/lib/api instead');
+  },
+  logout: () => {
+    console.warn('[DEPRECATED] Use api.clearToken() from @/lib/api instead');
+  }
+};
+
+export { db, auth };

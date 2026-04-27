@@ -1,0 +1,586 @@
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import {
+  ArrowLeft, Clock, Search, Calendar, Users, CheckCircle2,
+  XCircle, AlertCircle, Download, RefreshCw, FileSpreadsheet, FileText, Info,
+  LayoutDashboard, BarChart3, FileCheck, Timer, CalendarClock, ChevronLeft,
+  ChevronRight, Activity, Eye, Filter
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "@/hooks/use-toast";
+import { db } from "@/integrations/mysql/client";
+import { usersApi, attendanceApi, leaveApi } from "@/lib/api";
+import { useSystemSettings } from "@/hooks/useSystemSettings";
+import EnterpriseLayout from "@/components/layout/EnterpriseLayout";
+import { MANAGER_MENU_SECTIONS } from "@/config/menu";
+import { ABSENSI_WAJIB_ROLE, EXCLUDED_USER_NAMES } from "@/lib/constants";
+import { cn } from "@/lib/utils";
+
+// Talenta Brand Colors
+const BRAND_COLORS = {
+  blue: "#1A5BA8",
+  lightBlue: "#00A0E3",
+  green: "#7DC242",
+};
+
+interface AttendanceRecord {
+  id: string;
+  user_id: string;
+  clock_in: string | null;
+  clock_out: string | null;
+  status: string;
+  profile: {
+    full_name: string | null;
+    department: string | null;
+  };
+  notes?: string;
+}
+
+// Helper to get yesterday's date
+const getYesterdayDate = () => {
+  const date = new Date();
+  date.setDate(date.getDate() - 1);
+  return date.toISOString().split("T")[0];
+};
+
+const ManagerRekapAbsensi = () => {
+  const navigate = useNavigate();
+  const { settings, isLoading: settingsLoading } = useSystemSettings();
+  const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterStatus, setFilterStatus] = useState("all");
+  const [filterDate, setFilterDate] = useState(new Date().toISOString().split("T")[0]); // Default Today
+
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [totalEmployees, setTotalEmployees] = useState(0);
+  const [stats, setStats] = useState({
+    total: 0,
+    present: 0,
+    late: 0,
+    earlyLeave: 0,
+    absent: 0,
+    leaves: 0
+  });
+
+  // Menu sections for sidebar
+  const menuSections = MANAGER_MENU_SECTIONS;
+
+  // New Fetch Logic
+  const fetchAttendance = useCallback(async () => {
+    setIsLoading(true);
+
+    try {
+      // 1. Fetch Target Employees (Karyawan) using API
+      const allUsers = await usersApi.getAll();
+      
+      if (!allUsers || !Array.isArray(allUsers)) {
+        throw new Error('Failed to fetch users');
+      }
+
+      // Filter by role
+      const roleArray = [...ABSENSI_WAJIB_ROLE];
+      let candidates = allUsers.filter((u: any) => roleArray.includes(u.role));
+
+      // Filter Excluded Users
+      candidates = candidates.filter((p: any) => {
+        if (!p.full_name) return true;
+        const nameLower = p.full_name.toLowerCase();
+        return !EXCLUDED_USER_NAMES.some(excluded => nameLower.includes(excluded.toLowerCase()));
+      });
+
+      setTotalEmployees(candidates.length);
+
+      // 2. Fetch Attendance for Date using API
+      const startIso = `${filterDate}T00:00:00+07:00`;
+      const endIso = `${filterDate}T23:59:59.999+07:00`;
+
+      const startUtc = new Date(startIso).toISOString();
+      const endUtc = new Date(endIso).toISOString();
+
+      // Use db.query for attendance (complex date range query not available in API yet)
+      const attendanceData = await db.query(
+        'SELECT * FROM attendance WHERE deleted_at IS NULL AND clock_in >= ? AND clock_in <= ?',
+        [startUtc, endUtc]
+      ) as any[];
+
+      // 3. Fetch Leaves using API
+      const leaves = await leaveApi.getAll({ status: 'approved' });
+      const leaveData = leaves?.filter((l: any) => {
+        return l.status === 'approved' && l.start_date <= filterDate && l.end_date >= filterDate;
+      }) || [];
+
+      // 4. Merge
+      const merged: AttendanceRecord[] = candidates.map((emp: any) => {
+        // Check Attendance
+        const att = attendanceData?.find((a: any) => a.user_id === emp.id);
+        // Check Leave
+        const leave = leaveData?.find((l: any) => l.user_id === emp.id);
+
+        let status = 'absent';
+        let clock_in = null;
+        let clock_out = null;
+        let notes = '';
+        let id = `virt-${emp.id}`;
+
+        if (att) {
+          status = att.status;
+          clock_in = att.clock_in;
+          clock_out = att.clock_out;
+          notes = att.notes;
+          id = att.id;
+        } else if (leave) {
+          status = leave.leave_type === 'sick' ? 'sick' : 'leave';
+        } else {
+          const d = new Date(filterDate);
+          const isWeekend = d.getDay() === 0 || d.getDay() === 6;
+          if (isWeekend) status = 'weekend';
+          const todayStr = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' });
+          if (filterDate >= todayStr) status = 'future';
+          if (emp.join_date && emp.join_date > filterDate) status = 'future';
+        }
+
+        return {
+          id,
+          user_id: emp.id,
+          clock_in,
+          clock_out,
+          status,
+          profile: { full_name: emp.full_name, department: emp.department },
+          notes
+        };
+      });
+
+      // Calculate Stats
+      const newStats = {
+        total: merged.length,
+        present: merged.filter(m => ['present', 'late', 'early_leave'].includes(m.status)).length,
+        late: merged.filter(m => m.status === 'late').length,
+        earlyLeave: merged.filter(m => m.status === 'early_leave').length,
+        absent: merged.filter(m => ['absent', 'alpha'].includes(m.status)).length,
+        leaves: merged.filter(m => ['leave', 'sick', 'permission'].includes(m.status)).length
+      };
+
+      setStats(newStats);
+      setAttendance(merged);
+      setLastUpdated(new Date());
+
+    } catch (e) {
+      console.error(e);
+      toast({ variant: "destructive", title: "Gagal memuat data" });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [filterDate]);
+
+
+  // Auto-fetch on mount and date change
+  useEffect(() => {
+    if (!settingsLoading) fetchAttendance();
+  }, [settingsLoading, fetchAttendance]);
+
+
+  // Navigation helpers
+  const goToPreviousDay = () => {
+    const date = new Date(filterDate);
+    date.setDate(date.getDate() - 1);
+    setFilterDate(date.toISOString().split("T")[0]);
+  };
+
+  const goToNextDay = () => {
+    const date = new Date(filterDate);
+    date.setDate(date.getDate() + 1);
+    setFilterDate(date.toISOString().split("T")[0]);
+  };
+
+  const goToToday = () => {
+    setFilterDate(new Date().toISOString().split("T")[0]);
+  };
+
+  const isBeforeStartDate = settings?.attendanceStartDate && new Date(filterDate) < new Date(settings.attendanceStartDate);
+  const isToday = filterDate === new Date().toISOString().split("T")[0];
+  const isYesterday = filterDate === getYesterdayDate();
+
+  const getStatusBadge = (status: string) => {
+    const pill = (bg: string, text: string, dot: string, label: string) => (
+      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold border ${bg} ${text}`}>
+        <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${dot}`} />
+        {label}
+      </span>
+    );
+    switch (status) {
+      case "present": return pill("bg-emerald-50 border-emerald-200", "text-emerald-700", "bg-emerald-500", "Hadir");
+      case "late": return pill("bg-amber-50 border-amber-200", "text-amber-700", "bg-amber-500", "Terlambat");
+      case "early_leave": return pill("bg-orange-50 border-orange-200", "text-orange-700", "bg-orange-500", "Pulang Cepat");
+      case "absent":
+      case "alpha": return pill("bg-red-50 border-red-200", "text-red-700", "bg-red-500", "Alpha");
+      case "leave": return pill("bg-purple-50 border-purple-200", "text-purple-700", "bg-purple-500", "Cuti");
+      case "sick": return pill("bg-pink-50 border-pink-200", "text-pink-700", "bg-pink-500", "Sakit");
+      case "weekend": return <span className="text-[11px] text-slate-400">Libur</span>;
+      case "future": return <span className="text-[11px] text-slate-300">-</span>;
+      default: return <span className="text-[11px] text-slate-400">{status}</span>;
+    }
+  };
+
+  const formatTime = (dateString: string | null) => {
+    if (!dateString) return "-";
+    return new Date(dateString).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("id-ID", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric"
+    });
+  };
+
+  const calculateDuration = (clockIn: string | null, clockOut: string | null) => {
+    if (!clockIn || !clockOut) return "-";
+    const diffMs = new Date(clockOut).getTime() - new Date(clockIn).getTime();
+    const hours = Math.floor(diffMs / (1000 * 60 * 60));
+    const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+    return `${hours}j ${minutes}m`;
+  };
+
+  const filteredAttendance = attendance.filter((record) => {
+    const matchesSearch = record.profile?.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      record.profile?.department?.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus = filterStatus === "all" || record.status === filterStatus;
+    return matchesSearch && matchesStatus;
+  });
+
+  const attendanceRate = totalEmployees > 0 ? Math.round((stats.present / totalEmployees) * 100) : 0;
+
+  // Export functions reusing logic
+  const exportColumns = [
+    { header: "Nama", key: "nama", width: 100 },
+    { header: "Departemen", key: "departemen", width: 80 },
+    { header: "Clock In", key: "clock_in", width: 50 },
+    { header: "Clock Out", key: "clock_out", width: 50 },
+    { header: "Status", key: "status", width: 50 },
+  ];
+
+  const getExportData = () => {
+    return filteredAttendance.map(record => ({
+      nama: record.profile?.full_name || "-",
+      departemen: record.profile?.department || "-",
+      clock_in: formatTime(record.clock_in),
+      clock_out: formatTime(record.clock_out),
+      status: record.status,
+    }));
+  };
+
+  const handleExportExcel = async () => {
+    const { exportToExcel } = await import("@/lib/exportUtils");
+    exportToExcel({
+      title: "Rekap Absensi " + formatDate(filterDate),
+      data: getExportData(),
+      columns: exportColumns,
+      filename: `rekap-absensi-${filterDate}`,
+    });
+  };
+
+  const handleExportPDF = async () => {
+    const { exportToPDF } = await import("@/lib/exportUtils");
+    exportToPDF({
+      title: "Rekap Absensi",
+      subtitle: formatDate(filterDate),
+      data: getExportData(),
+      columns: exportColumns.map(c => c.header),
+      filename: `rekap-absensi-${filterDate}`,
+    });
+  };
+
+  return (
+    <EnterpriseLayout
+      title="Rekap Absensi"
+      subtitle={formatDate(filterDate)}
+      menuSections={menuSections}
+      roleLabel="Manager"
+      showRefresh={true}
+      onRefresh={fetchAttendance}
+      refreshInterval={0}
+      showExport={true}
+      onExport={handleExportExcel}
+      breadcrumbs={[
+        { label: "Manager", href: "/manager" },
+        { label: "Rekap Absensi" },
+      ]}
+    >
+      {/* Date Navigation Bar */}
+      <div className="animate-in fade-in slide-in-from-bottom-8 duration-700 ease-out mb-8 grid grid-cols-1 lg:grid-cols-3 gap-5">
+        {/* Date Selector */}
+        <div
+          className="p-4 rounded-2xl border flex items-center gap-4"
+          style={{
+            backgroundColor: `${BRAND_COLORS.blue}08`,
+            borderColor: `${BRAND_COLORS.blue}25`
+          }}
+        >
+          <div
+            className="w-12 h-12 rounded-xl flex items-center justify-center shadow-sm"
+            style={{
+              background: `linear-gradient(135deg, ${BRAND_COLORS.blue} 0%, ${BRAND_COLORS.lightBlue} 100%)`
+            }}
+          >
+            <CalendarClock className="h-6 w-6 text-white" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              <p className="text-sm text-slate-600 dark:text-slate-300 whitespace-nowrap">Tanggal Rekap</p>
+              {isToday && <Badge variant="secondary" className="text-xs px-2 py-0 h-5">Hari Ini</Badge>}
+            </div>
+            <div className="flex items-center gap-1">
+              <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={goToPreviousDay}>
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <Input
+                type="date"
+                value={filterDate}
+                onChange={(e) => setFilterDate(e.target.value)}
+                className="w-[130px] h-8 text-sm font-medium shrink-0"
+                max={new Date().toISOString().split("T")[0]}
+              />
+              <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={goToNextDay} disabled={isToday}>
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* Attendance Rate */}
+        <div
+          className="p-4 rounded-2xl border flex items-center gap-4"
+          style={{
+            backgroundColor: `${BRAND_COLORS.green}08`,
+            borderColor: `${BRAND_COLORS.green}25`
+          }}
+        >
+          <div
+            className="w-12 h-12 rounded-xl flex items-center justify-center shadow-sm"
+            style={{
+              background: `linear-gradient(135deg, ${BRAND_COLORS.green} 0%, #8BC34A 100%)`
+            }}
+          >
+            <Activity className="h-6 w-6 text-white" />
+          </div>
+          <div className="flex-1">
+            <p className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">Tingkat Kehadiran</p>
+            <div className="flex items-baseline gap-2">
+              <span className="text-3xl font-black text-emerald-600 dark:text-emerald-400 tracking-tight">
+                {attendanceRate}%
+              </span>
+              <span className="text-sm text-slate-500 dark:text-slate-400">
+                ({stats.present}/{totalEmployees})
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Last Updated */}
+        <div
+          className="p-4 rounded-2xl border flex items-center gap-4"
+          style={{
+            backgroundColor: `${BRAND_COLORS.lightBlue}08`,
+            borderColor: `${BRAND_COLORS.lightBlue}25`
+          }}
+        >
+          <div
+            className="w-12 h-12 rounded-xl flex items-center justify-center shadow-sm"
+            style={{
+              background: `linear-gradient(135deg, ${BRAND_COLORS.lightBlue} 0%, ${BRAND_COLORS.blue} 100%)`
+            }}
+          >
+            <Timer className="h-6 w-6 text-white" />
+          </div>
+          <div className="flex-1">
+            <p className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">Data Real-time</p>
+            <p className="text-lg font-black text-slate-800 dark:text-white tracking-tight">
+              {lastUpdated?.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }) || "-"}
+            </p>
+          </div>
+          <Button variant="outline" size="sm" onClick={fetchAttendance} className="gap-1">
+            <RefreshCw className="h-3.5 w-3.5" /> Perbarui
+          </Button>
+        </div>
+      </div>
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-5 mb-8">
+        <StatCard icon={Users} label="Total Karyawan" value={totalEmployees} colorClass="text-blue-600" bgClass="bg-blue-50" />
+        <StatCard icon={CheckCircle2} label="Hadir" value={stats.present} colorClass="text-emerald-600" bgClass="bg-emerald-50" />
+        <StatCard icon={AlertCircle} label="Terlambat" value={stats.late} colorClass="text-amber-600" bgClass="bg-amber-50" />
+        <StatCard icon={Clock} label="Pulang Awal" value={stats.earlyLeave} colorClass="text-orange-600" bgClass="bg-orange-50" />
+        <StatCard icon={FileCheck} label="Cuti/Izin" value={stats.leaves} colorClass="text-purple-600" bgClass="bg-purple-50" />
+        <StatCard icon={XCircle} label="Alpha" value={stats.absent} colorClass="text-red-600" bgClass="bg-red-50" />
+      </div>
+
+      {/* Filters & Export */}
+      <Card className="border-slate-200/50 dark:border-slate-800/50 shadow-sm bg-white/90 dark:bg-slate-900/70 backdrop-blur-md mb-8 rounded-[28px]">
+        <CardContent className="py-4">
+          <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
+            <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+              <div className="relative flex-1 sm:w-64">
+                <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <Input
+                  placeholder="Cari nama atau departemen..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 border-slate-200/60 rounded-xl h-11 bg-white dark:bg-slate-900/50 font-medium"
+                />
+              </div>
+              <Select value={filterStatus} onValueChange={setFilterStatus}>
+                <SelectTrigger className="w-full sm:w-[150px] border-slate-200/60 rounded-xl h-11 bg-white dark:bg-slate-900/50 font-medium">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Semua Status</SelectItem>
+                  <SelectItem value="present">Hadir</SelectItem>
+                  <SelectItem value="late">Terlambat</SelectItem>
+                  <SelectItem value="absent">Alpha</SelectItem>
+                  <SelectItem value="leave">Cuti/Izin</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-center gap-2">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button className="gap-2 text-white rounded-xl font-semibold bg-slate-900 hover:bg-slate-800 shadow-lg shadow-slate-900/20">
+                    <Download className="h-4 w-4" /> Ekspor
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem className="cursor-pointer" onClick={handleExportExcel}>
+                    <FileSpreadsheet className="w-4 h-4 mr-2" /> Export Excel
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="cursor-pointer" onClick={handleExportPDF}>
+                    <FileText className="w-4 h-4 mr-2" /> Export PDF
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Table */}
+      <Card className="border-slate-200/50 dark:border-slate-800/50 shadow-sm bg-white/90 dark:bg-slate-900/70 backdrop-blur-md rounded-[28px] overflow-hidden">
+        <CardContent className="p-0">
+          {/* Desktop Table */}
+          <div className="hidden md:block overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-slate-50/80 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800">
+                  <TableHead className="font-black text-slate-400 text-[10px] uppercase tracking-widest">Karyawan</TableHead>
+                  <TableHead className="font-black text-slate-400 text-[10px] uppercase tracking-widest hidden sm:table-cell">Departemen</TableHead>
+                  <TableHead className="font-black text-slate-400 text-[10px] uppercase tracking-widest text-center">Clock In</TableHead>
+                  <TableHead className="font-black text-slate-400 text-[10px] uppercase tracking-widest text-center">Clock Out</TableHead>
+                  <TableHead className="font-black text-slate-400 text-[10px] uppercase tracking-widest text-center hidden md:table-cell">Durasi</TableHead>
+                  <TableHead className="font-black text-slate-400 text-[10px] uppercase tracking-widest text-center">Status</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {isLoading ? (
+                  [...Array(5)].map((_, i) => <TableRow key={i}><TableCell colSpan={6}><Skeleton className="h-12 w-full" /></TableCell></TableRow>)
+                ) : filteredAttendance.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center py-16">
+                      <div className="flex flex-col items-center gap-3">
+                        <div className="w-14 h-14 bg-slate-100 dark:bg-slate-800 rounded-2xl flex items-center justify-center">
+                          <Users className="h-7 w-7 text-slate-400" />
+                        </div>
+                        <h3 className="text-base font-bold text-slate-700 dark:text-slate-200">Tidak Ada Data</h3>
+                        <p className="text-slate-500 dark:text-slate-400 text-sm">Tidak ada data kehadiran untuk kriteria ini</p>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filteredAttendance.map((row) => (
+                    <TableRow key={row.id}>
+                      <TableCell>
+                        <div className="font-medium">{row.profile.full_name}</div>
+                      </TableCell>
+                      <TableCell className="hidden sm:table-cell text-slate-500 dark:text-slate-400">{row.profile.department}</TableCell>
+                      <TableCell className="text-center text-sm font-mono">{formatTime(row.clock_in)}</TableCell>
+                      <TableCell className="text-center text-sm font-mono">{formatTime(row.clock_out)}</TableCell>
+                      <TableCell className="text-center hidden md:table-cell text-sm">{calculateDuration(row.clock_in, row.clock_out)}</TableCell>
+                      <TableCell className="text-center">{getStatusBadge(row.status)}</TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+
+          {/* Mobile Cards */}
+          <div className="md:hidden flex flex-col p-4 gap-3 bg-slate-50/50 dark:bg-slate-800/50 rounded-b-[20px]">
+            {isLoading ? (
+              [...Array(3)].map((_, i) => <Skeleton key={i} className="h-24 w-full rounded-2xl" />)
+            ) : filteredAttendance.length === 0 ? (
+              <div className="flex flex-col items-center gap-3 py-12 bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800">
+                <div className="w-14 h-14 bg-slate-100 dark:bg-slate-800 rounded-2xl flex items-center justify-center">
+                  <Users className="h-7 w-7 text-slate-400" />
+                </div>
+                <h3 className="text-base font-bold text-slate-700 dark:text-slate-200">Tidak Ada Data</h3>
+                <p className="text-slate-500 dark:text-slate-400 text-sm">Tidak ada data kehadiran untuk kriteria ini</p>
+              </div>
+            ) : (
+              filteredAttendance.map((row) => (
+                <div key={row.id} className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-4 shadow-sm flex flex-col gap-3">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h4 className="font-bold text-slate-900 dark:text-white text-sm">{row.profile.full_name}</h4>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400">{row.profile.department || "Karyawan"}</p>
+                    </div>
+                    <div>{getStatusBadge(row.status)}</div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 mt-1">
+                    <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-2.5 flex flex-col">
+                      <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Masuk</span>
+                      <span className="text-xs font-mono font-semibold text-slate-700 dark:text-slate-200">{formatTime(row.clock_in)}</span>
+                    </div>
+                    <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-2.5 flex flex-col">
+                      <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Keluar</span>
+                      <span className="text-xs font-mono font-semibold text-slate-700 dark:text-slate-200">{formatTime(row.clock_out)}</span>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+    </EnterpriseLayout>
+  );
+};
+
+// Simple Stat Card Component inline
+function StatCard({ icon: Icon, label, value, colorClass, bgClass }: any) {
+  return (
+    <Card className="border-slate-200/60 dark:border-slate-700/60 shadow-sm bg-white dark:bg-slate-900/70 backdrop-blur-md rounded-2xl hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
+      <CardContent className="pt-4 pb-4">
+        <div className="flex items-center gap-3">
+          <div className={cn("h-10 w-10 rounded-xl flex items-center justify-center", bgClass)}>
+            <Icon className={cn("h-5 w-5", colorClass)} />
+          </div>
+          <div>
+            <p className={cn("text-2xl font-extrabold tracking-tight", colorClass)}>{value}</p>
+            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{label}</p>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+export default ManagerRekapAbsensi;

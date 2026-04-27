@@ -1,0 +1,139 @@
+import * as React from "react";
+import { useState, useEffect } from "react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
+import { useIsMobile } from "@/hooks/useIsMobile";
+import { JournalForm, JournalFormData } from "./JournalForm";
+
+interface JournalFormModalProps {
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+    onSave: (data: JournalFormData, isDraft: boolean, isSilent?: boolean) => Promise<void>;
+    initialData?: Partial<JournalFormData>;
+    isEditing?: boolean;
+    isRevision?: boolean; // When editing a journal that needs revision
+    isReadOnly?: boolean; // view mode
+    managerNotes?: string; // Show manager feedback when in revision mode
+    existingDates?: string[];
+    onRequestEdit?: (date: string) => void;
+    isDateLocked?: boolean;
+}
+
+export type { JournalFormData };
+
+export function JournalFormModal({
+    open,
+    onOpenChange,
+    onSave,
+    initialData,
+    isEditing = false,
+    isRevision = false,
+    isReadOnly = false,
+    managerNotes,
+    existingDates,
+    onRequestEdit,
+    isDateLocked
+}: JournalFormModalProps) {
+
+    const isMobile = useIsMobile();
+    const [isMounted, setIsMounted] = useState(false);
+
+    useEffect(() => {
+        setIsMounted(true);
+    }, []);
+
+    const handleCancel = () => {
+        onOpenChange(false);
+    };
+
+    if (!isMounted) return null;
+
+    // Desktop: Dialog
+    if (!isMobile) {
+        return (
+            <Dialog open={open} onOpenChange={onOpenChange}>
+                <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-hidden flex flex-col p-6">
+                    <DialogHeader>
+                        <DialogTitle className="text-xl font-bold text-slate-800 dark:text-slate-100">
+                            {isReadOnly
+                                ? "📋 Detail Jurnal"
+                                : isRevision
+                                    ? "✏️ Revisi Jurnal Aktivitas"
+                                    : isEditing
+                                        ? "✏️ Edit Jurnal Aktivitas"
+                                        : "📝 Apa yang kamu kerjakan hari ini?"
+                            }
+                        </DialogTitle>
+                        <DialogDescription className="text-slate-500 dark:text-slate-400">
+                            {isReadOnly
+                                ? "Detail jurnal yang telah dikirim."
+                                : isRevision
+                                    ? "Perbaiki jurnal sesuai catatan dari Manager, lalu kirim ulang."
+                                    : "Catatan ini akan dibaca oleh Manager dan Admin."
+                            }
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="flex-1 overflow-hidden h-full -mr-6 pr-6 pt-2">
+                        <JournalForm
+                            initialData={initialData}
+                            isEditing={isEditing}
+                            isRevision={isRevision}
+                            isReadOnly={isReadOnly}
+                            managerNotes={managerNotes}
+                            onSave={onSave}
+                            onCancel={handleCancel}
+                            existingDates={existingDates}
+                            onRequestEdit={onRequestEdit}
+                            isDateLocked={isDateLocked}
+                        />
+                    </div>
+                </DialogContent>
+            </Dialog>
+        );
+    }
+
+    // Mobile: Drawer
+    return (
+        <Drawer open={open} onOpenChange={onOpenChange}>
+            <DrawerContent className="h-[90vh] flex flex-col rounded-t-[20px] after:hidden">
+                <DrawerHeader className="text-left shrink-0">
+                    <DrawerTitle className="text-lg font-bold text-slate-800 dark:text-slate-100">
+                        {isReadOnly
+                            ? "📋 Detail Jurnal"
+                            : isRevision
+                                ? "✏️ Revisi Jurnal"
+                                : isEditing
+                                    ? "✏️ Edit Jurnal"
+                                    : "📝 Apa yang kamu kerjakan hari ini?"
+                        }
+                    </DrawerTitle>
+                    <DrawerDescription className="text-slate-500 dark:text-slate-400 text-sm">
+                        {isReadOnly
+                            ? "Detail jurnal yang telah dikirim."
+                            : isRevision
+                                ? "Perbaiki sesuai catatan Manager."
+                                : "Catatan ini akan dibaca oleh Manager."
+                        }
+                    </DrawerDescription>
+                </DrawerHeader>
+                <div className="px-4 flex-1 min-h-0 h-full pb-0 bg-white dark:bg-slate-900">
+                    <JournalForm
+                        initialData={initialData}
+                        isEditing={isEditing}
+                        isRevision={isRevision}
+                        isReadOnly={isReadOnly}
+                        managerNotes={managerNotes}
+                        onSave={onSave}
+                        onCancel={handleCancel}
+                        existingDates={existingDates}
+                        onRequestEdit={onRequestEdit}
+                        isDateLocked={isDateLocked}
+                    />
+                </div>
+            </DrawerContent>
+        </Drawer>
+    );
+}
+
+export default JournalFormModal;

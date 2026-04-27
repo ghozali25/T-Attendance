@@ -1,0 +1,317 @@
+import { useState, useEffect, useCallback, useRef } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@/hooks/useAuth";
+import EnterpriseLayout from "@/components/layout/EnterpriseLayout";
+import { JournalTable } from "@/components/journal/JournalTable";
+import { JournalFilters } from "@/components/journal/JournalFilters";
+import { JournalReviewDetail } from "@/components/journal/JournalReviewDetail";
+import {
+    Sheet,
+    SheetContent,
+} from "@/components/ui/sheet";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { CheckCircle, SlidersHorizontal, LayoutDashboard, Clock, BookOpen, BarChart3, FileCheck } from "lucide-react";
+import { db } from "@/integrations/mysql/client";
+import { journalsApi, profilesApi } from "@/lib/api";
+import { toast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
+import { JournalCardData } from "@/components/journal/JournalCard";
+
+// Manager has its own specific fetching needs, but for simplicity we keep it close to Admin but maybe scoped if needed.
+const ITEMS_PER_PAGE = 20;
+
+const ManagerJurnal = () => {
+    const { user } = useAuth();
+    const queryClient = useQueryClient();
+
+    // State
+    const [selectedIds, setSelectedIds] = useState<string[]>([]);
+    const [viewJournal, setViewJournal] = useState<JournalCardData | null>(null);
+    const [isDetailOpen, setIsDetailOpen] = useState(false);
+
+    // Filters
+    const [search, setSearch] = useState("");
+    const [debouncedSearch, setDebouncedSearch] = useState("");
+    const [status, setStatus] = useState("all");
+    const [department, setDepartment] = useState("all");
+    const [date, setDate] = useState<Date | undefined>(undefined);
+
+    // Data State
+    const [journals, setJournals] = useState<JournalCardData[]>([]);
+    const [isLoading, setIsLoading] = useState(false);
+
+    // Debounce Search
+    useEffect(() => {
+        const timer = setTimeout(() => setDebouncedSearch(search), 500);
+        return () => clearTimeout(timer);
+    }, [search]);
+
+    const fetchJournals = async () => {
+        setIsLoading(true);
+        try {
+            // Use API to get journals
+            const journalsData = await journalsApi.getAll();
+            
+            if (!journalsData || !Array.isArray(journalsData)) {
+                setJournals([]);
+                return;
+            }
+
+            // Filter on client side (TODO: Move to backend API)
+            let filtered = journalsData;
+
+            if (status !== 'all') {
+                filtered = filtered.filter((j: any) => j.verification_status === status);
+            }
+
+            if (date) {
+                const start = new Date(date);
+                start.setHours(0, 0, 0, 0);
+                const end = new Date(date);
+                end.setHours(23, 59, 59, 999);
+                filtered = filtered.filter((j: any) => {
+                    const jDate = new Date(j.date);
+                    return jDate >= start && jDate <= end;
+                });
+            }
+
+            if (debouncedSearch) {
+                filtered = filtered.filter((j: any) => 
+                    j.content?.toLowerCase().includes(debouncedSearch.toLowerCase())
+                );
+            }
+
+            if (filtered.length === 0) {
+                setJournals([]);
+                return;
+            }
+
+            // Get user IDs and fetch profiles
+            const userIds = [...new Set(filtered.map((j: any) => j.user_id))];
+            
+            // Use API to get profiles
+            const allUsers = await profilesApi.getAll();
+            const profileMap = new Map<string, any>();
+            
+            if (allUsers && Array.isArray(allUsers)) {
+                allUsers.forEach((u: any) => profileMap.set(u.id, u));
+            }
+
+            const formattedData = filtered.map((journal: any) => {
+                const profile = profileMap.get(journal.user_id);
+                if (department !== 'all' && !profile) return null;
+
+                return {
+                    ...journal,
+                    profiles: profile || { full_name: 'Unknown', avatar_url: null, department: '-', position: '-' }
+                };
+            }).filter(Boolean) as unknown as JournalCardData[];
+
+            setJournals(formattedData);
+        } catch (error: any) {
+            toast({ variant: "destructive", title: "Error", description: error.message });
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        if (user) fetchJournals();
+    }, [user, status, debouncedSearch, department, date]);
+
+    // Handle Selection & Actions
+    const handleSelect = (id: string, checked: boolean) => {
+        if (checked) setSelectedIds(prev => [...prev, id]);
+        else setSelectedIds(prev => prev.filter(item => item !== id));
+    };
+
+    const handleSelectAll = (checked: boolean) => {
+        if (checked) setSelectedIds(journals.map(j => j.id));
+        else setSelectedIds([]);
+    };
+
+    const handleBulkApprove = async () => {
+        if (selectedIds.length === 0) return;
+        try {
+            // Use API to bulk approve journals
+            await Promise.all(selectedIds.map(id => 
+                journalsApi.update(id, { verification_status: 'approved', status: 'approved' })
+            ));
+            toast({ title: "Berhasil", description: `${selectedIds.length} jurnal telah disetujui.` });
+            setSelectedIds([]);
+            fetchJournals();
+        } catch (err: any) {
+            toast({ variant: "destructive", title: "Error", description: err.message });
+        }
+    };
+
+    const handleSingleAction = async (id: string, action: 'approve' | 'reject', reason?: string) => {
+        try {
+            const updateData = {
+                verification_status: action === 'approve' ? 'approved' : 'rejected',
+                status: action === 'approve' ? 'approved' : 'rejected'
+            };
+
+            // Use API to update journal
+            await journalsApi.update(id, updateData);
+
+            toast({ title: "Berhasil", description: action === 'approve' ? 'Jurnal disetujui.' : 'Jurnal ditolak.' });
+            fetchJournals();
+
+            if (viewJournal?.id === id) {
+                setIsDetailOpen(false);
+                setViewJournal(null);
+            }
+        } catch (err: any) {
+            toast({ variant: "destructive", title: "Error", description: err.message });
+        }
+    };
+
+    const menuSections = [
+        {
+            title: "Menu Utama",
+            items: [
+                { icon: LayoutDashboard, title: "Dashboard", href: "/manager" },
+                { icon: Clock, title: "Rekap Absensi", href: "/manager/absensi" },
+                { icon: BookOpen, title: "Jurnal Tim", href: "/manager/jurnal" },
+                { icon: BarChart3, title: "Laporan", href: "/manager/laporan" },
+                { icon: FileCheck, title: "Kelola Cuti", href: "/manager/cuti" },
+            ],
+        },
+    ];
+
+    // Stats for Insight Bar
+    const pendingCount = journals.filter(j => j.verification_status === 'pending' || j.verification_status === 'submitted').length;
+    const approvedCount = journals.filter(j => j.verification_status === 'approved').length;
+    const totalJournals = journals.length;
+    const approvalRate = totalJournals > 0 ? Math.round((approvedCount / (totalJournals || 1)) * 100) : 0;
+    const uniqueUsersCount = new Set(journals.map((j: any) => j.user_id)).size;
+    const avgPerUser = uniqueUsersCount > 0 ? Math.round(totalJournals / uniqueUsersCount) : 0;
+
+    return (
+        <EnterpriseLayout
+            title="Jurnal Tim"
+            subtitle="Tinjau dan kelola aktivitas kerja tim Anda di satu tempat."
+            menuSections={menuSections}
+            roleLabel="Manager"
+            showRefresh={true}
+            onRefresh={fetchJournals}
+            breadcrumbs={[
+                { label: "Manager", href: "/manager" },
+                { label: "Jurnal Tim" },
+            ]}
+        >
+            <div className="max-w-[1400px] mx-auto pb-20 animate-in fade-in slide-in-from-bottom-8 duration-700 ease-out">
+
+                {/* Summary Insight Bar (SaaS Workspace Style) */}
+                <div className="bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white rounded-[28px] p-6 lg:p-8 mb-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative overflow-hidden shadow-xl shadow-indigo-900/20 border border-indigo-800/30">
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-[80px] pointer-events-none" />
+                    <div className="absolute bottom-0 left-10 w-48 h-48 bg-blue-400/10 rounded-full blur-[60px] pointer-events-none" />
+
+                    <div className="relative z-10 flex-1">
+                        <h2 className="text-xl font-black bg-clip-text text-transparent bg-gradient-to-r from-white to-white/70 tracking-tight">
+                            Sekilas Jurnal Tim
+                        </h2>
+                        <p className="text-blue-200 text-sm mt-1 font-medium max-w-sm">
+                            {pendingCount > 0
+                                ? `Ada ${pendingCount} jurnal yang menunggu review Anda. Mari selesaikan!`
+                                : "Tim Anda luar biasa! Semua jurnal telah direview."}
+                        </p>
+                    </div>
+
+                    <div className="relative z-10 flex items-center gap-6 md:gap-12 bg-white/[.07] backdrop-blur-md rounded-[20px] px-8 py-5 border border-white/[.08]">
+                        <div className="flex flex-col">
+                            <span className="text-blue-200 uppercase tracking-widest text-[10px] font-bold mb-1">Vol. Jurnal</span>
+                            <div className="flex items-baseline gap-1.5">
+                                <span className="text-2xl font-black text-white tracking-tight">{totalJournals}</span>
+                                <span className="text-xs text-blue-200 font-semibold">minggu ini</span>
+                            </div>
+                        </div>
+
+                        <div className="w-[1px] h-10 bg-white/20 hidden sm:block" />
+
+                        <div className="flex flex-col">
+                            <span className="text-blue-200 uppercase tracking-widest text-[10px] font-bold mb-1">Tingkat Persetujuan</span>
+                            <div className="flex items-baseline gap-1.5">
+                                <span className={cn("text-2xl font-black tracking-tight", approvalRate >= 80 ? "text-emerald-400" : "text-amber-400")}>
+                                    {approvalRate}%
+                                </span>
+                                <span className="text-xs text-blue-200 font-semibold">disetujui</span>
+                            </div>
+                        </div>
+
+                        <div className="w-[1px] h-10 bg-white/20 hidden sm:block" />
+
+                        <div className="flex flex-col">
+                            <span className="text-blue-200 uppercase tracking-widest text-[10px] font-bold mb-1">Produktivitas</span>
+                            <div className="flex items-baseline gap-1.5">
+                                <span className="text-2xl font-black text-sky-300 tracking-tight">~{avgPerUser}</span>
+                                <span className="text-xs text-blue-200 font-semibold">/karyawan</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* FILTERS */}
+                <JournalFilters
+                    search={search} onSearchChange={setSearch}
+                    status={status} onStatusChange={setStatus}
+                    department={department} onDepartmentChange={setDepartment}
+                    date={date} onDateChange={setDate}
+                    onReset={() => {
+                        setSearch(""); setStatus("all"); setDepartment("all"); setDate(undefined);
+                    }}
+                />
+
+                {/* ACTION BAR */}
+                {selectedIds.length > 0 && (
+                    <div className="flex items-center gap-3 mb-6 p-4 bg-indigo-50/50 dark:bg-indigo-500/10 rounded-[20px] border border-indigo-100 dark:border-indigo-800/30 animate-in fade-in slide-in-from-top-2 duration-300 shadow-sm backdrop-blur-sm">
+                        <div className="flex items-center gap-2">
+                            <Badge className="bg-indigo-600 text-white hover:bg-indigo-600 h-8 px-4 text-xs font-black rounded-xl shadow-sm">
+                                {selectedIds.length} jurnal dipilih
+                            </Badge>
+                        </div>
+                        <Button onClick={handleBulkApprove} size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white gap-2 rounded-xl h-9 px-5 font-bold shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-0.5 ml-auto md:ml-0">
+                            <CheckCircle className="w-4 h-4" /> Setujui Semua
+                        </Button>
+                        <Button onClick={() => setSelectedIds([])} variant="ghost" size="sm" className="text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:text-slate-200 hover:bg-white dark:bg-slate-900 rounded-xl h-9 font-semibold">
+                            Batal
+                        </Button>
+                    </div>
+                )}
+
+                {/* TABLE/CARDS WORKSPACE */}
+                <JournalTable
+                    data={journals}
+                    selectedIds={selectedIds}
+                    onSelect={handleSelect}
+                    onSelectAll={handleSelectAll}
+                    onView={(journal) => { setViewJournal(journal); setIsDetailOpen(true); }}
+                    onApprove={(id) => handleSingleAction(id, 'approve')}
+                    onReject={(id) => handleSingleAction(id, 'reject')}
+                    isLoading={isLoading}
+                />
+
+                {/* SLIDE-IN DETAIL PANEL (PREMIUM MODE) */}
+                <Sheet open={isDetailOpen} onOpenChange={setIsDetailOpen}>
+                    <SheetContent className="w-full sm:max-w-[800px] p-0 border-l border-slate-200/50 dark:border-slate-800/50 shadow-2xl">
+                        <div className="h-full overflow-y-auto bg-slate-50/50 dark:bg-slate-800/50">
+                            {viewJournal && (
+                                <JournalReviewDetail
+                                    journal={viewJournal}
+                                    onApprove={async (id) => handleSingleAction(id, 'approve')}
+                                    onReject={async (id) => handleSingleAction(id, 'reject')}
+                                    onRequestRevision={async (id) => handleSingleAction(id, 'reject')}
+                                />
+                            )}
+                        </div>
+                    </SheetContent>
+                </Sheet>
+
+            </div>
+        </EnterpriseLayout>
+    );
+};
+
+export default ManagerJurnal;
