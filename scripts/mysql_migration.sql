@@ -40,12 +40,16 @@ CREATE TABLE user_roles (
 );
 
 -- ============ 5. CREATE profiles TABLE ============
-CREATE TABLE profiles (
-    user_id CHAR(36) PRIMARY KEY,
-    full_name VARCHAR(191),
-    email VARCHAR(191),
+CREATE TABLE IF NOT EXISTS profiles (
+    id CHAR(36) PRIMARY KEY,
+    user_id CHAR(36) NOT NULL UNIQUE,
+    full_name VARCHAR(191) NOT NULL,
+    phone VARCHAR(50),
+    address TEXT,
+    join_date DATE,
     department VARCHAR(191),
     position VARCHAR(191),
+    avatar_url TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
@@ -193,8 +197,8 @@ INSERT INTO user_roles (user_id, role)
 SELECT id, 'admin' FROM users WHERE email = 'admin@talenta.com';
 
 -- Insert admin profile using subquery to get the admin user ID
-INSERT INTO profiles (user_id, full_name, email, department, position) 
-SELECT id, 'Super Admin', 'admin@talenta.com', 'Board of Directors', 'Administrator' FROM users WHERE email = 'admin@talenta.com';
+INSERT INTO profiles (id, user_id, full_name, department, position) 
+SELECT UUID(), id, 'Super Admin', 'Board of Directors', 'Administrator' FROM users WHERE email = 'admin@talenta.com';
 
 -- ============ 13.5. INSERT DEMO EMPLOYEE ACCOUNTS ============
 -- Password for all demo accounts: 'password' (hashed with bcrypt)
@@ -211,16 +215,16 @@ INSERT INTO user_roles (user_id, role)
 SELECT id, 'employee' FROM users WHERE email LIKE 'karyawan%@talenta.com';
 
 -- Insert employee profiles
-INSERT INTO profiles (user_id, full_name, email, department, position) 
+INSERT INTO profiles (id, user_id, full_name, department, position) 
 SELECT 
+    UUID(),
     u.id, 
     u.full_name, 
-    u.email, 
     CASE u.email
         WHEN 'karyawan1@talenta.com' THEN 'Engineering'
         WHEN 'karyawan2@talenta.com' THEN 'Marketing'
         WHEN 'karyawan3@talenta.com' THEN 'Finance'
-        WHEN 'karyawan4@talenta.com' THEN 'HR'
+        WHEN 'karyawan4@talenta.com' THEN 'Human Resources'
         WHEN 'karyawan5@talenta.com' THEN 'Operations'
     END,
     CASE u.email
