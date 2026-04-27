@@ -232,11 +232,201 @@ SELECT
     END
 FROM users u WHERE u.email LIKE 'karyawan%@talenta.com';
 
--- ============ 14. INSERT INITIAL ATTENDANCE PERIOD ============
+-- ============ 14. CREATE HOLIDAYS TABLE ============
+CREATE TABLE IF NOT EXISTS holidays (
+    id CHAR(36) PRIMARY KEY,
+    date DATE NOT NULL UNIQUE,
+    name VARCHAR(191) NOT NULL,
+    description TEXT,
+    is_national BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- ============ 15. INSERT INDONESIAN HOLIDAYS 2026 ============
+INSERT INTO holidays (id, date, name, description, is_national) VALUES
+(UUID(), '2026-01-01', 'Tahun Baru', 'Hari Tahun Baru Masehi', TRUE),
+(UUID(), '2026-01-12', 'Isra Miraj', 'Isra Mikraj Nabi Muhammad SAW', TRUE),
+(UUID(), '2026-01-26', 'Hari Raya Imlek', 'Tahun Baru Imlek 2577 Kongzili', TRUE),
+(UUID(), '2026-02-15', 'Hari Raya Nyepi', 'Tahun Baru Saka 1948', TRUE),
+(UUID(), '2026-03-31', 'Hari Raya Idul Fitri', 'Hari Raya Idul Fitri 1447 Hijriah', TRUE),
+(UUID(), '2026-04-01', 'Hari Raya Idul Fitri', 'Hari ke-2 Idul Fitri 1447 Hijriah', TRUE),
+(UUID(), '2026-04-18', 'Wafat Isa Almasih', 'Wafat Isa Almasih', TRUE),
+(UUID(), '2026-05-01', 'Hari Buruh', 'Hari Buruh Internasional', TRUE),
+(UUID(), '2026-05-22', 'Kenaikan Isa Almasih', 'Kenaikan Isa Almasih', TRUE),
+(UUID(), '2026-06-07', 'Hari Lahir Pancasila', 'Hari Lahir Pancasila', TRUE),
+(UUID(), '2026-06-17', 'Idul Adha', 'Hari Raya Idul Adha 1447 Hijriah', TRUE),
+(UUID(), '2026-07-07', 'Tahun Baru Islam', 'Tahun Baru Islam 1448 Hijriah', TRUE),
+(UUID(), '2026-08-17', 'Hari Kemerdekaan', 'Hari Proklamasi Kemerdekaan Indonesia ke-81', TRUE),
+(UUID(), '2026-09-06', 'Maulid Nabi', 'Maulid Nabi Muhammad SAW', TRUE),
+(UUID(), '2026-12-25', 'Hari Raya Natal', 'Hari Raya Natal', TRUE);
+
+-- ============ 16. INSERT INITIAL ATTENDANCE PERIOD ============
 INSERT INTO attendance_periods (id, start_date, is_active)
 VALUES (UUID(), CURDATE(), TRUE);
 
--- ============ 15. CREATE VIEW FOR ATTENDANCE SUMMARY ============
+-- ============ 17. INSERT DEMO ATTENDANCE DATA (JANUARY - APRIL 2026) ============
+-- Get employee IDs (using variables for demo employees)
+SET @emp1 = (SELECT id FROM users WHERE email = 'karyawan1@talenta.com' LIMIT 1);
+SET @emp2 = (SELECT id FROM users WHERE email = 'karyawan2@talenta.com' LIMIT 1);
+SET @emp3 = (SELECT id FROM users WHERE email = 'karyawan3@talenta.com' LIMIT 1);
+SET @emp4 = (SELECT id FROM users WHERE email = 'karyawan4@talenta.com' LIMIT 1);
+SET @emp5 = (SELECT id FROM users WHERE email = 'karyawan5@talenta.com' LIMIT 1);
+
+-- Insert attendance records for January 2026 (excluding holidays and weekends)
+INSERT INTO attendance (id, user_id, date, clock_in, clock_out, clock_in_lat, clock_in_lng, clock_out_lat, clock_out_lng, status, work_hours, period_month)
+SELECT 
+    UUID(),
+    CASE FLOOR(RAND() * 5) + 1
+        WHEN 1 THEN @emp1
+        WHEN 2 THEN @emp2
+        WHEN 3 THEN @emp3
+        WHEN 4 THEN @emp4
+        WHEN 5 THEN @emp5
+    END,
+    DATE_ADD('2026-01-05', INTERVAL seq DAY),
+    DATE_ADD(DATE_ADD('2026-01-05', INTERVAL seq DAY), INTERVAL 8 HOUR),
+    DATE_ADD(DATE_ADD('2026-01-05', INTERVAL seq DAY), INTERVAL 17 HOUR),
+    -6.2088, 106.8456, -6.2088, 106.8456,
+    CASE WHEN RAND() > 0.8 THEN 'late' ELSE 'present' END,
+    8.0,
+    '2026-01'
+FROM (
+    SELECT 0 as seq UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION 
+    SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9 UNION
+    SELECT 10 UNION SELECT 11 UNION SELECT 12 UNION SELECT 13 UNION SELECT 14 UNION
+    SELECT 15 UNION SELECT 16 UNION SELECT 17 UNION SELECT 18 UNION SELECT 19
+) as numbers
+WHERE DATE_ADD('2026-01-05', INTERVAL seq DAY) NOT IN (
+    SELECT date FROM holidays WHERE date BETWEEN '2026-01-01' AND '2026-01-31'
+)
+AND DAYOFWEEK(DATE_ADD('2026-01-05', INTERVAL seq DAY)) NOT IN (1, 7);
+
+-- Insert attendance records for February 2026
+INSERT INTO attendance (id, user_id, date, clock_in, clock_out, clock_in_lat, clock_in_lng, clock_out_lat, clock_out_lng, status, work_hours, period_month)
+SELECT 
+    UUID(),
+    CASE FLOOR(RAND() * 5) + 1
+        WHEN 1 THEN @emp1
+        WHEN 2 THEN @emp2
+        WHEN 3 THEN @emp3
+        WHEN 4 THEN @emp4
+        WHEN 5 THEN @emp5
+    END,
+    DATE_ADD('2026-02-02', INTERVAL seq DAY),
+    DATE_ADD(DATE_ADD('2026-02-02', INTERVAL seq DAY), INTERVAL 8 HOUR),
+    DATE_ADD(DATE_ADD('2026-02-02', INTERVAL seq DAY), INTERVAL 17 HOUR),
+    -6.2088, 106.8456, -6.2088, 106.8456,
+    CASE WHEN RAND() > 0.8 THEN 'late' ELSE 'present' END,
+    8.0,
+    '2026-02'
+FROM (
+    SELECT 0 as seq UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION 
+    SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9 UNION
+    SELECT 10 UNION SELECT 11 UNION SELECT 12 UNION SELECT 13 UNION SELECT 14 UNION
+    SELECT 15 UNION SELECT 16 UNION SELECT 17 UNION SELECT 18 UNION SELECT 19
+) as numbers
+WHERE DATE_ADD('2026-02-02', INTERVAL seq DAY) NOT IN (
+    SELECT date FROM holidays WHERE date BETWEEN '2026-02-01' AND '2026-02-28'
+)
+AND DAYOFWEEK(DATE_ADD('2026-02-02', INTERVAL seq DAY)) NOT IN (1, 7);
+
+-- Insert attendance records for March 2026
+INSERT INTO attendance (id, user_id, date, clock_in, clock_out, clock_in_lat, clock_in_lng, clock_out_lat, clock_out_lng, status, work_hours, period_month)
+SELECT 
+    UUID(),
+    CASE FLOOR(RAND() * 5) + 1
+        WHEN 1 THEN @emp1
+        WHEN 2 THEN @emp2
+        WHEN 3 THEN @emp3
+        WHEN 4 THEN @emp4
+        WHEN 5 THEN @emp5
+    END,
+    DATE_ADD('2026-03-02', INTERVAL seq DAY),
+    DATE_ADD(DATE_ADD('2026-03-02', INTERVAL seq DAY), INTERVAL 8 HOUR),
+    DATE_ADD(DATE_ADD('2026-03-02', INTERVAL seq DAY), INTERVAL 17 HOUR),
+    -6.2088, 106.8456, -6.2088, 106.8456,
+    CASE WHEN RAND() > 0.8 THEN 'late' ELSE 'present' END,
+    8.0,
+    '2026-03'
+FROM (
+    SELECT 0 as seq UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION 
+    SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9 UNION
+    SELECT 10 UNION SELECT 11 UNION SELECT 12 UNION SELECT 13 UNION SELECT 14 UNION
+    SELECT 15 UNION SELECT 16 UNION SELECT 17 UNION SELECT 18 UNION SELECT 19 UNION
+    SELECT 20 UNION SELECT 21 UNION SELECT 22
+) as numbers
+WHERE DATE_ADD('2026-03-02', INTERVAL seq DAY) NOT IN (
+    SELECT date FROM holidays WHERE date BETWEEN '2026-03-01' AND '2026-03-31'
+)
+AND DAYOFWEEK(DATE_ADD('2026-03-02', INTERVAL seq DAY)) NOT IN (1, 7);
+
+-- Insert attendance records for April 2026 (up to current date)
+INSERT INTO attendance (id, user_id, date, clock_in, clock_out, clock_in_lat, clock_in_lng, clock_out_lat, clock_out_lng, status, work_hours, period_month)
+SELECT 
+    UUID(),
+    CASE FLOOR(RAND() * 5) + 1
+        WHEN 1 THEN @emp1
+        WHEN 2 THEN @emp2
+        WHEN 3 THEN @emp3
+        WHEN 4 THEN @emp4
+        WHEN 5 THEN @emp5
+    END,
+    DATE_ADD('2026-04-01', INTERVAL seq DAY),
+    DATE_ADD(DATE_ADD('2026-04-01', INTERVAL seq DAY), INTERVAL 8 HOUR),
+    DATE_ADD(DATE_ADD('2026-04-01', INTERVAL seq DAY), INTERVAL 17 HOUR),
+    -6.2088, 106.8456, -6.2088, 106.8456,
+    CASE WHEN RAND() > 0.8 THEN 'late' ELSE 'present' END,
+    8.0,
+    '2026-04'
+FROM (
+    SELECT 0 as seq UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION 
+    SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9 UNION
+    SELECT 10 UNION SELECT 11 UNION SELECT 12 UNION SELECT 13 UNION SELECT 14 UNION
+    SELECT 15 UNION SELECT 16 UNION SELECT 17 UNION SELECT 18 UNION SELECT 19 UNION
+    SELECT 20 UNION SELECT 21 UNION SELECT 22 UNION SELECT 23 UNION SELECT 24
+) as numbers
+WHERE DATE_ADD('2026-04-01', INTERVAL seq DAY) <= CURDATE()
+AND DATE_ADD('2026-04-01', INTERVAL seq DAY) NOT IN (
+    SELECT date FROM holidays WHERE date BETWEEN '2026-04-01' AND '2026-04-30'
+)
+AND DAYOFWEEK(DATE_ADD('2026-04-01', INTERVAL seq DAY)) NOT IN (1, 7);
+
+-- Insert some leave requests for demo
+INSERT INTO leave_requests (id, user_id, leave_type, start_date, end_date, reason, status)
+VALUES 
+(UUID(), @emp3, 'Cuti Tahunan', '2026-02-10', '2026-02-12', 'Liburan keluarga', 'approved'),
+(UUID(), @emp5, 'Sakit', '2026-03-15', '2026-03-16', 'Demam', 'approved'),
+(UUID(), @emp1, 'Cuti Tahunan', '2026-04-05', '2026-04-07', 'Urusan keluarga', 'approved');
+
+-- Insert some work journals for demo
+INSERT INTO work_journals (id, user_id, date, content, duration, obstacles, work_result, mood, verification_status)
+SELECT 
+    UUID(),
+    CASE FLOOR(RAND() * 5) + 1
+        WHEN 1 THEN @emp1
+        WHEN 2 THEN @emp2
+        WHEN 3 THEN @emp3
+        WHEN 4 THEN @emp4
+        WHEN 5 THEN @emp5
+    END,
+    DATE_ADD('2026-04-20', INTERVAL FLOOR(RAND() * 7) DAY),
+    CASE FLOOR(RAND() * 3) + 1
+        WHEN 1 THEN 'Completed project documentation and code review'
+        WHEN 2 THEN 'Meeting with clients and product development'
+        WHEN 3 THEN 'Database optimization and bug fixes'
+    END,
+    480,
+    CASE WHEN RAND() > 0.5 THEN 'None' ELSE 'Network issues' END,
+    'Tasks completed successfully',
+    '😊',
+    'approved'
+FROM (
+    SELECT 0 UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4
+) as numbers
+WHERE DATE_ADD('2026-04-20', INTERVAL FLOOR(RAND() * 7) DAY) <= CURDATE();
+
+-- ============ 18. CREATE VIEW FOR ATTENDANCE SUMMARY ============
 CREATE OR REPLACE VIEW v_attendance_summary AS
 SELECT 
     a.id,
@@ -257,5 +447,9 @@ JOIN users u ON a.user_id = u.id
 LEFT JOIN profiles p ON a.user_id = p.user_id
 LEFT JOIN user_roles ur ON a.user_id = ur.user_id;
 
--- ============ SUCCESS MESSAGE ============
+-- ============ 19. SUCCESS MESSAGE ============
 SELECT 'MySQL migration completed successfully!' as status;
+SELECT CONCAT('Total attendance records seeded: ', COUNT(*)) as info FROM attendance;
+SELECT CONCAT('Total holidays seeded: ', COUNT(*)) as info FROM holidays;
+SELECT CONCAT('Total leave requests seeded: ', COUNT(*)) as info FROM leave_requests;
+SELECT CONCAT('Total work journals seeded: ', COUNT(*)) as info FROM work_journals;
