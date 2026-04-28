@@ -38,7 +38,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
 import { db } from "@/integrations/mysql/client";
-import { usersApi, attendanceApi, leaveApi } from "@/lib/api";
+import { usersApi, attendanceApi, leaveApi, profilesApi } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 
 import { generateAttendancePeriod } from "@/lib/attendanceGenerator";
@@ -167,10 +167,21 @@ const RekapAbsensi = () => {
     setIsLoading(true);
     try {
       // A. Get Target Employees (Profiles) using API
+      const profiles = await profilesApi.getAll();
+      
+      // Get all users to check roles
       const users = await usersApi.getAll();
       const roleArray = [...ABSENSI_WAJIB_ROLE];
       
-      let activeKaryawan = users?.filter((u: any) => roleArray.includes(u.role)) || [];
+      // Merge profiles with user roles
+      let activeKaryawan = profiles?.map((p: any) => {
+        const user = users?.find((u: any) => u.id === p.user_id);
+        return {
+          ...p,
+          id: p.user_id,
+          role: user?.role || 'employee'
+        };
+      }).filter((u: any) => roleArray.includes(u.role)) || [];
 
       // Filter Excluded Users
       activeKaryawan = activeKaryawan.filter((p: any) => {
