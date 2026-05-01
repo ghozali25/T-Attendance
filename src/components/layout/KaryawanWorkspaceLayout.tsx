@@ -60,7 +60,7 @@ export default function KaryawanWorkspaceLayout({ children, notifCount = 0 }: Ka
                             <div className="hidden sm:block">
                                 <span className={cn("font-extrabold text-[15px] tracking-tight leading-none block",
                                     isDark ? "text-white" : "text-slate-900")}>
-                                    Talenta<span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 ml-0.5">Traincom</span>
+                                    Talenta<span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 ml-0.5">T-Attendance</span>
                                 </span>
                                 <span className="text-[9px] font-bold tracking-[0.15em] uppercase text-slate-500 block mt-0.5">Indonesia</span>
                             </div>

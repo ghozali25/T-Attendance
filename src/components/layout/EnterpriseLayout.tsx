@@ -167,7 +167,7 @@ const EnterpriseLayout = ({
                         {!isCollapsed && (
                             <div className="min-w-0 overflow-hidden ml-0.5">
                                 <h1 className="font-extrabold text-slate-900 dark:text-white text-[15px] leading-tight truncate tracking-tight">
-                                    Talenta<span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 ml-1">Traincom</span>
+                                    Talenta<span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 ml-1">T-Attendance</span>
                                 </h1>
                                 <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-tight mt-0.5 font-bold tracking-[0.15em] uppercase flex items-center gap-1.5">
                                     <span className="relative flex h-1.5 w-1.5 shrink-0">
@@ -270,7 +270,7 @@ const EnterpriseLayout = ({
                                 <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-600 via-blue-600 to-blue-700 flex items-center justify-center shadow-lg border border-blue-400/30 relative overflow-hidden">
                                     <img src={logoImage} alt="Logo" className="h-5 w-5 object-contain brightness-0 invert drop-shadow-sm relative z-10" />
                                 </div>
-                                <span className="font-extrabold text-slate-900 dark:text-white text-sm tracking-tight">Talenta<span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 ml-0.5">Traincom</span></span>
+                                <span className="font-extrabold text-slate-900 dark:text-white text-sm tracking-tight">Talenta<span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 ml-0.5">T-Attendance</span></span>
                             </div>
 
                             {/* Global Search */}
