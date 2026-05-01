@@ -28,7 +28,7 @@ export default defineConfig(({ mode }) => ({
       manifest: {
         name: "T-Absensi - Sistem Absensi Karyawan",
         short_name: "T-Absensi",
-        description: "Sistem Absensi & Manajemen Karyawan by Talenta Traincom Indonesia",
+        description: "Sistem Absensi & Manajemen Karyawan by T-Attendance",
         theme_color: "#0066b3",
         background_color: "#ffffff",
         display: "standalone",

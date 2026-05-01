@@ -783,7 +783,7 @@ const LaporanKehadiran = () => {
                 const { generateAttendanceExcel } = await import("@/lib/excelExport");
                 await generateAttendanceExcel({
                     month: periodStr,
-                    companyName: 'PT. TALENTA TRAINCOM INDONESIA',
+                    companyName: 'PT. T-Attendance',
                     summaries,
                     details
                 });

@@ -202,7 +202,7 @@ const Auth = () => {
         {/* Footer */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-6 text-[13px] text-slate-500 font-medium">
-            <span>© 2026 Talenta Traincom Indonesia</span>
+            <span>© 2026 T-Attendance</span>
             <div className="w-1 h-1 rounded-full bg-slate-700 hidden xl:block" />
             <a href="#" className="hover:text-slate-300 transition-colors hidden xl:block">Privacy Policy</a>
             <div className="w-1 h-1 rounded-full bg-slate-700 hidden xl:block" />
@@ -377,7 +377,7 @@ const Auth = () => {
             </div>
             <span className="text-[11px] font-medium text-emerald-400">System Operational</span>
           </div>
-          <p className="text-[11px] text-slate-500 mb-2">© 2026 Talenta Traincom Indonesia | <a href="#" className="underline decoration-slate-600 underline-offset-2">Privacy</a></p>
+          <p className="text-[11px] text-slate-500 mb-2">© 2026 T-Attendance | <a href="#" className="underline decoration-slate-600 underline-offset-2">Privacy</a></p>
         </div>
 
       </div>

@@ -18,7 +18,7 @@ export interface SystemSettings {
 }
 
 const defaultSettings: SystemSettings = {
-    companyName: "PT. Talenta Traincom Indonesia",
+    companyName: "PT. T-Attendance",
     clockInStart: "08:00",
     clockInEnd: "09:00",
     clockOutStart: "17:00",

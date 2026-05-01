@@ -40,7 +40,7 @@ export interface ExportAttendanceProps {
  */
 export const generateAttendanceExcel = async ({
     month,
-    companyName = 'PT. TALENTA TRAINCOM INDONESIA',
+    companyName = 'PT. T-Attendance',
     summaries,
     details
 }: ExportAttendanceProps) => {

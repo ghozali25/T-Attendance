@@ -39,7 +39,7 @@ interface AttendanceReportData {
     }[];
 }
 
-const COMPANY_NAME = "PT. TALENTA TRAINCOM INDONESIA";
+const COMPANY_NAME = "PT. T-Attendance";
 const COMPANY_DIV = "Divisi Human Resources";
 
 // Helper to load image
