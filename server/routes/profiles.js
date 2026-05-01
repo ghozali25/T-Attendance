@@ -22,6 +22,9 @@ router.get('/', async (req, res) => {
     
     query += ' ORDER BY p.created_at DESC';
     
+    console.log('[Profiles API] Query:', query);
+    console.log('[Profiles API] Params:', params);
+    
     const [rows] = await req.db.query(query, params);
     res.json(rows);
   } catch (error) {
