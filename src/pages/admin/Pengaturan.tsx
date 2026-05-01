@@ -351,7 +351,7 @@ const Pengaturan = () => {
         <InputPremium
           defaultValue={formData.companyName}
           onChange={(e: any) => handleChange("companyName", e.target.value)}
-          placeholder="PT. Talenta Ekosistem Digital"
+          placeholder="PT. Ali Tech"
         />
       </FormFieldPremium>
     </GlassCard>

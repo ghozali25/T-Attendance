@@ -51,7 +51,7 @@ export const MiniSidebar = ({ userInitials, onLogout }: MiniSidebarProps) => {
                             <img src={logoImage} alt="Logo" className="h-6 w-6 object-contain brightness-0 invert drop-shadow-md relative z-10 transition-transform duration-500 group-hover:scale-110" />
                         </div>
                         {isExpanded && (
-                            <span className="ml-3 font-extrabold text-white animate-fade-in tracking-tight">Talenta<span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-300 ml-0.5">T-Attendance</span></span>
+                            <span className="ml-3 font-extrabold text-white animate-fade-in tracking-tight"><span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-300 ml-0.5">T-Attendance</span></span>
                         )}
                     </div>
 

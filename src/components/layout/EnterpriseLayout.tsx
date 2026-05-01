@@ -270,7 +270,7 @@ const EnterpriseLayout = ({
                                 <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-600 via-blue-600 to-blue-700 flex items-center justify-center shadow-lg border border-blue-400/30 relative overflow-hidden">
                                     <img src={logoImage} alt="Logo" className="h-5 w-5 object-contain brightness-0 invert drop-shadow-sm relative z-10" />
                                 </div>
-                                <span className="font-extrabold text-slate-900 dark:text-white text-sm tracking-tight">Talenta<span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 ml-0.5">T-Attendance</span></span>
+                                <span className="font-extrabold text-slate-900 dark:text-white text-sm tracking-tight"><span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 ml-0.5">T-Attendance</span></span>
                             </div>
 
                             {/* Global Search */}
