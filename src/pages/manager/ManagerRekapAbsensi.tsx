@@ -23,6 +23,7 @@ import { MANAGER_MENU_SECTIONS } from "@/config/menu";
 import { ABSENSI_WAJIB_ROLE, EXCLUDED_USER_NAMES } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { formatJakartaDate } from "@/lib/dateUtils";
+import { ExportColumn } from "@/lib/exportUtils";
 
 // Talenta Brand Colors
 const BRAND_COLORS = {
@@ -262,7 +263,7 @@ const ManagerRekapAbsensi = () => {
   const attendanceRate = totalEmployees > 0 ? Math.round((stats.present / totalEmployees) * 100) : 0;
 
   // Export functions reusing logic
-  const exportColumns = [
+  const exportColumns: ExportColumn[] = [
     { header: "Nama", key: "nama", width: 100 },
     { header: "Departemen", key: "departemen", width: 80 },
     { header: "Clock In", key: "clock_in", width: 50 },
@@ -296,7 +297,7 @@ const ManagerRekapAbsensi = () => {
       title: "Rekap Absensi",
       subtitle: formatDate(filterDate),
       data: getExportData(),
-      columns: exportColumns.map(c => c.header),
+      columns: exportColumns,
       filename: `rekap-absensi-${filterDate}`,
     });
   };

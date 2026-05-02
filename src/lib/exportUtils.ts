@@ -2,13 +2,13 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import logoUrl from "@/assets/logo.png";
 
-interface ExportColumn {
+export interface ExportColumn {
   header: string;
   key: string;
   width?: number;
 }
 
-interface ExportOptions {
+export interface ExportOptions {
   title: string;
   subtitle?: string;
   filename: string;
