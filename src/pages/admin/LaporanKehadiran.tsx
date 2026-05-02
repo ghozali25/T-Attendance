@@ -482,6 +482,7 @@ const LaporanKehadiran = () => {
                     totalWorkingDays,
                     details,
                     lateMinutes,
+                    lateCount: late, // Added for clarity
                     dailyStatus,
                     absentDates,
                     lateDates,
@@ -1212,9 +1213,14 @@ const LaporanKehadiran = () => {
                                                             </Badge>
                                                         </TableCell>
                                                         <TableCell className="text-center">
-                                                            {emp.lateMinutes > 0 ? (
-                                                                <div className="inline-flex items-center gap-1 font-semibold text-amber-600 bg-amber-50 px-2 py-1 rounded text-xs">
-                                                                    <Clock className="w-3 h-3" /> {emp.lateMinutes}m
+                                                            {(emp.lateCount > 0 || emp.lateMinutes > 0) ? (
+                                                                <div className="flex flex-col items-center gap-0.5">
+                                                                    <div className="inline-flex items-center gap-1 font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded text-[10px]">
+                                                                        <Timer className="w-3 h-3" /> {emp.lateCount}x Terlambat
+                                                                    </div>
+                                                                    {emp.lateMinutes > 0 && (
+                                                                        <span className="text-[9px] text-slate-500 font-medium">{emp.lateMinutes} menit</span>
+                                                                    )}
                                                                 </div>
                                                             ) : (
                                                                 <span className="text-slate-400 text-xs">-</span>

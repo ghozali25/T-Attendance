@@ -464,6 +464,7 @@ const ManagerLaporan = () => {
           details: details,
           remarks: remarks,
           lateMinutes: totalLateMinutes,
+          lateCount: calcLate,
           absentDates: details.filter(x => ['absent', 'alpha'].includes(x.status)).map(x => x.date),
           lateDates: details.filter(x => x.status === 'late').map(x => x.date),
           leaveDates: details.filter(x => ['leave', 'permission', 'sick'].includes(x.status)).map(x => x.date),
@@ -1048,8 +1049,9 @@ const ManagerLaporan = () => {
                     </TableHeader>
                     <TableBody>
                       {filteredReports.map((emp, index) => {
-                        const totalDays = emp.present + emp.late + emp.absent + emp.leave;
-                        const attendancePercent = totalDays > 0 ? Math.round(((emp.present + emp.late) / totalDays) * 100) : 0;
+                        const attendancePercent = emp.totalWorkingDays > 0 
+                          ? Math.round(((emp.present + emp.late) / emp.totalWorkingDays) * 100) 
+                          : 0;
 
                         // Badges logic for Leave/Permit
                         const sickCount = emp.details.filter(d => d.status === 'sick').length;
@@ -1089,9 +1091,14 @@ const ManagerLaporan = () => {
                               </Badge>
                             </TableCell>
                             <TableCell className="text-center">
-                              {emp.lateMinutes > 0 ? (
-                                <div className="inline-flex items-center gap-1 font-semibold text-amber-600 bg-amber-50 px-2 py-1 rounded text-xs">
-                                  <Clock className="w-3 h-3" /> {emp.lateMinutes}m
+                              {(emp.lateCount > 0 || emp.lateMinutes > 0) ? (
+                                <div className="flex flex-col items-center gap-0.5">
+                                  <div className="inline-flex items-center gap-1 font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded text-[10px]">
+                                    <Timer className="w-3 h-3" /> {emp.lateCount}x Terlambat
+                                  </div>
+                                  {emp.lateMinutes > 0 && (
+                                    <span className="text-[9px] text-slate-500 font-medium">{emp.lateMinutes} menit</span>
+                                  )}
                                 </div>
                               ) : (
                                 <span className="text-slate-400 text-xs">-</span>
@@ -1142,8 +1149,9 @@ const ManagerLaporan = () => {
                 {/* Mobile Cards View */}
                 <div className="md:hidden flex flex-col p-4 gap-4 bg-slate-50/50 dark:bg-slate-800/50">
                   {filteredReports.map((emp, index) => {
-                    const totalDays = emp.present + emp.late + emp.absent + emp.leave;
-                    const attendancePercent = totalDays > 0 ? Math.round(((emp.present + emp.late) / totalDays) * 100) : 0;
+                    const attendancePercent = emp.totalWorkingDays > 0 
+                      ? Math.round(((emp.present + emp.late) / emp.totalWorkingDays) * 100) 
+                      : 0;
 
                     const sickCount = emp.details.filter(d => d.status === 'sick').length;
                     const permitCount = emp.details.filter(d => d.status === 'permission').length;

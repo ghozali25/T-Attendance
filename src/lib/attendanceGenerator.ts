@@ -99,11 +99,16 @@ export const generateAttendancePeriod = (
         // Check if dateStr is within any leave range
         const leave = leaves.find(l => {
             if (l.status !== 'approved') return false;
-            return dateStr >= l.start_date && dateStr <= l.end_date;
+            const start = new Date(l.start_date).toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' });
+            const end = new Date(l.end_date).toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' });
+            return dateStr >= start && dateStr <= end;
         });
 
         // 3. Check if it's a holiday
-        const holiday = holidays.find((h: any) => h.date === dateStr);
+        const holiday = holidays.find((h: any) => {
+            const hDate = new Date(h.date).toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' });
+            return hDate === dateStr;
+        });
 
         let status: DailyAttendanceStatus['status'] = 'absent';
         const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
