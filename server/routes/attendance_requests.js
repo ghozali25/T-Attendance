@@ -10,7 +10,7 @@ router.get('/', async (req, res) => {
     let query = `
       SELECT ar.*, p.full_name, p.department 
       FROM attendance_requests ar
-      JOIN profiles p ON ar.user_id = p.user_id
+      LEFT JOIN profiles p ON ar.user_id = p.user_id
       WHERE 1=1
     `;
     const params = [];
@@ -27,11 +27,14 @@ router.get('/', async (req, res) => {
     
     query += ' ORDER BY ar.created_at DESC';
     
+    console.log('[AttendanceRequests API] Fetching with query:', query);
+    console.log('[AttendanceRequests API] Params:', params);
+    
     const [rows] = await req.db.query(query, params);
     res.json(rows);
   } catch (error) {
     console.error('Get attendance requests error:', error);
-    res.status(500).json({ error: 'Failed to fetch attendance requests' });
+    res.status(500).json({ error: 'Failed to fetch attendance requests', message: error.message });
   }
 });
 
