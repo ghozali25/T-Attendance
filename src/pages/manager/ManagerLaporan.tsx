@@ -439,7 +439,8 @@ const ManagerLaporan = () => {
 
         details.forEach(det => {
           if (det.status === 'late' && det.clockIn) {
-            totalLateMinutes += calculateLateMinutes(det.clockIn);
+            const mins = calculateLateMinutes(det.clockIn);
+            totalLateMinutes += (mins > 0 ? mins : 15);
           }
           if (['present', 'early_leave'].includes(det.status)) calcPresent++;
           if (det.status === 'late') calcLate++;
@@ -513,15 +514,24 @@ const ManagerLaporan = () => {
 
   const summaryStats = useMemo(() => {
     const totalEmployees = employeeReports.length;
+    const totalPresent = employeeReports.reduce((sum, e) => sum + e.present, 0) + employeeReports.reduce((sum, e) => sum + e.late, 0);
+    const totalWorkingDays = employeeReports.length > 0 ? employeeReports[0].totalWorkingDays : 0;
+    const totalExpectedAttendance = totalEmployees * totalWorkingDays;
+    const attendanceRate = totalExpectedAttendance > 0 ? Math.round((totalPresent / totalExpectedAttendance) * 100) : 0;
 
     return {
       totalEmployees,
-      totalPresent: employeeReports.reduce((sum, e) => sum + e.present, 0) + employeeReports.reduce((sum, e) => sum + e.late, 0),
+      totalPresent,
+      totalWorkingDays,
+      totalExpectedAttendance,
+      attendanceRate,
       totalAbsent: employeeReports.reduce((sum, e) => sum + e.absent, 0),
       totalLate: employeeReports.reduce((sum, e) => sum + e.late, 0),
       totalLateMinutes: employeeReports.reduce((sum, e) => sum + e.lateMinutes, 0),
       totalLeave: employeeReports.reduce((sum, e) => sum + e.leave, 0),
-      waitingCheckIn: Math.max(0, employeeReports.length - (employeeReports.reduce((sum, e) => sum + (e.present > 0 ? 1 : 0), 0))) // Approx check
+      totalSick: employeeReports.reduce((sum, e) => sum + e.details.filter(d => d.status === 'sick').length, 0),
+      totalPermit: employeeReports.reduce((sum, e) => sum + e.details.filter(d => d.status === 'permission').length, 0),
+      totalNotReported: Math.max(0, totalExpectedAttendance - (totalPresent + employeeReports.reduce((sum, e) => sum + e.leave, 0))),
     };
   }, [employeeReports]);
 
@@ -867,11 +877,11 @@ const ManagerLaporan = () => {
               </div>
               <div className="flex items-baseline gap-2 mb-2">
                 <span className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">{summaryStats.totalPresent}</span>
-                <span className="text-sm text-slate-400 font-medium">/ {(dateRange?.to && dateRange?.from) ? Math.round(differenceInMinutes(dateRange.to, dateRange.from) / 1440 * summaryStats.totalEmployees) : '-'} Total</span>
+                <span className="text-sm text-slate-400 font-medium">/ {summaryStats.totalExpectedAttendance} Total</span>
               </div>
-              <Progress value={75} className="h-1.5 bg-slate-100 dark:bg-slate-800/80" indicatorClassName="bg-blue-600" />
+              <Progress value={summaryStats.attendanceRate} className="h-1.5 bg-slate-100 dark:bg-slate-800/80" indicatorClassName="bg-blue-600" />
               <div className="flex justify-end mt-2 text-xs font-bold text-blue-600">
-                92%
+                {summaryStats.attendanceRate}%
               </div>
             </CardContent>
           </Card>
@@ -890,9 +900,6 @@ const ManagerLaporan = () => {
               </div>
               <div className="flex items-baseline gap-3 mb-1">
                 <span className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">{summaryStats.totalLate}</span>
-                <Badge variant="secondary" className="bg-amber-50 dark:bg-amber-900/30 text-amber-600 hover:bg-amber-50 text-[10px] px-1.5 py-0 h-5">
-                  <TrendingUp className="h-3 w-3 mr-1" /> +2
-                </Badge>
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400">Karyawan terlambat hadir</p>
               <div className="mt-3 inline-flex items-center text-xs font-medium text-amber-600 bg-amber-50 dark:bg-amber-900/30 px-2 py-1 rounded-md">
@@ -915,11 +922,15 @@ const ManagerLaporan = () => {
               </div>
               <div className="flex items-baseline gap-2 mb-2">
                 <span className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">{summaryStats.totalLeave}</span>
-                <span className="text-sm text-slate-400 font-medium">Staf</span>
+                <span className="text-sm text-slate-400 font-medium ml-1">Staff</span>
               </div>
-              <div className="flex gap-2 mt-2">
-                <Badge className="bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 hover:bg-purple-100 border-none">Sakit</Badge>
-                <Badge className="bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 hover:bg-blue-100 border-none">Izin</Badge>
+              <div className="flex flex-wrap gap-1 mt-3">
+                <Badge variant="secondary" className="bg-purple-50 text-purple-600 hover:bg-purple-50 text-[10px] px-2 py-0.5 border-purple-100">
+                  {summaryStats.totalSick} Sakit
+                </Badge>
+                <Badge variant="secondary" className="bg-blue-50 text-blue-600 hover:bg-blue-50 text-[10px] px-2 py-0.5 border-blue-100">
+                  {summaryStats.totalPermit} Izin
+                </Badge>
               </div>
             </CardContent>
           </Card>
@@ -937,10 +948,10 @@ const ManagerLaporan = () => {
                 </div>
               </div>
               <div className="flex items-baseline gap-2 mb-2">
-                <span className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">{summaryStats.waitingCheckIn}</span>
-                <span className="text-sm text-slate-400 font-medium">Staf</span>
+                <span className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">{summaryStats.totalNotReported}</span>
+                <span className="text-sm text-slate-400 font-medium ml-1">Records</span>
               </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400">Menunggu absensi masuk...</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">Absensi yang belum tercatat (Alpha)</p>
             </CardContent>
           </Card>
         </div>
