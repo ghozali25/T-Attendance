@@ -29,7 +29,7 @@ import { Progress } from "@/components/ui/progress";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { db } from "@/integrations/mysql/client";
-import { usersApi, attendanceApi, leaveApi } from "@/lib/api";
+import { usersApi, attendanceApi, leaveApi, holidaysApi } from "@/lib/api";
 import { exportToPDF, exportToExcel } from "@/lib/exportUtils";
 import { AttendanceReportData } from "@/lib/attendanceExportUtils";
 import { useSystemSettings } from "@/hooks/useSystemSettings";
@@ -381,6 +381,42 @@ const ManagerLaporan = () => {
         l.status === 'approved' && l.start_date <= endDate && l.end_date >= startDate
       ) || [];
 
+      // 3b. Fetch Holidays for the period
+      const fromYear = dateRange.from!.getFullYear();
+      const toYear = (dateRange.to || dateRange.from!).getFullYear();
+      let allHolidays: any[] = [];
+      try {
+        const h1 = await holidaysApi.getAll({ year: fromYear });
+        allHolidays = h1 || [];
+        if (toYear !== fromYear) {
+          const h2 = await holidaysApi.getAll({ year: toYear });
+          allHolidays = [...allHolidays, ...(h2 || [])];
+        }
+      } catch (e) {
+        console.warn('Could not fetch holidays:', e);
+      }
+
+      // 3c. Calculate totalWorkingDays from the calendar (same for ALL employees)
+      const holidayDateSet = new Set(allHolidays.map((h: any) => {
+        // Normalize date string from DB (ISO) to YYYY-MM-DD in Jakarta time
+        return new Date(h.date).toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' });
+      }));
+      let totalWorkingDays = 0;
+      {
+        const cursor = new Date(dateRange.from!);
+        cursor.setHours(0, 0, 0, 0);
+        const endCursor = new Date(dateRange.to || dateRange.from!);
+        endCursor.setHours(0, 0, 0, 0);
+        while (cursor <= endCursor) {
+          const dow = cursor.getDay();
+          const ds = format(cursor, 'yyyy-MM-dd');
+          if (dow !== 0 && dow !== 6 && !holidayDateSet.has(ds)) {
+            totalWorkingDays++;
+          }
+          cursor.setDate(cursor.getDate() + 1);
+        }
+      }
+
       // 4. Map over ALL candidates to ensure no one is missing, using generateAttendancePeriod for accuracy
       const reports: EmployeeReport[] = candidates.map((emp: any) => {
         const empAttendance = allAttendance?.filter((a: any) => a.user_id === emp.id) || [];
@@ -392,7 +428,7 @@ const ManagerLaporan = () => {
           empAttendance,
           empLeaves,
           emp.created_at,
-          []
+          allHolidays
         );
 
         let totalLateMinutes = 0;
@@ -424,7 +460,7 @@ const ManagerLaporan = () => {
           late: calcLate,
           absent: calcAbsent,
           leave: calcLeave,
-          totalWorkingDays: details.filter(d => !d.isWeekend && d.status !== 'holiday' && d.status !== 'future').length,
+          totalWorkingDays: totalWorkingDays,
           details: details,
           remarks: remarks,
           lateMinutes: totalLateMinutes,

@@ -52,6 +52,7 @@ import journalsRoutes from './routes/journals.js';
 import leaveRoutes from './routes/leave.js';
 import usersRoutes from './routes/users.js';
 import dbRoutes from './routes/db.js';
+import holidayRoutes from './routes/holidays.js';
 
 app.use('/api/auth', authRoutes);
 app.use('/api/attendance', attendanceRoutes);
@@ -60,6 +61,7 @@ app.use('/api/journals', journalsRoutes);
 app.use('/api/leave', leaveRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/db', dbRoutes);
+app.use('/api/holidays', holidayRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

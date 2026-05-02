@@ -248,7 +248,20 @@ export const useDashboardStats = (karyawanUserIds: Set<string> | undefined) => {
                 ) as any[];
                 const attendanceThisMonthCount = attendanceThisMonthResult[0]?.count || 0;
 
-                const workDaysThisMonth = getWorkingDaysInMonth(today);
+                // Fetch holidays for the current month
+                const fromYear = startOfMonth.getFullYear();
+                let allHolidays: any[] = [];
+                try {
+                    allHolidays = await holidaysApi.getAll({ year: fromYear });
+                } catch (e) {
+                    console.warn('[useDashboardStats] Could not fetch holidays:', e);
+                }
+
+                const holidayDateSet = new Set(allHolidays.map((h: any) => 
+                    new Date(h.date).toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' })
+                ));
+
+                const workDaysThisMonth = getWorkingDaysInMonth(today, holidayDateSet);
                 const expectedAttendance = totalEmployees * workDaysThisMonth;
                 const attendanceRate = expectedAttendance > 0
                     ? Math.round((attendanceThisMonthCount / expectedAttendance) * 100)
@@ -513,7 +526,20 @@ export const useMonthlyTrend = (karyawanUserIds: Set<string> | undefined) => {
                     ? monthAttendance?.filter((a: any) => karyawanUserIds.has(a.user_id)) || []
                     : monthAttendance || [];
 
-                const workingDays = getWorkingDaysInMonth(targetMonth);
+                // Fetch holidays for the year
+                const year = targetMonth.getFullYear();
+                let allHolidays: any[] = [];
+                try {
+                    allHolidays = await holidaysApi.getAll({ year });
+                } catch (e) {
+                    console.warn('[useMonthlyTrend] Could not fetch holidays:', e);
+                }
+
+                const holidayDateSet = new Set(allHolidays.map((h: any) => 
+                    new Date(h.date).toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' })
+                ));
+
+                const workingDays = getWorkingDaysInMonth(targetMonth, holidayDateSet);
                 const totalPossibleAttendance = totalEmployees * workingDays;
 
                 const presentCount = validRecords.filter((a: any) => a.status === "present" || a.status === "late").length;
@@ -656,8 +682,8 @@ export const useRecentJournals = (karyawanUserIds: Set<string> | undefined) => {
     });
 };
 
-// Helper: Count working days in a month (Mon-Fri)
-function getWorkingDaysInMonth(date: Date): number {
+// Helper: Count working days in a month (Mon-Fri) excluding holidays
+function getWorkingDaysInMonth(date: Date, holidayDateSet?: Set<string>): number {
     const year = date.getFullYear();
     const month = date.getMonth();
     const firstDay = new Date(year, month, 1);
@@ -666,7 +692,9 @@ function getWorkingDaysInMonth(date: Date): number {
     let workingDays = 0;
     for (let d = new Date(firstDay); d <= lastDay; d.setDate(d.getDate() + 1)) {
         const dayOfWeek = d.getDay();
-        if (dayOfWeek !== 0 && dayOfWeek !== 6) { // Not Sunday or Saturday
+        const ds = d.toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' });
+        
+        if (dayOfWeek !== 0 && dayOfWeek !== 6 && (!holidayDateSet || !holidayDateSet.has(ds))) { 
             workingDays++;
         }
     }

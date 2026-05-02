@@ -398,7 +398,10 @@ const LaporanKehadiran = () => {
             }
 
             // 3c. Calculate totalWorkingDays from the calendar (same for ALL employees)
-            const holidayDateSet = new Set(allHolidays.map((h: any) => h.date));
+            const holidayDateSet = new Set(allHolidays.map((h: any) => {
+                // Normalize date string from DB (ISO) to YYYY-MM-DD in Jakarta time
+                return new Date(h.date).toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' });
+            }));
             let totalWorkingDays = 0;
             {
                 const cursor = new Date(dateRange.from);
@@ -1167,8 +1170,9 @@ const LaporanKehadiran = () => {
                                         </TableHeader>
                                         <TableBody>
                                             {filteredReports.map((emp, index) => {
-                                                const totalDays = emp.present + emp.late + emp.absent + emp.leave;
-                                                const attendancePercent = totalDays > 0 ? Math.round(((emp.present + emp.late) / totalDays) * 100) : 0;
+                                                const attendancePercent = emp.totalWorkingDays > 0 
+                                                    ? Math.round(((emp.present + emp.late) / emp.totalWorkingDays) * 100) 
+                                                    : 0;
 
                                                 // Badges logic for Leave/Permit
                                                 const sickCount = emp.details.filter(d => d.status === 'sick').length;
