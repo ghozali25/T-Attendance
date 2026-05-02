@@ -276,9 +276,25 @@ INSERT INTO holidays (id, date, name, description, is_national) VALUES
 INSERT INTO attendance_periods (id, start_date, is_active)
 VALUES (UUID(), CURDATE(), TRUE);
 
-/*
--- ============ 17. INSERT DEMO ATTENDANCE DATA (JANUARY - APRIL 2026) ============
-*/
+-- ============ 17. INSERT DEMO ATTENDANCE DATA (MAY 2026) ============
+-- Insert basic attendance records for demo users
+INSERT INTO attendance (id, user_id, date, clock_in, clock_out, clock_in_lat, clock_in_lng, clock_out_lat, clock_out_lng, status, work_hours, period_month)
+SELECT UUID(), id, '2026-05-01', '2026-05-01 08:00:00', '2026-05-01 17:00:00', -6.2, 106.8, -6.2, 106.8, 'present', 8.0, '2026-05' FROM users WHERE email = 'karyawan1@talenta.com';
+
+INSERT INTO attendance (id, user_id, date, clock_in, clock_out, clock_in_lat, clock_in_lng, clock_out_lat, clock_out_lng, status, work_hours, period_month)
+SELECT UUID(), id, '2026-05-01', '2026-05-01 08:15:00', '2026-05-01 17:15:00', -6.2, 106.8, -6.2, 106.8, 'present', 8.0, '2026-05' FROM users WHERE email = 'karyawan2@talenta.com';
+
+INSERT INTO attendance (id, user_id, date, clock_in, clock_out, clock_in_lat, clock_in_lng, clock_out_lat, clock_out_lng, status, work_hours, period_month)
+SELECT UUID(), id, '2026-05-01', '2026-05-01 09:30:00', '2026-05-01 18:30:00', -6.2, 106.8, -6.2, 106.8, 'late', 8.0, '2026-05' FROM users WHERE email = 'karyawan3@talenta.com';
+
+-- Insert some leave requests
+INSERT INTO leave_requests (id, user_id, leave_type, start_date, end_date, reason, status)
+SELECT UUID(), id, 'Cuti Tahunan', '2026-05-10', '2026-05-12', 'Liburan keluarga', 'approved' FROM users WHERE email = 'karyawan1@talenta.com';
+
+-- Insert some work journals
+INSERT INTO work_journals (id, user_id, date, content, duration, obstacles, work_result, mood, verification_status)
+SELECT UUID(), id, '2026-05-01', 'Mengerjakan fitur absensi cloud', 480, 'None', 'Fitur selesai', '😊', 'approved' FROM users WHERE email = 'karyawan1@talenta.com';
+
 
 -- ============ 18. CREATE VIEW FOR ATTENDANCE SUMMARY ============
 CREATE OR REPLACE VIEW v_attendance_summary AS
