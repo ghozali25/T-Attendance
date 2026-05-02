@@ -55,7 +55,7 @@ const poolConfig = process.env.DATABASE_URL
       ssl: process.env.DB_HOST && process.env.DB_HOST.includes('tidbcloud.com') 
         ? {
             minVersion: 'TLSv1.2',
-            rejectUnauthorized: true
+            rejectUnauthorized: false
           }
         : undefined
     };
@@ -73,6 +73,16 @@ app.use((req, res, next) => {
   req.db = pool;
   next();
 });
+
+// Test connection
+pool.getConnection()
+  .then(connection => {
+    console.log('Database connected successfully');
+    connection.release();
+  })
+  .catch(err => {
+    console.error('Database connection failed:', err.message);
+  });
 
 // API Routes
 app.use('/api/auth', authRoutes);
