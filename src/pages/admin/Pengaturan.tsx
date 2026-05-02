@@ -53,6 +53,97 @@ const SECTIONS: { id: SettingsSection; label: string; icon: any; description: st
   { id: "system", label: "Sistem & Data", icon: Database, description: "Backup, arsip, & periode aktif" },
 ];
 
+// ==========================================
+// SUB-COMPONENTS (Moved outside to prevent focus loss)
+// ==========================================
+
+const GlassCard = ({ title, description, badge, children, isDanger = false }: any) => (
+  <div className={`relative overflow-hidden rounded-[24px] border border-white/10 dark:border-white/[0.05] bg-white/50 dark:bg-slate-900/50 backdrop-blur-xl shadow-sm mb-6 ${isDanger ? 'border-red-500/30 dark:border-red-500/30 shadow-red-500/5' : ''}`}>
+    {/* Subtle Inner Glow */}
+    <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-white/40 dark:via-white/10 to-transparent" />
+
+    <div className="p-6 sm:p-8">
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h3 className={`text-lg sm:text-[20px] font-bold tracking-tight mb-1.5 ${isDanger ? 'text-red-600 dark:text-red-400' : 'text-slate-900 dark:text-white'}`}>
+            {title}
+          </h3>
+          <p className="text-[13px] text-slate-500 dark:text-slate-400 font-medium">
+            {description}
+          </p>
+        </div>
+        {badge}
+      </div>
+      <div className="space-y-6">
+        {children}
+      </div>
+    </div>
+  </div>
+);
+
+const FormFieldPremium = ({ label, description, children }: any) => (
+  <div className="space-y-2">
+    <div className="flex items-center justify-between">
+      <Label className="text-[13px] font-semibold text-slate-700 dark:text-slate-200">
+        {label}
+      </Label>
+    </div>
+    {children}
+    {description && <p className="text-[12px] text-slate-500 dark:text-slate-400 font-medium leading-relaxed">{description}</p>}
+  </div>
+);
+
+const FormRowPremium = ({ label, description, children }: any) => (
+  <div className="flex flex-row items-center justify-between gap-6 py-1">
+    <div className="flex-1 space-y-1">
+      <Label className="text-[14px] font-semibold text-slate-800 dark:text-slate-200">
+        {label}
+      </Label>
+      {description && <p className="text-[13px] text-slate-500 dark:text-slate-400">{description}</p>}
+    </div>
+    <div>
+      {children}
+    </div>
+  </div>
+);
+
+const InputPremium = (props: any) => (
+  <Input
+    {...props}
+    className={`h-12 bg-white dark:bg-black/20 border-slate-200 dark:border-white/10 rounded-xl px-4 text-[14px] font-medium placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-indigo-500/20 focus-visible:border-indigo-500/50 shadow-inner transition-all ${props.className || ''}`}
+  />
+);
+
+const FloatingActionBar = ({ onSave, onCancel, isSaving, hasUnsavedChanges }: { onSave: () => void, onCancel: () => void, isSaving: boolean, hasUnsavedChanges: boolean }) => {
+  return (
+    <div className={`fixed bottom-0 sm:bottom-6 sm:left-1/2 sm:-translate-x-1/2 left-0 right-0 sm:w-[500px] z-[100] transition-all duration-500 transform ${hasUnsavedChanges ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0 pointer-events-none'}`}>
+      <div className="bg-slate-900/90 dark:bg-white/10 backdrop-blur-2xl sm:rounded-2xl border border-white/10 shadow-[0_10px_40px_rgba(0,0,0,0.3)] p-3 sm:p-4 flex items-center justify-between gap-4">
+        <div className="hidden sm:flex items-center gap-3 pl-2">
+          <div className="w-10 h-10 rounded-full bg-indigo-500/20 flex items-center justify-center border border-indigo-500/30">
+            <Save className="w-5 h-5 text-indigo-400 shrink-0" />
+          </div>
+          <div>
+            <h4 className="text-[13px] font-bold text-white tracking-wide">Perubahan Belum Disimpan</h4>
+            <p className="text-[11px] text-slate-400">Anda memiliki perubahan yang belum disimpan</p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3 w-full sm:w-auto">
+          <Button variant="ghost" onClick={onCancel} className="flex-1 sm:flex-none h-11 rounded-xl text-slate-300 hover:text-white hover:bg-white/10 font-medium px-4">
+            Batal
+          </Button>
+          <Button onClick={onSave} disabled={isSaving} className="flex-1 sm:flex-none h-11 rounded-xl bg-gradient-to-r from-indigo-500 to-blue-500 hover:from-indigo-600 hover:to-blue-600 text-white shadow-[0_0_20px_rgba(99,102,241,0.4)] font-bold px-8 border border-white/10 relative overflow-hidden group">
+            <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform" />
+            <span className="relative z-10 flex items-center gap-2">
+              {isSaving ? "Menyimpan..." : "Simpan"}
+            </span>
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const Pengaturan = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -296,66 +387,6 @@ const Pengaturan = () => {
   };
 
 
-  // ==========================================
-  // RENDER BLOCKS (SaaS Premium UI logic)
-  // ==========================================
-
-  const GlassCard = ({ title, description, badge, children, isDanger = false }: any) => (
-    <div className={`relative overflow-hidden rounded-[24px] border border-white/10 dark:border-white/[0.05] bg-white/50 dark:bg-slate-900/50 backdrop-blur-xl shadow-sm mb-6 ${isDanger ? 'border-red-500/30 dark:border-red-500/30 shadow-red-500/5' : ''}`}>
-      {/* Subtle Inner Glow */}
-      <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-white/40 dark:via-white/10 to-transparent" />
-
-      <div className="p-6 sm:p-8">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h3 className={`text-lg sm:text-[20px] font-bold tracking-tight mb-1.5 ${isDanger ? 'text-red-600 dark:text-red-400' : 'text-slate-900 dark:text-white'}`}>
-              {title}
-            </h3>
-            <p className="text-[13px] text-slate-500 dark:text-slate-400 font-medium">
-              {description}
-            </p>
-          </div>
-          {badge}
-        </div>
-        <div className="space-y-6">
-          {children}
-        </div>
-      </div>
-    </div>
-  );
-
-  const FormFieldPremium = ({ label, description, children }: any) => (
-    <div className="space-y-2">
-      <div className="flex items-center justify-between">
-        <Label className="text-[13px] font-semibold text-slate-700 dark:text-slate-200">
-          {label}
-        </Label>
-      </div>
-      {children}
-      {description && <p className="text-[12px] text-slate-500 dark:text-slate-400 font-medium leading-relaxed">{description}</p>}
-    </div>
-  );
-
-  const FormRowPremium = ({ label, description, children }: any) => (
-    <div className="flex flex-row items-center justify-between gap-6 py-1">
-      <div className="flex-1 space-y-1">
-        <Label className="text-[14px] font-semibold text-slate-800 dark:text-slate-200">
-          {label}
-        </Label>
-        {description && <p className="text-[13px] text-slate-500 dark:text-slate-400">{description}</p>}
-      </div>
-      <div>
-        {children}
-      </div>
-    </div>
-  );
-
-  const InputPremium = (props: any) => (
-    <Input
-      {...props}
-      className={`h-12 bg-white dark:bg-black/20 border-slate-200 dark:border-white/10 rounded-xl px-4 text-[14px] font-medium placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-indigo-500/20 focus-visible:border-indigo-500/50 shadow-inner transition-all ${props.className || ''}`}
-    />
-  );
 
 
   const renderGeneralSettings = () => (
@@ -512,38 +543,6 @@ const Pengaturan = () => {
   // VIEW STRATEGY
   // ==========================================
 
-  // Custom Floating Bar
-  const FloatingActionBar = () => {
-    const dataToCheck = { ...formData, ...inputRefs.current };
-    const hasUnsavedChanges = JSON.stringify(dataToCheck) !== JSON.stringify(settings);
-    return (
-      <div className="fixed bottom-0 sm:bottom-6 sm:left-1/2 sm:-translate-x-1/2 left-0 right-0 sm:w-[500px] z-[100]">
-        <div className="bg-slate-900/90 dark:bg-white/10 backdrop-blur-2xl sm:rounded-2xl border border-white/10 shadow-[0_10px_40px_rgba(0,0,0,0.3)] p-3 sm:p-4 flex items-center justify-between gap-4">
-          <div className="hidden sm:flex items-center gap-3 pl-2">
-            <div className="w-10 h-10 rounded-full bg-indigo-500/20 flex items-center justify-center border border-indigo-500/30">
-              <Save className="w-5 h-5 text-indigo-400 shrink-0" />
-            </div>
-            <div>
-              <h4 className="text-[13px] font-bold text-white tracking-wide">Perubahan Belum Disimpan</h4>
-              <p className="text-[11px] text-slate-400">Anda memiliki perubahan yang belum disimpan</p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3 w-full sm:w-auto">
-            <Button variant="ghost" onClick={handleCancel} disabled={!hasUnsavedChanges} className="flex-1 sm:flex-none h-11 rounded-xl text-slate-300 hover:text-white hover:bg-white/10 font-medium px-4 disabled:opacity-50">
-              Batal
-            </Button>
-            <Button onClick={handleSave} disabled={!hasUnsavedChanges || isSaving} className="flex-1 sm:flex-none h-11 rounded-xl bg-gradient-to-r from-indigo-500 to-blue-500 hover:from-indigo-600 hover:to-blue-600 text-white shadow-[0_0_20px_rgba(99,102,241,0.4)] font-bold px-8 border border-white/10 relative overflow-hidden group disabled:opacity-50 disabled:cursor-not-allowed">
-              <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform" />
-              <span className="relative z-10 flex items-center gap-2">
-                {isSaving ? "Menyimpan..." : "Simpan"}
-              </span>
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  };
 
   // === Mobile View ===
   if (isMobile) {
@@ -608,7 +607,12 @@ const Pengaturan = () => {
           </SheetContent>
         </Sheet>
 
-        <FloatingActionBar />
+        <FloatingActionBar 
+          onSave={handleSave} 
+          onCancel={handleCancel} 
+          isSaving={isSaving} 
+          hasUnsavedChanges={hasChanges} 
+        />
 
         {/* Modal Confrim (Same for both) */}
         <AlertDialog open={showSaveConfirm} onOpenChange={(open) => {
@@ -736,7 +740,12 @@ const Pengaturan = () => {
           </main>
         </div>
 
-        <FloatingActionBar />
+        <FloatingActionBar 
+          onSave={handleSave} 
+          onCancel={handleCancel} 
+          isSaving={isSaving} 
+          hasUnsavedChanges={hasChanges} 
+        />
 
         {/* Desktop Save Confirm */}
         <AlertDialog open={showSaveConfirm} onOpenChange={(open) => {

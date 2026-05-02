@@ -66,11 +66,28 @@ export const SystemSettingsProvider = ({ children }: { children: ReactNode }) =>
     const fetchSettings = useCallback(async () => {
         setLoadError(null);
         try {
-            // TODO: Replace with actual API call when system settings endpoint is available
-            // For now, use default settings
-            setSettings(defaultSettings);
+            // Fetch settings from database
+            const rows = await api.post<any[]>('/db/query', { 
+                sql: 'SELECT setting_value FROM system_settings WHERE setting_key = ?',
+                params: ['current_settings']
+            });
+            
+            if (rows && rows.length > 0) {
+                const dbSettings = JSON.parse(rows[0].setting_value);
+                // Merge with defaults to handle new fields
+                setSettings({ ...defaultSettings, ...dbSettings });
+            } else {
+                // No settings in DB, use defaults and save them
+                setSettings(defaultSettings);
+                await api.post('/db/execute', {
+                    sql: 'INSERT INTO system_settings (setting_key, setting_value) VALUES (?, ?)',
+                    params: ['current_settings', JSON.stringify(defaultSettings)]
+                });
+            }
         } catch (error: any) {
             console.error("Error fetching settings:", error);
+            // Fallback to default but set error
+            setSettings(defaultSettings);
             setLoadError(error.message || "Failed to load settings");
         } finally {
             setIsLoading(false);
@@ -83,13 +100,19 @@ export const SystemSettingsProvider = ({ children }: { children: ReactNode }) =>
 
     const updateSettings = async (newSettings: Partial<SystemSettings>) => {
         // Optimistic Update
-        setSettings((prev) => ({ ...prev, ...newSettings }));
+        const updatedSettings = { ...settings, ...newSettings };
+        setSettings(updatedSettings);
 
         try {
-            // TODO: Replace with actual API call when system settings endpoint is available
-            console.log("Settings would be updated:", newSettings);
+            // Save to database
+            await api.post('/db/execute', {
+                sql: 'UPDATE system_settings SET setting_value = ? WHERE setting_key = ?',
+                params: [JSON.stringify(updatedSettings), 'current_settings']
+            });
+            console.log("Settings updated in database");
         } catch (error: any) {
             console.error("Error updating settings:", error);
+            // Revert on error? For now just throw
             throw error;
         }
     };
