@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
-import { 
-  Clock, CheckCircle2, XCircle, AlertCircle, Search, 
+import {
+  Clock, CheckCircle2, XCircle, AlertCircle, Search,
   Filter, Calendar, User, Building2, ChevronRight, Check, X,
   FileText, History as HistoryIcon, Info
 } from "lucide-react";
@@ -10,13 +10,13 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogDescription, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogFooter 
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
@@ -89,7 +89,7 @@ const KelolaPermohonanAbsen = () => {
         title: status === 'approved' ? "Berhasil Disetujui" : "Berhasil Ditolak",
         description: status === 'approved' ? "Data absensi telah diperbarui." : "Permohonan telah ditolak.",
       });
-      
+
       setIsProcessOpen(false);
       setIsRejectOpen(false);
       setRejectionReason("");
@@ -124,8 +124,8 @@ const KelolaPermohonanAbsen = () => {
   };
 
   const filteredRequests = requests.filter(req => {
-    const matchesSearch = req.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          req.department?.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = req.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      req.department?.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = filterStatus === "all" || req.status === filterStatus;
     return matchesSearch && matchesStatus;
   });
@@ -207,48 +207,48 @@ const KelolaPermohonanAbsen = () => {
                   <TableHead className="font-black text-slate-400 text-[10px] uppercase tracking-widest text-center">Aksi</TableHead>
                 </TableRow>
               </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                [...Array(5)].map((_, i) => (
-                  <TableRow key={i}>
-                    <TableCell colSpan={7} className="h-16 animate-pulse bg-slate-50/50" />
+              <TableBody>
+                {isLoading ? (
+                  [...Array(5)].map((_, i) => (
+                    <TableRow key={i}>
+                      <TableCell colSpan={7} className="h-16 animate-pulse bg-slate-50/50" />
+                    </TableRow>
+                  ))
+                ) : filteredRequests.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="h-40 text-center text-slate-500">
+                      Tidak ada permohonan yang ditemukan.
+                    </TableCell>
                   </TableRow>
-                ))
-              ) : filteredRequests.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={7} className="h-40 text-center text-slate-500">
-                    Tidak ada permohonan yang ditemukan.
-                  </TableCell>
-                </TableRow>
-              ) : (
-                filteredRequests.map((req) => (
-                  <TableRow key={req.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-indigo-100 to-indigo-50 dark:from-indigo-900/50 dark:to-indigo-800/30 flex items-center justify-center shadow-sm shrink-0">
-                          <User className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+                ) : (
+                  filteredRequests.map((req) => (
+                    <TableRow key={req.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-indigo-100 to-indigo-50 dark:from-indigo-900/50 dark:to-indigo-800/30 flex items-center justify-center shadow-sm shrink-0">
+                            <User className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+                          </div>
+                          <div>
+                            <p className="font-bold text-slate-800 dark:text-slate-100 text-sm">{req.full_name}</p>
+                            <p className="text-[11px] text-slate-400 flex items-center gap-1 font-semibold">
+                              <Building2 className="h-3 w-3" />
+                              {req.department}
+                            </p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="font-bold text-slate-800 dark:text-slate-100 text-sm">{req.full_name}</p>
-                          <p className="text-[11px] text-slate-400 flex items-center gap-1 font-semibold">
-                            <Building2 className="h-3 w-3" />
-                            {req.department}
-                          </p>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-center font-semibold text-slate-700 dark:text-slate-200 text-sm">
-                      {new Date(req.date).toLocaleDateString("id-ID", { day: 'numeric', month: 'short', year: 'numeric' })}
-                    </TableCell>
-                    <TableCell className="text-center font-mono text-sm font-bold text-slate-800 dark:text-slate-100">{formatTime(req.clock_in)}</TableCell>
-                    <TableCell className="text-center font-mono text-sm font-bold text-slate-800 dark:text-slate-100">{formatTime(req.clock_out)}</TableCell>
-                    <TableCell className="max-w-[200px]">
+                      </TableCell>
+                      <TableCell className="text-center font-semibold text-slate-700 dark:text-slate-200 text-sm">
+                        {new Date(req.date).toLocaleDateString("id-ID", { day: 'numeric', month: 'short', year: 'numeric' })}
+                      </TableCell>
+                      <TableCell className="text-center font-mono text-sm font-bold text-slate-800 dark:text-slate-100">{formatTime(req.clock_in)}</TableCell>
+                      <TableCell className="text-center font-mono text-sm font-bold text-slate-800 dark:text-slate-100">{formatTime(req.clock_out)}</TableCell>
+                      <TableCell className="max-w-[200px]">
                         <div className="flex flex-col gap-1">
                           <div className="flex items-center gap-2 group relative">
-                              <span className="truncate text-xs text-slate-600 italic">{req.reason || "-"}</span>
+                            <span className="truncate text-xs text-slate-600 italic">{req.reason || "-"}</span>
                           </div>
                           {req.attachment_url && (
-                            <button 
+                            <button
                               onClick={(e) => {
                                 e.stopPropagation();
                                 window.open(req.attachment_url!, '_blank');
@@ -259,120 +259,121 @@ const KelolaPermohonanAbsen = () => {
                             </button>
                           )}
                         </div>
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <div className="flex justify-center">
-                        {getStatusBadge(req.status)}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <div className="flex justify-center gap-2">
-                        {req.status === 'pending' ? (
-                          <>
-                            <Button size="sm" className="gap-1.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl shadow-sm shadow-emerald-500/20 h-9 font-bold text-xs" onClick={() => { setSelectedRequest(req); setIsProcessOpen(true); }}>
-                              <Check className="h-3.5 w-3.5" /> Setujui
-                            </Button>
-                            <Button size="sm" variant="outline" className="gap-1.5 text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-500/10 border-rose-200 dark:border-rose-800/50 rounded-xl h-9 font-bold text-xs" onClick={() => { setSelectedRequest(req); setIsRejectOpen(true); }}>
-                              <X className="h-3.5 w-3.5" /> Tolak
-                            </Button>
-                          </>
-                        ) : (
-                          <span className="text-sm text-slate-400 font-medium">—</span>
-                        )}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </Card>
-
-        {/* Approval Dialog */}
-        <Dialog open={isProcessOpen} onOpenChange={setIsProcessOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Setujui Permohonan Absen</DialogTitle>
-              <DialogDescription>
-                Data absensi {selectedRequest?.full_name} untuk tanggal {selectedRequest?.date && new Date(selectedRequest.date).toLocaleDateString("id-ID")} akan diperbarui secara otomatis.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-xl space-y-3">
-              <div className="flex justify-between text-sm">
-                <span className="text-slate-500">Jam Masuk</span>
-                <span className="font-bold text-blue-600">{formatTime(selectedRequest?.clock_in || null)}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-slate-500">Jam Pulang</span>
-                <span className="font-bold text-blue-600">{formatTime(selectedRequest?.clock_out || null)}</span>
-              </div>
-              <div className="pt-2 border-t border-slate-200">
-                <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Alasan Karyawan</p>
-                <p className="text-xs italic text-slate-600">{selectedRequest?.reason}</p>
-                {selectedRequest?.attachment_url && (
-                  <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 mt-2">
-                    <p className="text-[10px] font-bold text-slate-400 uppercase mb-2">Lampiran File</p>
-                    {selectedRequest.attachment_url.startsWith('data:image') ? (
-                      <img 
-                        src={selectedRequest.attachment_url} 
-                        alt="Lampiran" 
-                        className="max-h-[200px] rounded-lg border border-slate-200 cursor-zoom-in hover:opacity-90 transition-opacity"
-                        onClick={() => window.open(selectedRequest.attachment_url!, '_blank')}
-                      />
-                    ) : (
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="w-full gap-2 text-xs h-10 rounded-lg"
-                        onClick={() => window.open(selectedRequest.attachment_url!, '_blank')}
-                      >
-                        <FileText className="w-4 h-4" /> Buka Dokumen Pendukung
-                      </Button>
-                    )}
-                  </div>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <div className="flex justify-center">
+                          {getStatusBadge(req.status)}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <div className="flex justify-center gap-2">
+                          {req.status === 'pending' ? (
+                            <>
+                              <Button size="sm" className="gap-1.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl shadow-sm shadow-emerald-500/20 h-9 font-bold text-xs" onClick={() => { setSelectedRequest(req); setIsProcessOpen(true); }}>
+                                <Check className="h-3.5 w-3.5" /> Setujui
+                              </Button>
+                              <Button size="sm" variant="outline" className="gap-1.5 text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-500/10 border-rose-200 dark:border-rose-800/50 rounded-xl h-9 font-bold text-xs" onClick={() => { setSelectedRequest(req); setIsRejectOpen(true); }}>
+                                <X className="h-3.5 w-3.5" /> Tolak
+                              </Button>
+                            </>
+                          ) : (
+                            <span className="text-sm text-slate-400 font-medium">—</span>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
                 )}
-              </div>
-            </div>
-            <DialogFooter className="gap-2 sm:gap-0">
-              <Button variant="outline" onClick={() => setIsProcessOpen(false)} disabled={isActionLoading}>Batal</Button>
-              <Button className="bg-emerald-600 hover:bg-emerald-700 text-white" onClick={() => handleAction(selectedRequest!.id, 'approved')} disabled={isActionLoading}>
-                {isActionLoading ? "Memproses..." : "Konfirmasi & Setujui"}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+              </TableBody>
+            </Table>
 
-        {/* Rejection Dialog */}
-        <Dialog open={isRejectOpen} onOpenChange={setIsRejectOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Tolak Permohonan Absen</DialogTitle>
-              <DialogDescription>
-                Berikan alasan penolakan untuk permohonan {selectedRequest?.full_name}.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4">
-              <Textarea 
-                placeholder="Misal: Data tidak valid atau sudah ada absensi di tanggal tersebut..." 
-                value={rejectionReason}
-                onChange={(e) => setRejectionReason(e.target.value)}
-                rows={4}
-                className="rounded-xl"
-              />
-            </div>
-            <DialogFooter className="gap-2 sm:gap-0">
-              <Button variant="outline" onClick={() => setIsRejectOpen(false)} disabled={isActionLoading}>Batal</Button>
-              <Button 
-                variant="destructive" 
-                onClick={() => handleAction(selectedRequest!.id, 'rejected', rejectionReason)}
-                disabled={isActionLoading || !rejectionReason.trim()}
-              >
-                {isActionLoading ? "Memproses..." : "Tolak Permohonan"}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </div>
+          </div>
+          {/* Approval Dialog */}
+          <Dialog open={isProcessOpen} onOpenChange={setIsProcessOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Setujui Permohonan Absen</DialogTitle>
+                <DialogDescription>
+                  Data absensi {selectedRequest?.full_name} untuk tanggal {selectedRequest?.date && new Date(selectedRequest.date).toLocaleDateString("id-ID")} akan diperbarui secara otomatis.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-xl space-y-3">
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-500">Jam Masuk</span>
+                  <span className="font-bold text-blue-600">{formatTime(selectedRequest?.clock_in || null)}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-500">Jam Pulang</span>
+                  <span className="font-bold text-blue-600">{formatTime(selectedRequest?.clock_out || null)}</span>
+                </div>
+                <div className="pt-2 border-t border-slate-200">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Alasan Karyawan</p>
+                  <p className="text-xs italic text-slate-600">{selectedRequest?.reason}</p>
+                  {selectedRequest?.attachment_url && (
+                    <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 mt-2">
+                      <p className="text-[10px] font-bold text-slate-400 uppercase mb-2">Lampiran File</p>
+                      {selectedRequest.attachment_url.startsWith('data:image') ? (
+                        <img
+                          src={selectedRequest.attachment_url}
+                          alt="Lampiran"
+                          className="max-h-[200px] rounded-lg border border-slate-200 cursor-zoom-in hover:opacity-90 transition-opacity"
+                          onClick={() => window.open(selectedRequest.attachment_url!, '_blank')}
+                        />
+                      ) : (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full gap-2 text-xs h-10 rounded-lg"
+                          onClick={() => window.open(selectedRequest.attachment_url!, '_blank')}
+                        >
+                          <FileText className="w-4 h-4" /> Buka Dokumen Pendukung
+                        </Button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+              <DialogFooter className="gap-2 sm:gap-0">
+                <Button variant="outline" onClick={() => setIsProcessOpen(false)} disabled={isActionLoading}>Batal</Button>
+                <Button className="bg-emerald-600 hover:bg-emerald-700 text-white" onClick={() => handleAction(selectedRequest!.id, 'approved')} disabled={isActionLoading}>
+                  {isActionLoading ? "Memproses..." : "Konfirmasi & Setujui"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          {/* Rejection Dialog */}
+          <Dialog open={isRejectOpen} onOpenChange={setIsRejectOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Tolak Permohonan Absen</DialogTitle>
+                <DialogDescription>
+                  Berikan alasan penolakan untuk permohonan {selectedRequest?.full_name}.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                <Textarea
+                  placeholder="Misal: Data tidak valid atau sudah ada absensi di tanggal tersebut..."
+                  value={rejectionReason}
+                  onChange={(e) => setRejectionReason(e.target.value)}
+                  rows={4}
+                  className="rounded-xl"
+                />
+              </div>
+              <DialogFooter className="gap-2 sm:gap-0">
+                <Button variant="outline" onClick={() => setIsRejectOpen(false)} disabled={isActionLoading}>Batal</Button>
+                <Button
+                  variant="destructive"
+                  onClick={() => handleAction(selectedRequest!.id, 'rejected', rejectionReason)}
+                  disabled={isActionLoading || !rejectionReason.trim()}
+                >
+                  {isActionLoading ? "Memproses..." : "Tolak Permohonan"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
+</div>
     </EnterpriseLayout>
   );
 };
