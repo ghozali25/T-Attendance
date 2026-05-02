@@ -23,22 +23,35 @@ async function migrateFresh() {
       port: DB_PORT,
       user: DB_USER,
       password: DB_PASSWORD,
-      multipleStatements: true
+      multipleStatements: true,
+      ssl: DB_HOST.includes('tidbcloud.com') 
+        ? {
+            minVersion: 'TLSv1.2',
+            rejectUnauthorized: true
+          }
+        : undefined
     });
 
     console.log('✅ Connected to MySQL server');
 
-    // 2. Drop database if exists
-    console.log(`\n🗑️  Dropping database "${DB_NAME}" if exists...`);
-    await connection.query(`DROP DATABASE IF EXISTS \`${DB_NAME}\``);
-    console.log('✅ Database dropped');
+    const isCloudDB = DB_HOST.includes('tidbcloud.com');
 
-    // 3. Create fresh database
-    console.log(`\n📦 Creating fresh database "${DB_NAME}"...`);
-    await connection.query(`CREATE DATABASE \`${DB_NAME}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`);
-    console.log('✅ Database created');
+    if (!isCloudDB) {
+      // 2. Drop database if exists
+      console.log(`\n🗑️  Dropping database "${DB_NAME}" if exists...`);
+      await connection.query(`DROP DATABASE IF EXISTS \`${DB_NAME}\``);
+      console.log('✅ Database dropped');
 
-    // 4. Switch to the new database
+      // 3. Create fresh database
+      console.log(`\n📦 Creating fresh database "${DB_NAME}"...`);
+      await connection.query(`CREATE DATABASE \`${DB_NAME}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`);
+      console.log('✅ Database created');
+    } else {
+      console.log(`\nℹ️  Cloud DB detected. Skipping DROP/CREATE for safety.`);
+      console.log(`💡 Please ensure database "${DB_NAME}" exists in your TiDB dashboard.`);
+    }
+
+    // 4. Switch to the database
     await connection.query(`USE \`${DB_NAME}\``);
     console.log('✅ Switched to database');
 

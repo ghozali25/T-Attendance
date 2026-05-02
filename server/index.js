@@ -27,12 +27,30 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 // Database connection pool
+const poolConfig = process.env.DATABASE_URL 
+  ? {
+      uri: process.env.DATABASE_URL,
+      ssl: {
+        minVersion: 'TLSv1.2',
+        rejectUnauthorized: true
+      }
+    }
+  : {
+      host: process.env.DB_HOST || 'localhost',
+      port: process.env.DB_PORT || 3306,
+      user: process.env.DB_USER || 'root',
+      password: process.env.DB_PASSWORD || '',
+      database: process.env.DB_NAME || 't_absensi',
+      ssl: process.env.DB_HOST && process.env.DB_HOST.includes('tidbcloud.com') 
+        ? {
+            minVersion: 'TLSv1.2',
+            rejectUnauthorized: true
+          }
+        : undefined
+    };
+
 const pool = mysql.createPool({
-  host: process.env.DB_HOST || 'localhost',
-  port: process.env.DB_PORT || 3306,
-  user: process.env.DB_USER || 'root',
-  password: process.env.DB_PASSWORD || '',
-  database: process.env.DB_NAME || 't_absensi',
+  ...poolConfig,
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0
