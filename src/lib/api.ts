@@ -45,6 +45,7 @@ class ApiClient {
       
       if (!response.ok) {
         const error = await response.json().catch(() => ({ error: 'Request failed' }));
+        console.error('API Error Detail:', error);
         throw new Error(error.error || error.message || 'Request failed');
       }
 
