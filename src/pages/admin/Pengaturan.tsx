@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft, Building2, Clock, MapPin, CalendarDays,
   ShieldAlert, RotateCcw, Download, ChevronRight, Database,
-  Info, Play, CheckCircle2, AlertCircle, Save
+  Info, Play, CheckCircle2, AlertCircle, Save, Calendar, Plus, Trash2
 } from "lucide-react";
 import { useSystemSettings, SystemSettings } from "@/hooks/useSystemSettings";
 import { useIsMobile } from "@/hooks/useIsMobile";
@@ -43,6 +43,7 @@ type SettingsSection =
   | "schedule"
   | "attendance"
   | "leaves"
+  | "holidays"
   | "system";
 
 const SECTIONS: { id: SettingsSection; label: string; icon: any; description: string }[] = [
@@ -50,6 +51,7 @@ const SECTIONS: { id: SettingsSection; label: string; icon: any; description: st
   { id: "schedule", label: "Jam Kerja & Shift", icon: Clock, description: "Jadwal kerja dan batas keterlambatan" },
   { id: "attendance", label: "Aturan Absensi", icon: MapPin, description: "Lokasi, pelacakan GPS, foto" },
   { id: "leaves", label: "Cuti & Izin", icon: CalendarDays, description: "Kuota cuti tahunan" },
+  { id: "holidays", label: "Hari Libur", icon: Calendar, description: "Atur hari libur nasional & khusus" },
   { id: "system", label: "Sistem & Data", icon: Database, description: "Backup, arsip, & periode aktif" },
 ];
 
@@ -161,9 +163,56 @@ const Pengaturan = () => {
   const [resetType, setResetType] = useState<"attendance" | "leaves" | "all">("attendance");
   const [showSaveConfirm, setShowSaveConfirm] = useState(false);
 
+  // Holiday Management State
+  const [holidays, setHolidays] = useState<any[]>([]);
+  const [isHolidaysLoading, setIsHolidaysLoading] = useState(false);
+  const [newHoliday, setNewHoliday] = useState({ date: "", name: "" });
+
   useEffect(() => {
     setFormData(settings);
+    fetchHolidays();
   }, [settings]);
+
+  const fetchHolidays = async () => {
+    setIsHolidaysLoading(true);
+    try {
+      const data = await db.query('SELECT * FROM holidays ORDER BY date ASC') as any[];
+      setHolidays(data || []);
+    } catch (e) {
+      console.error("Fetch holidays fail", e);
+    } finally {
+      setIsHolidaysLoading(false);
+    }
+  };
+
+  const handleAddHoliday = async () => {
+    if (!newHoliday.date || !newHoliday.name) {
+      toast({ variant: "destructive", title: "Data tidak lengkap", description: "Tanggal dan nama hari libur wajib diisi." });
+      return;
+    }
+
+    try {
+      await db.execute(
+        'INSERT INTO holidays (id, date, name, is_national) VALUES (UUID(), ?, ?, ?)',
+        [newHoliday.date, newHoliday.name, true]
+      );
+      toast({ title: "Hari Libur Ditambahkan", description: `${newHoliday.name} telah masuk dalam kalender.` });
+      setNewHoliday({ date: "", name: "" });
+      fetchHolidays();
+    } catch (e: any) {
+      toast({ variant: "destructive", title: "Gagal Menambah", description: e.message });
+    }
+  };
+
+  const handleDeleteHoliday = async (id: string) => {
+    try {
+      await db.execute('DELETE FROM holidays WHERE id = ?', [id]);
+      toast({ title: "Hari Libur Dihapus" });
+      fetchHolidays();
+    } catch (e: any) {
+      toast({ variant: "destructive", title: "Gagal Menghapus", description: e.message });
+    }
+  };
 
   const handleChange = (key: keyof SystemSettings, value: any) => {
     // For boolean values (Switch components), update state immediately for visual feedback
@@ -487,6 +536,91 @@ const Pengaturan = () => {
     </GlassCard>
   );
 
+  const renderHolidaysSettings = () => (
+    <div className="space-y-6">
+      <GlassCard title="Manajemen Hari Libur" description="Atur kalender libur nasional dan khusus perusahaan untuk perhitungan absensi.">
+        <div className="bg-slate-50 dark:bg-slate-800/40 p-6 rounded-[20px] border border-slate-200 dark:border-white/5 mb-8">
+          <h4 className="text-[14px] font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+            <Plus className="w-4 h-4 text-indigo-500" /> Tambah Hari Libur Baru
+          </h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-end">
+            <FormFieldPremium label="Tanggal Libur">
+              <InputPremium 
+                type="date" 
+                value={newHoliday.date} 
+                onChange={(e: any) => setNewHoliday(prev => ({ ...prev, date: e.target.value }))}
+              />
+            </FormFieldPremium>
+            <FormFieldPremium label="Nama Hari Libur">
+              <InputPremium 
+                placeholder="Contoh: Libur Idul Fitri" 
+                value={newHoliday.name} 
+                onChange={(e: any) => setNewHoliday(prev => ({ ...prev, name: e.target.value }))}
+              />
+            </FormFieldPremium>
+            <Button 
+              onClick={handleAddHoliday} 
+              className="h-12 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold shadow-lg shadow-indigo-500/20 transition-all"
+            >
+              <Plus className="w-4 h-4 mr-2" /> Simpan Hari Libur
+            </Button>
+          </div>
+        </div>
+
+        <div className="overflow-hidden rounded-2xl border border-slate-200 dark:border-white/5 bg-white dark:bg-transparent">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-slate-50 dark:bg-white/5 border-b border-slate-200 dark:border-white/10">
+                <th className="px-6 py-4 text-[13px] font-bold text-slate-500 uppercase tracking-wider w-[180px]">Tanggal</th>
+                <th className="px-6 py-4 text-[13px] font-bold text-slate-500 uppercase tracking-wider">Keterangan</th>
+                <th className="px-6 py-4 text-[13px] font-bold text-slate-500 uppercase tracking-wider w-[100px] text-center">Aksi</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 dark:divide-white/5">
+              {isHolidaysLoading ? (
+                <tr>
+                  <td colSpan={3} className="px-6 py-10 text-center text-slate-500 animate-pulse">Memuat data kalender...</td>
+                </tr>
+              ) : holidays.length === 0 ? (
+                <tr>
+                  <td colSpan={3} className="px-6 py-10 text-center text-slate-500">Belum ada hari libur yang terdaftar.</td>
+                </tr>
+              ) : (
+                holidays.map((holiday) => (
+                  <tr key={holiday.id} className="hover:bg-slate-50/50 dark:hover:bg-white/[0.02] transition-colors group">
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-lg bg-indigo-100 dark:bg-indigo-500/10 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
+                          <Calendar className="w-4.5 h-4.5" />
+                        </div>
+                        <span className="text-[14px] font-bold text-slate-800 dark:text-slate-200">
+                          {new Date(holiday.date).toLocaleDateString("id-ID", { day: "2-digit", month: "long", year: "numeric" })}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-[14px] font-medium text-slate-600 dark:text-slate-400">
+                      {holiday.name}
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        onClick={() => handleDeleteHoliday(holiday.id)}
+                        className="w-9 h-9 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all opacity-0 group-hover:opacity-100"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </GlassCard>
+    </div>
+  );
+
   const renderSystemSettings = () => (
     <div className="space-y-6">
       <GlassCard
@@ -534,6 +668,7 @@ const Pengaturan = () => {
       case 'schedule': return renderScheduleSettings();
       case 'attendance': return renderAttendanceSettings();
       case 'leaves': return renderLeavesSettings();
+      case 'holidays': return renderHolidaysSettings();
       case 'system': return renderSystemSettings();
       default: return null;
     }
