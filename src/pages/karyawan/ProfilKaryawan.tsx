@@ -315,7 +315,7 @@ const ProfilKaryawan = () => {
       >
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 pb-10">
           {/* Left: Identity Card */}
-          <div className="lg:col-span-1 h-fit bg-white/50 dark:bg-slate-900/50 backdrop-blur-xl rounded-[28px] border border-slate-200 dark:border-white/10 shadow-sm overflow-hidden">
+          <div className="lg:col-span-1 h-fit bg-white/50 dark:bg-slate-900 backdrop-blur-xl rounded-[28px] border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
             <div className="bg-gradient-to-br from-indigo-600 to-blue-700 h-28 relative flex justify-center">
               <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 brightness-100 mix-blend-overlay"></div>
               <div className="absolute -bottom-12">
@@ -355,7 +355,7 @@ const ProfilKaryawan = () => {
           </div>
 
           {/* Right: Detailed Form */}
-          <div className="lg:col-span-2 bg-white/50 dark:bg-slate-900/50 backdrop-blur-xl rounded-[28px] border border-slate-200 dark:border-white/10 shadow-sm p-8">
+          <div className="lg:col-span-2 bg-white/50 dark:bg-slate-900 backdrop-blur-xl rounded-[28px] border border-slate-200 dark:border-slate-800 shadow-sm p-8">
             <div className="mb-8">
               <h2 className="text-xl font-extrabold text-slate-800 dark:text-slate-100 tracking-tight">Informasi Pribadi</h2>
               <p className="text-sm text-slate-500 dark:text-slate-400 font-medium mt-1">Perbarui data diri Anda untuk keperluan administrasi.</p>
@@ -420,7 +420,7 @@ const ProfilKaryawan = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 w-full mx-auto pb-10">
 
         {/* Left: Identity Card */}
-        <div className="md:col-span-1 h-fit bg-white dark:bg-slate-900/70 backdrop-blur-md rounded-[24px] border border-white/60 shadow-xl shadow-slate-200/40 overflow-hidden vibe-glass-card">
+        <div className="md:col-span-1 h-fit bg-white dark:bg-slate-900 backdrop-blur-md rounded-[24px] border border-slate-200/60 dark:border-slate-800 shadow-xl shadow-slate-200/40 dark:shadow-none overflow-hidden">
           <div className="bg-gradient-to-br from-blue-600 to-indigo-700 h-28 relative flex justify-center">
             <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 brightness-100 mix-blend-overlay"></div>
             <div className="absolute -bottom-12">
@@ -449,7 +449,7 @@ const ProfilKaryawan = () => {
 
           <div className="pt-16 pb-6 px-6 flex flex-col items-center text-center">
             <h2 className="text-xl font-extrabold text-slate-800 dark:text-slate-100 tracking-tight">{profile?.full_name}</h2>
-            <span className="inline-block mt-1.5 px-3 py-1 rounded-full bg-blue-50 text-blue-600 text-xs font-bold border border-blue-100 uppercase tracking-wider">
+            <span className="inline-block mt-1.5 px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-xs font-bold border border-blue-100 dark:border-blue-800/50 uppercase tracking-wider">
               {profile?.position || "Karyawan"}
             </span>
 
@@ -480,7 +480,7 @@ const ProfilKaryawan = () => {
         </div>
 
         {/* Right: Detailed Form */}
-        <div className="md:col-span-2 bg-white dark:bg-slate-900/70 backdrop-blur-md rounded-[24px] border border-white/60 shadow-xl shadow-slate-200/40 p-1 vibe-glass-card">
+        <div className="md:col-span-2 bg-white dark:bg-slate-900 backdrop-blur-md rounded-[24px] border border-slate-200/60 dark:border-slate-800 shadow-xl shadow-slate-200/40 dark:shadow-none p-1">
           <div className="p-6 pb-4 border-b border-slate-200/50 dark:border-slate-700/50">
             <h2 className="text-xl font-extrabold text-slate-800 dark:text-slate-100 tracking-tight">Edit Informasi Profil</h2>
             <p className="text-sm text-slate-500 dark:text-slate-400 font-medium mt-1">Perbarui informasi kontak dan alamat lengkap Anda.</p>
@@ -489,7 +489,7 @@ const ProfilKaryawan = () => {
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
 
-                <div className="p-5 bg-blue-50/50 border border-blue-100 rounded-xl space-y-6">
+                <div className="p-5 bg-blue-50/50 dark:bg-slate-800/50 border border-blue-100 dark:border-slate-700/50 rounded-xl space-y-6">
                   <div className="flex items-center gap-2 mb-2 pb-2 border-b border-blue-100/50">
                     <User className="h-4 w-4 text-blue-600" />
                     <h3 className="text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">Data Utama</h3>
@@ -531,7 +531,7 @@ const ProfilKaryawan = () => {
                   )} />
                 </div>
 
-                <div className="p-5 bg-slate-50/80 border border-slate-100 dark:border-slate-800 rounded-xl space-y-6">
+                <div className="p-5 bg-slate-50/80 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700/50 rounded-xl space-y-6">
                   <div className="flex items-center justify-between mb-2 pb-2 border-b border-slate-200/50 dark:border-slate-700/50">
                     <div className="flex items-center gap-2">
                       <Briefcase className="h-4 w-4 text-slate-500 dark:text-slate-400" />

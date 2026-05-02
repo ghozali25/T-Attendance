@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { Bell, CheckCircle2, Clock, Calendar, FileText, AlertTriangle, X, CheckCheck, Trash2, XCircle } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
@@ -320,7 +321,7 @@ function timeAgo(date: Date): string {
 export function NotificationPanel({ role, isDark = false }: NotificationPanelProps) {
     const [isOpen, setIsOpen] = useState(false);
     const { notifications, unreadCount, markAllRead, clearAll, markRead } = useNotifications(role);
-    const navigate = require('react-router-dom').useNavigate();
+    const navigate = useNavigate();
 
     return (
         <div className="relative">
