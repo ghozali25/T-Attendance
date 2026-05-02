@@ -88,7 +88,7 @@ const ManagerCuti = () => {
       const userMap = new Map<string, any>();
       
       if (users && Array.isArray(users)) {
-        users.forEach((u: any) => userMap.set(u.id, u));
+        users.forEach((u: any) => userMap.set(u.user_id, u));
       }
 
       // Map leave requests with profile data
