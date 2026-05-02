@@ -66,12 +66,12 @@ async function migrateFresh() {
 
     // 6. Seed default data (already included in migration script)
     console.log('\n🌱 Seeding default data...');
-    console.log('✅ Default admin user created (admin@talenta.com / AdminPassword123!)');
+    console.log('✅ Default admin user created (admin@talenta.com / password)');
 
     console.log('\n✨ Migration completed successfully!\n');
     console.log('📝 Default Credentials:');
     console.log('   Email: admin@talenta.com');
-    console.log('   Password: AdminPassword123!');
+    console.log('   Password: password');
     console.log('\n⚠️  Please change the default password after first login!\n');
 
   } catch (error) {
