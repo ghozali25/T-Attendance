@@ -74,8 +74,12 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Something went wrong!' });
 });
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`API Server running on http://localhost:${PORT}`);
-  console.log(`Database: ${process.env.DB_NAME}`);
-});
+// Start server (only if not on Vercel)
+if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`API Server running on http://localhost:${PORT}`);
+    console.log(`Database: ${process.env.DB_NAME}`);
+  });
+}
+
+export default app;
