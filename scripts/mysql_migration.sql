@@ -147,6 +147,7 @@ CREATE TABLE IF NOT EXISTS attendance_requests (
     clock_out TIMESTAMP NULL,
     reason TEXT,
     status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
+    attachment_url TEXT,
     approved_by CHAR(36),
     rejection_reason TEXT,
     approved_at TIMESTAMP NULL,
