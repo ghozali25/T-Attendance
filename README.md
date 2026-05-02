@@ -1,5 +1,7 @@
 # T-Absensi
 
+![T-Attendance](public/T-Attendance.png)
+
 Sistem manajemen absensi berbasis web yang dibangun dengan React, TypeScript, dan MySQL.
 
 ## Tech Stack
@@ -117,7 +119,7 @@ Script migrasi akan otomatis membuat user default:
 
 **Admin Credentials:**
 - **Email**: admin@talenta.com
-- **Password**: AdminPassword123!
+- **Password**: password
 
 **Demo Employee Accounts:**
 - **karyawan1@talenta.com** - Budi Santoso (Engineering - Software Engineer)
