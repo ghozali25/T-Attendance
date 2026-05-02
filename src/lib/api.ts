@@ -163,8 +163,11 @@ export const holidaysApi = {
 
 export default api;
 export const attendanceRequestsApi = {
-    getAll: (params?: any) => fetchApi('/attendance-requests', { params }),
-    getById: (id: string) => fetchApi(`/attendance-requests/${id}`),
-    create: (data: any) => fetchApi('/attendance-requests', { method: 'POST', body: data }),
-    update: (id: string, data: any) => fetchApi(`/attendance-requests/${id}`, { method: 'PUT', body: data }),
+    getAll: (params?: any) => {
+        const query = params ? `?${new URLSearchParams(params).toString()}` : '';
+        return api.get<any[]>(`/attendance-requests${query}`);
+    },
+    getById: (id: string) => api.get<any>(`/attendance-requests/${id}`),
+    create: (data: any) => api.post<{ message: string; id: string }>('/attendance-requests', data),
+    update: (id: string, data: any) => api.put<{ message: string }>(`/attendance-requests/${id}`, data),
 };
