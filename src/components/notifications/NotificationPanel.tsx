@@ -17,6 +17,7 @@ export interface NotificationItem {
     icon: React.ElementType;
     color: string;
     bgColor: string;
+    link?: string;
 }
 
 interface NotificationPanelProps {
@@ -170,6 +171,7 @@ export function useNotifications(role: 'admin' | 'manager' | 'karyawan') {
                         icon: Calendar,
                         color: 'text-indigo-600',
                         bgColor: 'bg-indigo-50 dark:bg-indigo-900/20',
+                        link: role === 'manager' ? '/manager/cuti' : '/admin/cuti',
                     });
                 });
 
@@ -236,6 +238,7 @@ export function useNotifications(role: 'admin' | 'manager' | 'karyawan') {
                                 icon: Clock,
                                 color: 'text-orange-600',
                                 bgColor: 'bg-orange-50 dark:bg-orange-900/20',
+                                link: role === 'admin' ? '/admin/permohonan-absen' : '/manager/permohonan-absen',
                             });
                         });
                 } catch (e) {
@@ -317,6 +320,7 @@ function timeAgo(date: Date): string {
 export function NotificationPanel({ role, isDark = false }: NotificationPanelProps) {
     const [isOpen, setIsOpen] = useState(false);
     const { notifications, unreadCount, markAllRead, clearAll, markRead } = useNotifications(role);
+    const navigate = require('react-router-dom').useNavigate();
 
     return (
         <div className="relative">
@@ -395,7 +399,13 @@ export function NotificationPanel({ role, isDark = false }: NotificationPanelPro
                                 {notifications.map((notif) => (
                                     <div
                                         key={notif.id}
-                                        onClick={() => markRead(notif.id)}
+                                        onClick={() => {
+                                            markRead(notif.id);
+                                            if (notif.link) {
+                                                setIsOpen(false);
+                                                navigate(notif.link);
+                                            }
+                                        }}
                                         className={cn(
                                             "px-4 py-3.5 flex items-start gap-3 transition-colors cursor-pointer border-b last:border-b-0",
                                             isDark

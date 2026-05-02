@@ -322,6 +322,14 @@ const App = () => (
                       }
                     />
                     <Route
+                      path="/admin/cuti"
+                      element={
+                        <AdminRoute>
+                          <ManagerCuti />
+                        </AdminRoute>
+                      }
+                    />
+                    <Route
                       path="/admin/export-database"
                       element={
                         <AdminRoute>

@@ -205,7 +205,7 @@ const EnterpriseLayout = ({
         { icon: LayoutDashboard, label: "Beranda", href: "/dashboard" },
         { icon: Clock, label: "Rekap", href: "/manager/absensi" },
         { icon: Briefcase, label: "Jurnal", href: "/manager/jurnal" },
-        { icon: Calendar, label: "Cuti", href: "/manager/cuti" },
+        { icon: FileText, label: "Laporan", href: "/manager/laporan" },
     ];
 
     const isManager = roleLabel?.toLowerCase().includes('manager');

@@ -90,15 +90,32 @@ const ProfilKaryawan = () => {
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 2 * 1024 * 1024) {
-        toast({ variant: "destructive", title: "File terlalu besar", description: "Maksimal ukuran foto adalah 2MB" });
+      if (file.size > 5 * 1024 * 1024) {
+        toast({ variant: "destructive", title: "File terlalu besar", description: "Maksimal ukuran foto adalah 5MB" });
         return;
       }
       const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64String = reader.result as string;
-        setProfile(prev => prev ? { ...prev, avatar_url: base64String } : null);
-        form.setValue("avatar_url", base64String);
+      reader.onload = (event) => {
+        const img = new Image();
+        img.onload = () => {
+          const size = Math.min(img.width, img.height);
+          const startX = (img.width - size) / 2;
+          const startY = (img.height - size) / 2;
+          
+          const canvas = document.createElement('canvas');
+          const targetSize = Math.min(size, 400); 
+          canvas.width = targetSize;
+          canvas.height = targetSize;
+          
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(img, startX, startY, size, size, 0, 0, targetSize, targetSize);
+            const base64String = canvas.toDataURL('image/jpeg', 0.85);
+            setProfile(prev => prev ? { ...prev, avatar_url: base64String } : null);
+            form.setValue("avatar_url", base64String);
+          }
+        };
+        img.src = event.target?.result as string;
       };
       reader.readAsDataURL(file);
     }
