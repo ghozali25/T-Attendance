@@ -213,14 +213,15 @@ const KelolaPermohonanAbsen = () => {
                             <span className="truncate text-xs text-slate-600 italic">"{req.reason}"</span>
                           </div>
                           {req.attachment_url && (
-                            <a 
-                              href={req.attachment_url} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                              className="flex items-center gap-1 text-[10px] text-blue-600 hover:underline font-medium mt-1 ml-6"
+                            <button 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                window.open(req.attachment_url!, '_blank');
+                              }}
+                              className="flex items-center gap-1 text-[10px] text-blue-600 hover:text-blue-800 hover:underline font-bold mt-1 ml-6 bg-blue-50 px-2 py-0.5 rounded-full"
                             >
                               <FileText className="w-3 h-3" /> Lihat Lampiran
-                            </a>
+                            </button>
                           )}
                         </div>
                     </TableCell>
