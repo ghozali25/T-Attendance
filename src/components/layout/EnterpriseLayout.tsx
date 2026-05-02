@@ -211,7 +211,12 @@ const EnterpriseLayout = ({
                         {!isCollapsed && (
                             <div className="min-w-0 overflow-hidden ml-0.5">
                                 <h1 className="font-extrabold text-slate-900 dark:text-white text-[15px] leading-tight truncate tracking-tight">
-                                    {firstPart}{secondPart && <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 ml-1">{secondPart}</span>}
+                                    {firstPart}
+                                    {secondPart && (
+                                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 ml-0.5">
+                                            {secondPart}
+                                        </span>
+                                    )}
                                 </h1>
                                 <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-tight mt-0.5 font-bold tracking-[0.15em] uppercase flex items-center gap-1.5">
                                     <span className="relative flex h-1.5 w-1.5 shrink-0">
