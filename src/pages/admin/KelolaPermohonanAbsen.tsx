@@ -206,18 +206,18 @@ const KelolaPermohonanAbsen = () => {
                     </TableCell>
                     <TableCell className="text-center font-mono text-xs font-bold text-blue-600">{formatTime(req.clock_in)}</TableCell>
                     <TableCell className="text-center font-mono text-xs font-bold text-blue-600">{formatTime(req.clock_out)}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2 group relative">
-                        <Info className="h-4 w-4 text-slate-400 shrink-0" />
                     <TableCell className="max-w-[200px]">
                         <div className="flex flex-col gap-1">
-                          <span className="truncate text-xs text-slate-600 italic">"{req.reason}"</span>
+                          <div className="flex items-center gap-2 group relative">
+                            <Info className="h-4 w-4 text-slate-400 shrink-0" />
+                            <span className="truncate text-xs text-slate-600 italic">"{req.reason}"</span>
+                          </div>
                           {req.attachment_url && (
                             <a 
                               href={req.attachment_url} 
                               target="_blank" 
                               rel="noopener noreferrer"
-                              className="flex items-center gap-1 text-[10px] text-blue-600 hover:underline font-medium"
+                              className="flex items-center gap-1 text-[10px] text-blue-600 hover:underline font-medium mt-1 ml-6"
                             >
                               <FileText className="w-3 h-3" /> Lihat Lampiran
                             </a>
