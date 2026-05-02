@@ -148,7 +148,7 @@ const FloatingActionBar = ({ onSave, onCancel, isSaving, hasUnsavedChanges }: { 
 
 const Pengaturan = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const { settings, isLoading, updateSettings } = useSystemSettings();
   const isMobile = useIsMobile();
 
@@ -698,7 +698,7 @@ const Pengaturan = () => {
         </div>
 
         <div className="px-5 space-y-3 mt-4">
-          {SECTIONS.map((section) => (
+          {SECTIONS.filter(s => s.id !== 'holidays' || isAdmin).map((section) => (
             <div
               key={section.id}
               onClick={() => setActiveMobileSheet(section.id)}
@@ -843,7 +843,7 @@ const Pengaturan = () => {
                 <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest pl-1">Configuration Scope</span>
               </div>
               <div className="space-y-1.5">
-                {SECTIONS.map((section) => {
+                {SECTIONS.filter(s => s.id !== 'holidays' || isAdmin).map((section) => {
                   const isActive = activeSection === section.id;
                   return (
                     <button
