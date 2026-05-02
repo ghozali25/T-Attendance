@@ -167,6 +167,7 @@ const Pengaturan = () => {
   const [holidays, setHolidays] = useState<any[]>([]);
   const [isHolidaysLoading, setIsHolidaysLoading] = useState(false);
   const [newHoliday, setNewHoliday] = useState({ date: "", name: "" });
+  const [filterYear, setFilterYear] = useState(new Date().getFullYear());
 
   useEffect(() => {
     setFormData(settings);
@@ -567,6 +568,26 @@ const Pengaturan = () => {
           </div>
         </div>
 
+        <div className="flex items-center justify-between mb-6 px-1">
+          <div className="flex items-center gap-2">
+            <Calendar className="w-5 h-5 text-indigo-500" />
+            <h4 className="text-[15px] font-bold text-slate-900 dark:text-white">Daftar Hari Libur {filterYear}</h4>
+          </div>
+          <div className="flex bg-slate-100 dark:bg-white/5 p-1 rounded-xl border border-slate-200 dark:border-white/10">
+            {[filterYear - 1, filterYear, filterYear + 1].map((year) => (
+              <button
+                key={year}
+                onClick={() => setFilterYear(year)}
+                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${filterYear === year 
+                  ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm' 
+                  : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+              >
+                {year}
+              </button>
+            ))}
+          </div>
+        </div>
+
         <div className="overflow-y-auto max-h-[520px] rounded-2xl border border-slate-200 dark:border-white/5 bg-white dark:bg-transparent vibe-scrollbar relative">
           <table className="w-full text-left border-collapse">
             <thead className="sticky top-0 z-10">
@@ -581,12 +602,16 @@ const Pengaturan = () => {
                 <tr>
                   <td colSpan={3} className="px-6 py-10 text-center text-slate-500 animate-pulse">Memuat data kalender...</td>
                 </tr>
-              ) : holidays.length === 0 ? (
+              ) : holidays.filter(h => new Date(h.date).getFullYear() === filterYear).length === 0 ? (
                 <tr>
-                  <td colSpan={3} className="px-6 py-10 text-center text-slate-500">Belum ada hari libur yang terdaftar.</td>
+                  <td colSpan={3} className="px-6 py-10 text-center text-slate-500 italic">
+                    Belum ada hari libur yang terdaftar di tahun {filterYear}.
+                  </td>
                 </tr>
               ) : (
-                holidays.map((holiday) => (
+                holidays
+                  .filter(h => new Date(h.date).getFullYear() === filterYear)
+                  .map((holiday) => (
                   <tr key={holiday.id} className="hover:bg-slate-50/50 dark:hover:bg-white/[0.02] transition-colors group">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
