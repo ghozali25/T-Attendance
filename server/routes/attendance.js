@@ -52,14 +52,14 @@ router.get('/', async (req, res) => {
 // POST /api/attendance - Create attendance record
 router.post('/', async (req, res) => {
   try {
-    const { user_id, date, clock_in, clock_out, clock_in_location, clock_out_location, status, notes } = req.body;
+    const { user_id, date, clock_in, clock_out, clock_in_lat, clock_in_lng, clock_out_lat, clock_out_lng, status, notes } = req.body;
     
     const id = crypto.randomUUID();
     
     await req.db.query(
-      `INSERT INTO attendance (id, user_id, date, clock_in, clock_out, clock_in_location, clock_out_location, status, notes) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [id, user_id, date, clock_in, clock_out, clock_in_location, clock_out_location, status, notes]
+      `INSERT INTO attendance (id, user_id, date, clock_in, clock_out, clock_in_lat, clock_in_lng, clock_out_lat, clock_out_lng, status, notes) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [id, user_id, date, clock_in, clock_out, clock_in_lat, clock_in_lng, clock_out_lat, clock_out_lng, status, notes]
     );
     
     res.status(201).json({ message: 'Attendance created successfully', id });
@@ -72,11 +72,11 @@ router.post('/', async (req, res) => {
 // PUT /api/attendance/:id - Update attendance record
 router.put('/:id', async (req, res) => {
   try {
-    const { clock_out, clock_out_location, notes } = req.body;
+    const { clock_out, clock_out_lat, clock_out_lng, notes } = req.body;
     
     await req.db.query(
-      'UPDATE attendance SET clock_out = ?, clock_out_location = ?, notes = ? WHERE id = ?',
-      [clock_out, clock_out_location, notes, req.params.id]
+      'UPDATE attendance SET clock_out = ?, clock_out_lat = ?, clock_out_lng = ?, notes = ? WHERE id = ?',
+      [clock_out, clock_out_lat, clock_out_lng, notes, req.params.id]
     );
     
     res.json({ message: 'Attendance updated successfully' });
