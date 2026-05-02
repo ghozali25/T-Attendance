@@ -25,6 +25,7 @@ DROP TABLE IF EXISTS user_roles;
 DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS departments;
 DROP TABLE IF EXISTS holidays;
+DROP TABLE IF EXISTS system_settings;
 
 -- ============ 3. CREATE users TABLE ============
 CREATE TABLE IF NOT EXISTS users (
@@ -254,6 +255,16 @@ CREATE TABLE IF NOT EXISTS holidays (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
+-- ============ 14.5. CREATE system_settings TABLE ============
+CREATE TABLE IF NOT EXISTS system_settings (
+    id CHAR(36) PRIMARY KEY,
+    setting_key VARCHAR(191) NOT NULL UNIQUE,
+    setting_value TEXT NOT NULL,
+    description TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
 -- ============ 15. INSERT INDONESIAN HOLIDAYS 2026 ============
 INSERT INTO holidays (id, date, name, description, is_national) VALUES
 (UUID(), '2026-01-01', 'Tahun Baru', 'Hari Tahun Baru Masehi', TRUE),
@@ -275,6 +286,10 @@ INSERT INTO holidays (id, date, name, description, is_national) VALUES
 -- ============ 16. INSERT INITIAL ATTENDANCE PERIOD ============
 INSERT INTO attendance_periods (id, start_date, is_active)
 VALUES (UUID(), CURDATE(), TRUE);
+
+-- ============ 16.5. INSERT INITIAL SYSTEM SETTINGS ============
+INSERT INTO system_settings (id, setting_key, setting_value)
+VALUES (UUID(), 'current_settings', '{"companyName":"T-Attendance","clockInStart":"08:00","clockInEnd":"09:00","clockOutStart":"17:00","clockOutEnd":"18:00","lateThreshold":"09:00","enableLocationTracking":true,"enableNotifications":true,"requirePhotoOnClockIn":false,"autoClockOut":false,"autoClockOutTime":"22:00","maxLeaveDays":12,"attendanceStartDate":"2024-01-01"}');
 
 -- ============ 17. INSERT DEMO ATTENDANCE DATA (MAY 2026) ============
 -- Insert basic attendance records for demo users

@@ -80,7 +80,7 @@ export const SystemSettingsProvider = ({ children }: { children: ReactNode }) =>
                 // No settings in DB, use defaults and save them
                 setSettings(defaultSettings);
                 await api.post('/db/execute', {
-                    sql: 'INSERT INTO system_settings (setting_key, setting_value) VALUES (?, ?)',
+                    sql: 'INSERT INTO system_settings (id, setting_key, setting_value) VALUES (UUID(), ?, ?)',
                     params: ['current_settings', JSON.stringify(defaultSettings)]
                 });
             }
