@@ -54,7 +54,7 @@ router.post('/', async (req, res) => {
     res.status(201).json({ message: 'Attendance request created successfully', id });
   } catch (error) {
     console.error('Create attendance request error:', error);
-    res.status(500).json({ error: 'Failed to create attendance request' });
+    res.status(500).json({ error: 'Failed to create attendance request', message: error.message });
   }
 });
 

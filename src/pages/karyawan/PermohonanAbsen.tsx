@@ -104,12 +104,12 @@ const PermohonanAbsen = () => {
       form.reset();
       setDialogOpen(false);
       fetchRequests();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating request:', error);
       toast({
         variant: "destructive",
         title: "Gagal",
-        description: "Terjadi kesalahan saat mengirim permohonan.",
+        description: error.message || "Terjadi kesalahan saat mengirim permohonan.",
       });
     } finally {
       setIsLoading(false);
