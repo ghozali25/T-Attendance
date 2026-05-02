@@ -53,7 +53,8 @@ const pool = mysql.createPool({
   ...poolConfig,
   waitForConnections: true,
   connectionLimit: 10,
-  queueLimit: 0
+  queueLimit: 0,
+  timezone: '+07:00'
 });
 
 // Make pool available to routes

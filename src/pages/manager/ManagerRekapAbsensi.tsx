@@ -22,6 +22,7 @@ import EnterpriseLayout from "@/components/layout/EnterpriseLayout";
 import { MANAGER_MENU_SECTIONS } from "@/config/menu";
 import { ABSENSI_WAJIB_ROLE, EXCLUDED_USER_NAMES } from "@/lib/constants";
 import { cn } from "@/lib/utils";
+import { formatJakartaDate } from "@/lib/dateUtils";
 
 // Talenta Brand Colors
 const BRAND_COLORS = {
@@ -57,7 +58,7 @@ const ManagerRekapAbsensi = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
-  const [filterDate, setFilterDate] = useState(new Date().toISOString().split("T")[0]); // Default Today
+  const [filterDate, setFilterDate] = useState(formatJakartaDate(new Date(), "yyyy-MM-dd")); // Default Today
 
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [totalEmployees, setTotalEmployees] = useState(0);
@@ -231,7 +232,7 @@ const ManagerRekapAbsensi = () => {
 
   const formatTime = (dateString: string | null) => {
     if (!dateString) return "-";
-    return new Date(dateString).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
+    return formatJakartaDate(new Date(dateString), "HH:mm");
   };
 
   const formatDate = (dateString: string) => {

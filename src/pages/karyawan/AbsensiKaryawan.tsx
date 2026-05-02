@@ -14,6 +14,7 @@ import { attendanceApi, journalsApi } from "@/lib/api";
 import { useSystemSettings } from "@/hooks/useSystemSettings";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import MobileNavigation from "@/components/MobileNavigation";
+import { formatJakartaDate, toMySQLDateTime } from "@/lib/dateUtils";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -168,10 +169,7 @@ const AbsensiKaryawan = () => {
     if (!user) return;
 
     const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const day = String(now.getDate()).padStart(2, '0');
-    const todayStr = `${year}-${month}-${day}`;
+    const todayStr = formatJakartaDate(now, 'yyyy-MM-dd');
 
     try {
       // Use API to get attendance
@@ -253,10 +251,7 @@ const AbsensiKaryawan = () => {
       let status = "present";
       if (now > limitTime) status = "late";
 
-      const year = now.getFullYear();
-      const month = String(now.getMonth() + 1).padStart(2, '0');
-      const day = String(now.getDate()).padStart(2, '0');
-      const todayStr = `${year}-${month}-${day}`;
+      const todayStr = formatJakartaDate(now, 'yyyy-MM-dd');
 
       // Check if already clocked in today using API
       const allAttendance = await attendanceApi.getAll();
@@ -277,7 +272,7 @@ const AbsensiKaryawan = () => {
         id: crypto.randomUUID(),
         user_id: user.id,
         date: todayStr,
-        clock_in: now.toISOString(),
+        clock_in: toMySQLDateTime(now),
         clock_in_lat: coordinates?.lat,
         clock_in_lng: coordinates?.lng,
         status: status
@@ -341,7 +336,7 @@ const AbsensiKaryawan = () => {
       // Use API to update attendance with clock out
       const now = new Date();
       await attendanceApi.update(todayAttendance.id, {
-        clock_out: now.toISOString(),
+        clock_out: toMySQLDateTime(now),
         clock_out_lat: coordinates?.lat,
         clock_out_lng: coordinates?.lng
       });
@@ -369,7 +364,7 @@ const AbsensiKaryawan = () => {
   const saveJournal = async (attendanceId: string, content: string) => {
     try {
       const id = crypto.randomUUID();
-      const todayStr = new Date().toISOString().split('T')[0];
+      const todayStr = formatJakartaDate(new Date(), 'yyyy-MM-dd');
       
       // Use API to create journal
       await journalsApi.create({

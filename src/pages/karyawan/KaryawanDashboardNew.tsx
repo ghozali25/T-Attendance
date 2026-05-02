@@ -30,6 +30,7 @@ import { useIsMobile } from "@/hooks/useIsMobile";
 import { useTheme } from "@/contexts/ThemeContext";
 import MobileDashboardView from "@/components/MobileDashboardView";
 import { useQueryClient } from "@tanstack/react-query";
+import { formatJakartaDate, toMySQLDateTime } from "@/lib/dateUtils";
 
 interface AttendanceRecord {
     id: string;
@@ -228,7 +229,7 @@ const KaryawanDashboardNew = () => {
     const fetchTodayAttendance = async () => {
         if (!user) return;
         const now = new Date();
-        const todayStr = format(now, 'yyyy-MM-dd');
+        const todayStr = formatJakartaDate(now, 'yyyy-MM-dd');
         const data = await attendanceApi.getAll({ user_id: user.id, date: todayStr }) as any[];
         if (data && data.length > 0) setTodayAttendance(data[0]);
         setIsLoading(false);
@@ -274,11 +275,11 @@ const KaryawanDashboardNew = () => {
         try {
             if (confirmAction === "in") {
                 const now = new Date();
-                const todayStr = format(now, 'yyyy-MM-dd');
+                const todayStr = formatJakartaDate(now, 'yyyy-MM-dd');
                 await attendanceApi.create({
                     user_id: user?.id,
                     date: todayStr,
-                    clock_in: now.toISOString(),
+                    clock_in: toMySQLDateTime(now),
                     clock_in_location: location,
                     status: "present"
                 });
@@ -288,7 +289,7 @@ const KaryawanDashboardNew = () => {
             } else {
                 const now = new Date();
                 await attendanceApi.update(todayAttendance!.id, {
-                    clock_out: now.toISOString(),
+                    clock_out: toMySQLDateTime(now),
                     clock_out_location: location
                 });
                 toast({ title: "🏠 Berhasil Keluar", description: "Terima kasih atas kerja kerasnya!" });
@@ -497,7 +498,7 @@ const KaryawanDashboardNew = () => {
                                     <div className="grid grid-cols-3 gap-2">
                                         <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-3 text-center">
                                             <span className="block text-[10px] uppercase text-emerald-400 font-bold mb-1">Masuk</span>
-                                            <span className="text-sm font-semibold">{todayAttendance.clock_in.substring(11, 16)}</span>
+                                            <span className="text-sm font-semibold">{todayAttendance ? formatJakartaDate(new Date(todayAttendance.clock_in), 'HH:mm') : "--:--"}</span>
                                         </div>
                                         <div className="bg-white/5 border border-white/10 rounded-xl p-3 text-center">
                                             <span className="block text-[10px] uppercase text-slate-400 font-bold mb-1">Durasi</span>
@@ -521,9 +522,9 @@ const KaryawanDashboardNew = () => {
                                     <CheckCircle2 className="w-6 h-6 text-emerald-400 mx-auto" />
                                     <p className="text-sm font-medium">Sesi selesai. Kerja bagus hari ini!</p>
                                     <div className="flex justify-center gap-3 text-[11px] text-slate-400">
-                                        <span>Masuk: {todayAttendance.clock_in.substring(11, 16)}</span>
+                                        <span>Masuk: {formatJakartaDate(new Date(todayAttendance.clock_in), 'HH:mm')}</span>
                                         <span>•</span>
-                                        <span>Keluar: {todayAttendance.clock_out.substring(11, 16)}</span>
+                                        <span>Keluar: {todayAttendance.clock_out ? formatJakartaDate(new Date(todayAttendance.clock_out), 'HH:mm') : "—"}</span>
                                         <span>•</span>
                                         <span className="text-indigo-300 font-bold">{elapsedTime.substring(0, 5)}</span>
                                     </div>

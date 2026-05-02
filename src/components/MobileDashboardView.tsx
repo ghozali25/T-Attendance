@@ -26,6 +26,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useTheme } from "@/contexts/ThemeContext";
 import { attendanceApi, journalsApi, leaveApi, profilesApi } from "@/lib/api";
+import { formatJakartaDate, toMySQLDateTime } from "@/lib/dateUtils";
 
 interface AttendanceRecord {
     id: string;
@@ -359,16 +360,13 @@ export default function MobileDashboardView({ role }: { role: "admin" | "manager
         setIsActionLoading(true);
         try {
             const now = new Date();
-            const year = now.getFullYear();
-            const month = String(now.getMonth() + 1).padStart(2, '0');
-            const day = String(now.getDate()).padStart(2, '0');
-            const todayStr = `${year}-${month}-${day}`;
+            const todayStr = formatJakartaDate(now, 'yyyy-MM-dd');
 
             if (confirmAction === "in") {
                 await attendanceApi.create({
                     user_id: user?.id,
                     date: todayStr,
-                    clock_in: now.toISOString(),
+                    clock_in: toMySQLDateTime(now),
                     clock_in_location: location,
                     status: "present"
                 });
@@ -377,7 +375,7 @@ export default function MobileDashboardView({ role }: { role: "admin" | "manager
                 fetchData();
             } else {
                 await attendanceApi.update(todayAttendance!.id, {
-                    clock_out: now.toISOString(),
+                    clock_out: toMySQLDateTime(now),
                     clock_out_location: location
                 });
                 if (navigator.vibrate) navigator.vibrate([50, 50, 100]);
@@ -613,12 +611,12 @@ export default function MobileDashboardView({ role }: { role: "admin" | "manager
                             <div className="grid grid-cols-3 gap-2.5">
                                 <div className="bg-slate-50 p-3 rounded-xl flex flex-col items-center text-center">
                                     <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5">Masuk</span>
-                                    <span className="text-[15px] font-bold text-slate-800 tabular-nums">{todayAttendance.clock_in.substring(11, 16)}</span>
+                                    <span className="text-[15px] font-bold text-slate-800 tabular-nums">{todayAttendance ? formatJakartaDate(new Date(todayAttendance.clock_in), 'HH:mm') : "--:--"}</span>
                                 </div>
                                 <div className="bg-slate-50 p-3 rounded-xl flex flex-col items-center text-center">
                                     <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5">Keluar</span>
                                     <span className="text-[15px] font-bold text-slate-800 tabular-nums">
-                                        {todayAttendance.clock_out ? todayAttendance.clock_out.substring(11, 16) : "—"}
+                                        {todayAttendance?.clock_out ? formatJakartaDate(new Date(todayAttendance.clock_out), 'HH:mm') : "—"}
                                     </span>
                                 </div>
                                 <div className="bg-indigo-50 p-3 rounded-xl flex flex-col items-center text-center border border-indigo-100/50">

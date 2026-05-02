@@ -39,3 +39,17 @@ export function getJakartaEndOfDayISO(date: Date = new Date()): string {
 export function formatJakartaDate(date: Date, formatStr: string = "dd MMMM yyyy"): string {
     return formatInTimeZone(date, JAKARTA_TIMEZONE, formatStr);
 }
+
+/**
+ * Returns current time in Jakarta as ISO string with offset
+ */
+export function getJakartaNowISO(): string {
+    return formatInTimeZone(new Date(), JAKARTA_TIMEZONE, "yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
+}
+
+/**
+ * Formats a date for MySQL TIMESTAMP column (YYYY-MM-DD HH:mm:ss)
+ */
+export function toMySQLDateTime(date: Date = new Date()): string {
+    return formatInTimeZone(date, JAKARTA_TIMEZONE, "yyyy-MM-dd HH:mm:ss");
+}

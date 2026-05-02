@@ -51,7 +51,7 @@ import { startOfMonth, endOfMonth, format, addDays, subDays, getDaysInMonth, get
 import * as XLSX from "xlsx";
 import { id } from "date-fns/locale";
 import { DateRange } from "react-day-picker";
-import { getJakartaDate, getJakartaStartOfDayISO, getJakartaEndOfDayISO } from "@/lib/dateUtils";
+import { getJakartaDate, getJakartaStartOfDayISO, getJakartaEndOfDayISO, formatJakartaDate } from "@/lib/dateUtils";
 import StatCard from "@/components/ui/stat-card"; // Reusing generic stat card if avail, or build custom
 
 interface MonthlyStats {
@@ -146,7 +146,7 @@ const RekapAbsensi = () => {
   // Helpers
   const formatTime = (isoString: string | null) => {
     if (!isoString) return "-";
-    return format(new Date(isoString), "HH:mm");
+    return formatJakartaDate(new Date(isoString), "HH:mm");
   };
 
   const calculateDuration = (inTime: any, outTime: any) => {
