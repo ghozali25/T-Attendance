@@ -16,6 +16,8 @@ import { profilesApi } from "@/lib/api";
 import { useIsMobile } from "@/hooks/use-mobile";
 import MobileNavigation from "@/components/MobileNavigation";
 import KaryawanWorkspaceLayout from "@/components/layout/KaryawanWorkspaceLayout";
+import EnterpriseLayout from "@/components/layout/EnterpriseLayout";
+import { ADMIN_MENU_SECTIONS, MANAGER_MENU_SECTIONS } from "@/config/menu";
 import { cn } from "@/lib/utils";
 
 const profileSchema = z.object({
@@ -263,6 +265,112 @@ const ProfilKaryawan = () => {
   }
 
   // DESKTOP VIEW
+  if (user?.role === 'admin' || user?.role === 'manager') {
+    return (
+      <EnterpriseLayout
+        title="Profil Saya"
+        subtitle="Kelola detail informasi pribadi dan pengaturan akun Anda."
+        roleLabel={user.role === 'admin' ? "Administrator" : "Manager"}
+        menuSections={user.role === 'admin' ? ADMIN_MENU_SECTIONS : MANAGER_MENU_SECTIONS}
+      >
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 pb-10">
+          {/* Left: Identity Card */}
+          <div className="lg:col-span-1 h-fit bg-white/50 dark:bg-slate-900/50 backdrop-blur-xl rounded-[28px] border border-slate-200 dark:border-white/10 shadow-sm overflow-hidden">
+            <div className="bg-gradient-to-br from-indigo-600 to-blue-700 h-28 relative flex justify-center">
+              <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 brightness-100 mix-blend-overlay"></div>
+              <div className="absolute -bottom-12">
+                <div className="h-24 w-24 rounded-full bg-white dark:bg-slate-900 flex items-center justify-center text-slate-400 border-4 border-white dark:border-slate-800 shadow-lg relative">
+                  <span className="text-3xl font-extrabold text-slate-800 dark:text-slate-100">{profile?.full_name?.charAt(0) || "U"}</span>
+                  <div className="absolute bottom-0 right-0 h-8 w-8 bg-blue-600 rounded-full border-2 border-white flex items-center justify-center shadow-md active:scale-95 transition-transform cursor-pointer">
+                    <Camera className="h-4 w-4 text-white" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-16 pb-6 px-6 flex flex-col items-center text-center">
+              <h2 className="text-xl font-extrabold text-slate-800 dark:text-slate-100 tracking-tight">{profile?.full_name}</h2>
+              <span className="inline-block mt-1.5 px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-xs font-bold border border-blue-100 dark:border-blue-800/50 uppercase tracking-wider">
+                {user.role === 'admin' ? "Administrator" : "Manager"}
+              </span>
+
+              <div className="w-full border-t border-slate-100 dark:border-white/5 my-6" />
+
+              <div className="w-full space-y-4 text-left">
+                <div className="bg-slate-50/50 dark:bg-white/5 p-3 rounded-xl border border-slate-100 dark:border-white/5">
+                  <p className="text-[10px] text-slate-400 uppercase font-bold tracking-widest mb-1">Email Aktif</p>
+                  <p className="text-sm text-slate-800 dark:text-slate-100 font-semibold flex items-center gap-2"><Mail className="w-4 h-4 text-slate-400" />{user?.email}</p>
+                </div>
+              </div>
+
+              <div className="w-full mt-8 space-y-3">
+                <Button variant="outline" className="w-full justify-between h-12 rounded-xl border-slate-200 dark:border-slate-800 shadow-sm font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:bg-slate-800" onClick={() => navigate("/edit-password")}>
+                  Ubah Password <Key className="h-[18px] w-[18px] text-slate-400" />
+                </Button>
+                <Button variant="ghost" className="w-full justify-between h-12 rounded-xl text-red-600 hover:text-red-700 hover:bg-red-50 border border-transparent hover:border-red-100 font-bold" onClick={handleLogout}>
+                  Keluar Akun <LogOut className="h-[18px] w-[18px]" />
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          {/* Right: Detailed Form */}
+          <div className="lg:col-span-2 bg-white/50 dark:bg-slate-900/50 backdrop-blur-xl rounded-[28px] border border-slate-200 dark:border-white/10 shadow-sm p-8">
+            <div className="mb-8">
+              <h2 className="text-xl font-extrabold text-slate-800 dark:text-slate-100 tracking-tight">Informasi Pribadi</h2>
+              <p className="text-sm text-slate-500 dark:text-slate-400 font-medium mt-1">Perbarui data diri Anda untuk keperluan administrasi.</p>
+            </div>
+
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <FormField control={form.control} name="full_name" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-widest">Nama Lengkap</FormLabel>
+                      <FormControl><Input {...field} className="h-12 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 rounded-xl focus:ring-indigo-500/20 font-medium text-slate-800 dark:text-slate-100" /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                  <FormField control={form.control} name="phone" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-widest">No. Handphone</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Phone className="absolute left-3.5 top-3.5 h-[18px] w-[18px] text-slate-400" />
+                          <Input {...field} placeholder="08..." className="pl-10 h-12 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 rounded-xl focus:ring-indigo-500/20 font-medium text-slate-800 dark:text-slate-100" />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                </div>
+
+                <FormField control={form.control} name="address" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-widest">Alamat</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <MapPin className="absolute left-3.5 top-3.5 h-[18px] w-[18px] text-slate-400" />
+                        <Textarea {...field} rows={3} placeholder="Alamat lengkap..." className="pl-10 pt-3.5 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 rounded-xl focus:ring-indigo-500/20 font-medium text-slate-800 dark:text-slate-100 resize-none" />
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+
+                <div className="flex justify-end pt-4">
+                  <Button type="submit" disabled={isLoading} className="h-12 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-8 shadow-lg shadow-indigo-500/20 active:scale-95 transition-all gap-2">
+                    {isLoading ? "Menyimpan..." : <><Save className="w-4 h-4" /> Simpan Perubahan</>}
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          </div>
+        </div>
+      </EnterpriseLayout>
+    );
+  }
+
   return (
     <KaryawanWorkspaceLayout>
       <div className="mb-8">
@@ -307,7 +415,7 @@ const ProfilKaryawan = () => {
             </div>
 
             <div className="w-full mt-8 space-y-3">
-              <Button variant="outline" className="w-full justify-between h-12 rounded-xl border-slate-200 dark:border-slate-700 shadow-sm font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:bg-slate-800" onClick={() => navigate("/edit-password")}>
+              <Button variant="outline" className="w-full justify-between h-12 rounded-xl border-slate-200 dark:border-slate-800 shadow-sm font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:bg-slate-800" onClick={() => navigate("/edit-password")}>
                 Ubah Password <Key className="h-[18px] w-[18px] text-slate-400" />
               </Button>
               <Button variant="ghost" className="w-full justify-between h-12 rounded-xl text-red-600 hover:text-red-700 hover:bg-red-50 border border-transparent hover:border-red-100 font-bold" onClick={handleLogout}>
@@ -337,7 +445,7 @@ const ProfilKaryawan = () => {
                     <FormField control={form.control} name="full_name" render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-widest">Nama Lengkap</FormLabel>
-                        <FormControl><Input {...field} className="h-12 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 rounded-xl focus:ring-blue-500/20 font-medium text-slate-800 dark:text-slate-100 shadow-sm" /></FormControl>
+                        <FormControl><Input {...field} className="h-12 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 rounded-xl focus:ring-blue-500/20 font-medium text-slate-800 dark:text-slate-100 shadow-sm" /></FormControl>
                         <FormMessage />
                       </FormItem>
                     )} />

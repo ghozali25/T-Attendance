@@ -82,7 +82,7 @@ const EnterpriseLayout = ({
     customExportNode,
     breadcrumbs
 }: EnterpriseLayoutProps) => {
-    const { user, signOut } = useAuth();
+    const { user, signOut, isAdmin } = useAuth();
     const { isDark, toggleTheme } = useTheme();
     const { settings } = useSystemSettings();
     const navigate = useNavigate();
@@ -375,11 +375,17 @@ const EnterpriseLayout = ({
                                         </div>
                                     </DropdownMenuLabel>
                                     <DropdownMenuSeparator className="bg-slate-100 dark:bg-slate-700" />
-                                    <DropdownMenuItem className="gap-2 cursor-pointer p-2 rounded-lg text-sm">
+                                    <DropdownMenuItem 
+                                        onClick={() => navigate("/karyawan/profil")}
+                                        className="gap-2 cursor-pointer p-2 rounded-lg text-sm"
+                                    >
                                         <UserCog className="w-4 h-4 text-slate-500" />
                                         Pengaturan Profil
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem className="gap-2 cursor-pointer p-2 rounded-lg text-sm">
+                                    <DropdownMenuItem 
+                                        onClick={() => isAdmin ? navigate("/admin/pengaturan") : navigate("/karyawan/profil")}
+                                        className="gap-2 cursor-pointer p-2 rounded-lg text-sm"
+                                    >
                                         <Settings className="w-4 h-4 text-slate-500" />
                                         Preferensi
                                     </DropdownMenuItem>
