@@ -422,7 +422,7 @@ const AdminDashboardNew = () => {
                         ) : null}
 
                         <Card className="flex-1 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.08)] border-slate-200/60 dark:border-slate-700/60 bg-white dark:bg-slate-900 rounded-2xl overflow-hidden flex flex-col">
-                            <CardHeader className="border-b border-slate-100/80 dark:border-slate-800/80 bg-slate-50/30 pb-4 px-6 pt-5">
+                            <CardHeader className="border-b border-slate-100/80 dark:border-slate-800/80 bg-slate-50/30 dark:bg-transparent pb-4 px-6 pt-5">
                                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                                     <div className="space-y-1">
                                         <CardTitle className="text-lg font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
@@ -451,7 +451,7 @@ const AdminDashboardNew = () => {
                             </CardHeader>
                             <CardContent className="p-0 overflow-y-auto" style={{ maxHeight: '420px' }}>
                                 <Table>
-                                    <TableHeader className="bg-white dark:bg-slate-900 sticky top-0 z-10 shadow-[0_1px_2px_0_rgba(0,0,0,0.03)] border-b border-slate-200/80">
+                                    <TableHeader className="bg-slate-50 dark:bg-slate-800 sticky top-0 z-10 shadow-[0_1px_2px_0_rgba(0,0,0,0.03)] border-b border-slate-200/80 dark:border-slate-800">
                                         <TableRow className="hover:bg-transparent">
                                             <TableHead className="w-[45%] text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest pl-6 h-12">Karyawan</TableHead>
                                             <TableHead className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-center h-12">Jam Masuk</TableHead>

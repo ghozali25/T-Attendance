@@ -168,9 +168,9 @@ const KelolaPermohonanAbsen = () => {
         </div>
 
         {/* Desktop Table */}
-        <Card className="border-slate-200/60 shadow-sm overflow-hidden rounded-[24px]">
+        <Card className="bg-white dark:bg-slate-900 border-slate-200/60 dark:border-slate-800 shadow-sm overflow-hidden rounded-[24px]">
           <Table>
-            <TableHeader className="bg-slate-50 dark:bg-slate-800/50">
+            <TableHeader className="bg-slate-50 dark:bg-slate-800">
               <TableRow>
                 <TableHead className="font-bold">Karyawan</TableHead>
                 <TableHead className="font-bold">Tanggal</TableHead>
@@ -196,7 +196,7 @@ const KelolaPermohonanAbsen = () => {
                 </TableRow>
               ) : (
                 filteredRequests.map((req) => (
-                  <TableRow key={req.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
+                  <TableRow key={req.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800 border-b border-slate-100 dark:border-slate-800 transition-colors">
                     <TableCell>
                       <div className="font-bold text-slate-800 dark:text-slate-100">{req.full_name}</div>
                       <div className="text-[10px] uppercase font-bold text-slate-400">{req.department}</div>
