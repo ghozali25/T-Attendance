@@ -84,8 +84,8 @@ export function AttendanceHistoryTable({ data, isLoading, onAction }: Attendance
     };
 
     const getStatusBadge = (status: string, isWeekend: boolean) => {
-        if (isWeekend) {
-            return <Badge variant="outline" className="bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:bg-slate-800/80"><CalendarOff className="w-3 h-3 mr-1.5" /> Libur</Badge>;
+        if (isWeekend || status === 'holiday') {
+            return <Badge variant="outline" className="bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 border-red-200 dark:border-red-800 shadow-sm transition-all hover:scale-105 font-bold uppercase tracking-wider text-[10px]"><CalendarOff className="w-3 h-3 mr-1.5" /> Offday</Badge>;
         }
 
         switch (status) {
@@ -136,11 +136,17 @@ export function AttendanceHistoryTable({ data, isLoading, onAction }: Attendance
                                 return (
                                     <TableRow
                                         key={row.date}
-                                        className="border-b border-slate-50 bg-slate-50/20 opacity-40 hover:opacity-100 transition-opacity duration-300 group"
+                                        className={cn(
+                                            "border-b border-slate-50 transition-opacity duration-300 group",
+                                            finalIsWeekend ? "bg-red-50/5 dark:bg-red-900/5 opacity-80" : "bg-slate-50/20 opacity-40 hover:opacity-100"
+                                        )}
                                         style={{ animationDelay: `${index * 30}ms` }}
                                     >
                                         <TableCell className="pl-6 py-4">
-                                            <span className="text-sm font-medium text-slate-400 group-hover:text-slate-600 dark:text-slate-300 transition-colors">
+                                            <span className={cn(
+                                                "text-sm font-bold transition-colors",
+                                                finalIsWeekend ? "text-red-500" : "text-slate-400 group-hover:text-slate-600 dark:text-slate-300"
+                                            )}>
                                                 {format(new Date(row.date), "EEEE, d MMM yyyy", { locale: id })}
                                             </span>
                                         </TableCell>
@@ -148,7 +154,11 @@ export function AttendanceHistoryTable({ data, isLoading, onAction }: Attendance
                                         <TableCell className="text-center py-4 text-slate-300">-</TableCell>
                                         <TableCell className="text-center py-4 text-slate-300">-</TableCell>
                                         <TableCell className="text-center py-4">
-                                            <Badge variant="outline" className="border-dashed border-slate-200 dark:border-slate-700 text-slate-400 font-normal shadow-none hover:bg-transparent">Belum Berlangsung</Badge>
+                                            {finalIsWeekend ? (
+                                                <Badge variant="outline" className="bg-red-50/50 dark:bg-red-900/10 text-red-600 dark:text-red-400 border-red-100 dark:border-red-900 shadow-none font-bold uppercase tracking-wider text-[10px]">Offday</Badge>
+                                            ) : (
+                                                <Badge variant="outline" className="border-dashed border-slate-200 dark:border-slate-700 text-slate-400 font-normal shadow-none hover:bg-transparent">Belum Berlangsung</Badge>
+                                            )}
                                         </TableCell>
                                         <TableCell className="text-center py-4 text-slate-200">
                                             <div className="w-8 h-8 rounded-full bg-slate-50 dark:bg-slate-800 mx-auto"></div>
@@ -171,12 +181,12 @@ export function AttendanceHistoryTable({ data, isLoading, onAction }: Attendance
                                         <div className="flex flex-col">
                                             <span className={cn(
                                                 "font-bold text-sm transition-colors",
-                                                finalIsWeekend ? "text-red-500" : "text-slate-800 dark:text-slate-100 group-hover:text-blue-700"
+                                                (finalIsWeekend || row.status === 'holiday') ? "text-red-500" : "text-slate-800 dark:text-slate-100 group-hover:text-blue-700"
                                             )}>
                                                 {format(new Date(row.date), "EEEE, d MMM yyyy", { locale: id })}
                                             </span>
-                                            {finalIsWeekend && (
-                                                <span className="text-[10px] text-red-400 font-medium">Hari Libur</span>
+                                            {(finalIsWeekend || row.status === 'holiday') && (
+                                                <span className="text-[10px] text-red-400 font-bold uppercase tracking-tight">Offday</span>
                                             )}
                                             {row.notes && (
                                                 <span className="text-[10px] text-slate-400 italic mt-0.5 truncate max-w-[150px] flex items-center gap-1">
