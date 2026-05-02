@@ -306,19 +306,19 @@ const EnterpriseLayout = ({
                                                 isActive ? "text-blue-600 dark:text-blue-400 bg-blue-100/60 dark:bg-blue-800/30" : "text-slate-400 dark:text-slate-500 group-hover:text-slate-600 dark:group-hover:text-slate-300"
                                             )}>
                                                 <item.icon className="h-4 w-4 flex-shrink-0" />
-                                                
-                                                {/* Pulsing Red Dot Notification */}
-                                                {item.title.toLowerCase().includes('permohonan') && pendingRequests > 0 && hasNewNotif && (
-                                                    <span className="absolute -top-1 right-3 flex h-2.5 w-2.5">
-                                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                                                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500 border border-white dark:border-slate-900"></span>
-                                                    </span>
-                                                )}
                                             </div>
                                             {!isCollapsed && <span className="truncate">{item.title}</span>}
                                             {!isCollapsed && item.title.toLowerCase().includes('permohonan') && pendingRequests > 0 && (
-                                                <span className="ml-auto text-[10px] font-bold bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-2 py-0.5 rounded-full ring-1 ring-red-200 dark:ring-red-800/30">
-                                                    {pendingRequests}
+                                                <span className="ml-auto relative">
+                                                    {hasNewNotif && (
+                                                        <span className="absolute -top-1.5 -right-1.5 flex h-2.5 w-2.5 z-10">
+                                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                                            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500 border border-white dark:border-slate-900"></span>
+                                                        </span>
+                                                    )}
+                                                    <span className="text-[10px] font-bold bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-2 py-0.5 rounded-full ring-1 ring-red-200 dark:ring-red-800/30">
+                                                        {pendingRequests}
+                                                    </span>
                                                 </span>
                                             )}
                                             {!isCollapsed && !item.title.toLowerCase().includes('permohonan') && item.badge && item.badge > 0 && (
