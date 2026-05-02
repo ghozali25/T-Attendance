@@ -336,7 +336,7 @@ const KaryawanDashboardNew = () => {
     const hour = currentTime.getHours();
     const greeting = hour < 11 ? "Selamat Pagi" : hour < 15 ? "Selamat Siang" : hour < 18 ? "Selamat Sore" : "Selamat Malam";
     const remainingLeave = Math.max(0, settings.maxLeaveDays - usedLeaveDays);
-    const firstName = user?.user_metadata?.full_name?.split(' ')[0] || 'Karyawan';
+    const firstName = user?.full_name?.split(' ')[0] || 'Karyawan';
 
     const totalRecordedDays = monthStats.present + monthStats.absent;
     const attRate = totalRecordedDays > 0 ? Math.round((monthStats.present / totalRecordedDays) * 100) : 100;

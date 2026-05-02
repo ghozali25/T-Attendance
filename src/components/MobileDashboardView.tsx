@@ -443,7 +443,7 @@ export default function MobileDashboardView({ role }: { role: "admin" | "manager
     ];
 
     const isKaryawan = role === 'karyawan';
-    const firstName = userName.split(' ')[0] || 'User';
+    const firstName = (user?.full_name || userName).split(' ')[0] || 'Karyawan';
 
     // Skeleton component
     const Skeleton = ({ className }: { className?: string }) => (
