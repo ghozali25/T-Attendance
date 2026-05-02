@@ -142,7 +142,11 @@ const KelolaPermohonanAbsen = () => {
       title="Kelola Permohonan Absen"
       subtitle="Verifikasi permohonan absen manual dari karyawan"
       menuSections={menuSections}
-      roleLabel={isAdmin ? "Admin" : "Manager"}
+      roleLabel={isAdmin ? "Administrator" : "Manager"}
+      breadcrumbs={[
+        { label: isAdmin ? "Admin" : "Manager", href: "/dashboard" },
+        { label: "Permohonan Absen" },
+      ]}
     >
       <div className="space-y-8 pb-20 animate-in fade-in slide-in-from-bottom-8 duration-700">
         {/* Stats */}

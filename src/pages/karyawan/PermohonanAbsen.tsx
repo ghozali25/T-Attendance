@@ -331,7 +331,12 @@ const PermohonanAbsen = () => {
   );
 
   return (
-    <KaryawanWorkspaceLayout>
+    <KaryawanWorkspaceLayout
+      breadcrumbs={[
+        { label: "Karyawan", href: "/dashboard" },
+        { label: "Permohonan Absen" },
+      ]}
+    >
       {pageContent}
     </KaryawanWorkspaceLayout>
   );

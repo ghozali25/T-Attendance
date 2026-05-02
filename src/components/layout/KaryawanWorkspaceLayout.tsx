@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { Zap, Bell, User, LogOut, Key, Sun, Moon } from "lucide-react";
+import { Zap, Bell, User, LogOut, Key, Sun, Moon, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
     DropdownMenu, DropdownMenuContent, DropdownMenuItem,
@@ -20,9 +20,10 @@ interface KaryawanWorkspaceLayoutProps {
     isDark?: boolean;
     onToggleDark?: () => void;
     notifCount?: number;
+    breadcrumbs?: { label: string; href?: string }[];
 }
 
-export default function KaryawanWorkspaceLayout({ children, notifCount = 0 }: KaryawanWorkspaceLayoutProps) {
+export default function KaryawanWorkspaceLayout({ children, notifCount = 0, breadcrumbs }: KaryawanWorkspaceLayoutProps) {
     const { user, signOut } = useAuth();
     const { isDark, toggleTheme } = useTheme();
     const navigate = useNavigate();
@@ -146,6 +147,23 @@ export default function KaryawanWorkspaceLayout({ children, notifCount = 0 }: Ka
             </header>
 
             <main className="max-w-[1400px] mx-auto px-6 py-10 space-y-8 animate-in fade-in duration-500">
+                {/* Breadcrumbs */}
+                {breadcrumbs && breadcrumbs.length > 0 && (
+                    <nav className={cn("flex items-center gap-1.5 text-xs font-medium mb-4",
+                        isDark ? "text-slate-500" : "text-slate-400")}>
+                        <Link to="/" className="hover:text-blue-500 transition-colors">Home</Link>
+                        {breadcrumbs.map((crumb, i) => (
+                            <span key={i} className="flex items-center gap-1.5">
+                                <ChevronRight className={cn("w-3 h-3", isDark ? "text-slate-700" : "text-slate-300")} />
+                                {crumb.href ? (
+                                    <Link to={crumb.href} className="hover:text-blue-500 transition-colors">{crumb.label}</Link>
+                                ) : (
+                                    <span className={isDark ? "text-slate-300 font-semibold" : "text-slate-600 font-semibold"}>{crumb.label}</span>
+                                )}
+                            </span>
+                        ))}
+                    </nav>
+                )}
                 {children}
             </main>
 
