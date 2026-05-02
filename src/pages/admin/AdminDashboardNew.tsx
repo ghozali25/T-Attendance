@@ -493,7 +493,7 @@ const AdminDashboardNew = () => {
                                                     </TableCell>
                                                     <TableCell className="text-center">
                                                         {record.clock_in ? (
-                                                            <div className="inline-flex font-mono text-[13px] font-bold bg-slate-100/80 text-slate-700 dark:text-slate-200 px-2.5 py-1 rounded-md border border-slate-200/80">
+                                                            <div className="inline-flex font-mono text-[13px] font-bold bg-slate-100/80 dark:bg-slate-800 text-slate-700 dark:text-slate-200 px-2.5 py-1 rounded-md border border-slate-200/80 dark:border-slate-700/80">
                                                                 {formatTime(record.clock_in)}
                                                             </div>
                                                         ) : <span className="text-slate-300">-</span>}
