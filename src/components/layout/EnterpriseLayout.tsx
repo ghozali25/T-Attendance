@@ -17,7 +17,7 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTr
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { NotificationPanel } from "@/components/notifications/NotificationPanel";
-import { attendanceRequestsApi } from "@/lib/api";
+import { attendanceRequestsApi, leaveApi } from "@/lib/api";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -93,6 +93,8 @@ const EnterpriseLayout = ({
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [pendingRequests, setPendingRequests] = useState(0);
     const [hasNewNotif, setHasNewNotif] = useState(false);
+    const [pendingLeaveRequests, setPendingLeaveRequests] = useState(0);
+    const [hasNewLeaveNotif, setHasNewLeaveNotif] = useState(false);
 
     // Fetch attendance stats for notifications
     useEffect(() => {
@@ -117,6 +119,20 @@ const EnterpriseLayout = ({
                     setHasNewNotif(true);
                 }
                 setPendingRequests(count);
+
+                // Fetch leave stats
+                const leaves = await leaveApi.getAll(isAdmin ? { status: 'pending' } : { user_id: user?.id });
+                let leaveCount = 0;
+                if (isAdmin) {
+                    leaveCount = (leaves || []).length; // Because we requested status: 'pending'
+                } else {
+                    leaveCount = (leaves || []).filter((l: any) => l.status === 'approved' || l.status === 'rejected').length;
+                }
+                
+                if (leaveCount > pendingLeaveRequests) {
+                    setHasNewLeaveNotif(true);
+                }
+                setPendingLeaveRequests(leaveCount);
             } catch (error) {
                 console.error("Error fetching menu stats:", error);
             }
@@ -125,12 +141,15 @@ const EnterpriseLayout = ({
         fetchStats();
         const interval = setInterval(fetchStats, 30000); // Every 30 seconds
         return () => clearInterval(interval);
-    }, [user, isAdmin, pendingRequests]);
+    }, [user, isAdmin, pendingRequests, pendingLeaveRequests]);
 
-    // Reset notification when navigating to permohonan
+    // Reset notification when navigating
     useEffect(() => {
         if (location.pathname.includes('permohonan-absen')) {
             setHasNewNotif(false);
+        }
+        if (location.pathname.includes('cuti')) {
+            setHasNewLeaveNotif(false);
         }
     }, [location.pathname]);
 
@@ -308,7 +327,7 @@ const EnterpriseLayout = ({
                                                 <item.icon className="h-4 w-4 flex-shrink-0" />
                                             </div>
                                             {!isCollapsed && <span className="truncate">{item.title}</span>}
-                                            {!isCollapsed && item.title.toLowerCase().includes('permohonan') && pendingRequests > 0 && (
+                                            {!isCollapsed && item.title.toLowerCase().includes('permohonan absen') && pendingRequests > 0 && (
                                                 <span className="ml-auto relative">
                                                     {hasNewNotif && (
                                                         <span className="absolute -top-1.5 -right-1.5 flex h-2.5 w-2.5 z-10">
@@ -321,7 +340,20 @@ const EnterpriseLayout = ({
                                                     </span>
                                                 </span>
                                             )}
-                                            {!isCollapsed && !item.title.toLowerCase().includes('permohonan') && item.badge && item.badge > 0 && (
+                                            {!isCollapsed && item.title.toLowerCase().includes('cuti') && pendingLeaveRequests > 0 && (
+                                                <span className="ml-auto relative">
+                                                    {hasNewLeaveNotif && (
+                                                        <span className="absolute -top-1.5 -right-1.5 flex h-2.5 w-2.5 z-10">
+                                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
+                                                            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-orange-500 border border-white dark:border-slate-900"></span>
+                                                        </span>
+                                                    )}
+                                                    <span className="text-[10px] font-bold bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 px-2 py-0.5 rounded-full ring-1 ring-orange-200 dark:ring-orange-800/30">
+                                                        {pendingLeaveRequests}
+                                                    </span>
+                                                </span>
+                                            )}
+                                            {!isCollapsed && !item.title.toLowerCase().includes('permohonan') && !item.title.toLowerCase().includes('cuti') && item.badge && item.badge > 0 && (
                                                 <span className="ml-auto text-[10px] font-bold bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded-full">{item.badge}</span>
                                             )}
                                             {isCollapsed && (
