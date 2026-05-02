@@ -122,10 +122,14 @@ const Pengaturan = () => {
         title: "Konfigurasi Berhasil Disimpan",
         description: "Semua perubahan kebijakan telah diterapkan ke sistem HRIS.",
       });
-      setHasChanges(false);
-      setFormData(dataToSave);
-      inputRefs.current = {};
-      setActiveMobileSheet(null);
+      setShowSaveConfirm(false);
+      
+      setTimeout(() => {
+        setHasChanges(false);
+        setFormData(dataToSave);
+        inputRefs.current = {};
+        setActiveMobileSheet(null);
+      }, 100);
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -133,7 +137,9 @@ const Pengaturan = () => {
         description: error.message || "Terjadi kesalahan.",
       });
     } finally {
-      setIsSaving(false);
+      setTimeout(() => {
+        setIsSaving(false);
+      }, 200);
     }
   };
 

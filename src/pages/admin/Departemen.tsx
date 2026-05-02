@@ -131,39 +131,43 @@ const Departemen = () => {
   const onSubmit = async (data: DepartmentFormData) => {
     setIsSubmitting(true);
 
-    if (editingDepartment) {
-      // Update department name using db.query for now (no API endpoint yet)
-      await db.query(
-        'UPDATE profiles SET department = ? WHERE department = ?',
-        [data.name, editingDepartment]
-      );
-      // Also update in departments table
-      await db.query(
-        'UPDATE departments SET name = ? WHERE name = ?',
-        [data.name, editingDepartment]
-      );
-      toast({ title: "Departemen Diperbarui", description: `Nama departemen berahisl diubah menjadi ${data.name}` });
-      setDialogOpen(false);
-      setEditingDepartment(null);
-      fetchDepartments();
-    } else {
-      if (departments.some(d => d.name.toLowerCase() === data.name.toLowerCase())) {
-        toast({ variant: "destructive", title: "Gagal", description: "Departemen sudah terdaftar didalam sistem." });
-      } else {
-        // Insert new department into departments table
-        const crypto = (await import('crypto')).default;
-        const id = crypto.randomUUID();
+    try {
+      if (editingDepartment) {
+        // Update department name using db.query for now (no API endpoint yet)
         await db.query(
-          'INSERT INTO departments (id, name) VALUES (?, ?)',
-          [id, data.name]
+          'UPDATE profiles SET department = ? WHERE department = ?',
+          [data.name, editingDepartment]
         );
-        toast({ title: "Departemen Tersimpan", description: `Struktur divisi "${data.name}" siap digunakan.` });
-        toast({ title: "Info Integrasi", description: "Silakan tetapkan karyawan ke departemen ini agar muncul di daftar metrik." });
+        // Also update in departments table
+        await db.query(
+          'UPDATE departments SET name = ? WHERE name = ?',
+          [data.name, editingDepartment]
+        );
+        toast({ title: "Departemen Diperbarui", description: `Nama departemen berahisl diubah menjadi ${data.name}` });
         setDialogOpen(false);
+        setEditingDepartment(null);
         fetchDepartments();
+      } else {
+        if (departments.some(d => d.name.toLowerCase() === data.name.toLowerCase())) {
+          toast({ variant: "destructive", title: "Gagal", description: "Departemen sudah terdaftar didalam sistem." });
+        } else {
+          // Insert new department into departments table
+          const id = window.crypto.randomUUID();
+          await db.query(
+            'INSERT INTO departments (id, name) VALUES (?, ?)',
+            [id, data.name]
+          );
+          toast({ title: "Departemen Tersimpan", description: `Struktur divisi "${data.name}" siap digunakan.` });
+          toast({ title: "Info Integrasi", description: "Silakan tetapkan karyawan ke departemen ini agar muncul di daftar metrik." });
+          setDialogOpen(false);
+          fetchDepartments();
+        }
       }
+    } catch (err: any) {
+      toast({ variant: "destructive", title: "Error", description: err.message || "Gagal menyimpan departemen" });
+    } finally {
+      setIsSubmitting(false);
     }
-    setIsSubmitting(false);
   };
 
   const handleEdit = (deptName: string) => {

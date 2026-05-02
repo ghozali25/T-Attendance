@@ -120,6 +120,7 @@ interface EmployeeReport {
     position: string | null; // Add position
     details: DailyAttendanceStatus[];
     lateMinutes: number; // Add total late minutes
+    lateCount: number; // Add total late count
     dailyStatus: Record<string, string>; // Key: "YYYY-MM-DD", Value: Status Code
     totalWorkingDays: number;
     present: number;

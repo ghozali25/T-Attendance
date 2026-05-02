@@ -297,6 +297,14 @@ const KelolaKaryawan = () => {
 
     try {
       if (editingEmployee) {
+        // If it's a new department, also add it to the master departments table
+        if (values.department === "__new__" && newDepartment) {
+          const deptExists = await db.query('SELECT name FROM departments WHERE name = ?', [newDepartment]) as any[];
+          if (!deptExists || deptExists.length === 0) {
+            await db.query('INSERT INTO departments (id, name) VALUES (?, ?)', [window.crypto.randomUUID(), newDepartment]);
+          }
+        }
+
         // Update using API
         await usersApi.update(editingEmployee.user_id, {
           full_name: values.full_name,
@@ -308,6 +316,14 @@ const KelolaKaryawan = () => {
 
         toast({ title: "Updated", description: "Employee details updated." });
       } else {
+        // If it's a new department, also add it to the master departments table
+        if (values.department === "__new__" && newDepartment) {
+          const deptExists = await db.query('SELECT name FROM departments WHERE name = ?', [newDepartment]) as any[];
+          if (!deptExists || deptExists.length === 0) {
+            await db.query('INSERT INTO departments (id, name) VALUES (?, ?)', [window.crypto.randomUUID(), newDepartment]);
+          }
+        }
+
         // Create using API
         await usersApi.create({
           email: values.email,
@@ -322,10 +338,23 @@ const KelolaKaryawan = () => {
         toast({ title: "Created", description: "New employee added successfully." });
       }
 
+      // 1. Close dialog immediately
       setDialogOpen(false);
-      fetchEmployees();
-      fetchStats();
-      fetchDepartments();
+      
+      // 2. Clear editing state
+      setTimeout(() => {
+        setEditingEmployee(null);
+        form.reset();
+      }, 100);
+      
+      // 3. Refresh all data after a small delay to ensure UI is unblocked
+      setTimeout(async () => {
+        await Promise.all([
+          fetchEmployees(),
+          fetchStats(),
+          fetchDepartments()
+        ]);
+      }, 300);
 
     } catch (err: any) {
       toast({ variant: "destructive", title: "Error", description: err.message || "Unknown error" });
