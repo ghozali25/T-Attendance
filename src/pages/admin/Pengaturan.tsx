@@ -567,10 +567,10 @@ const Pengaturan = () => {
           </div>
         </div>
 
-        <div className="overflow-hidden rounded-2xl border border-slate-200 dark:border-white/5 bg-white dark:bg-transparent">
+        <div className="overflow-y-auto max-h-[520px] rounded-2xl border border-slate-200 dark:border-white/5 bg-white dark:bg-transparent vibe-scrollbar relative">
           <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-slate-50 dark:bg-white/5 border-b border-slate-200 dark:border-white/10">
+            <thead className="sticky top-0 z-10">
+              <tr className="bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-white/10 shadow-sm">
                 <th className="px-6 py-4 text-[13px] font-bold text-slate-500 uppercase tracking-wider w-[180px]">Tanggal</th>
                 <th className="px-6 py-4 text-[13px] font-bold text-slate-500 uppercase tracking-wider">Keterangan</th>
                 <th className="px-6 py-4 text-[13px] font-bold text-slate-500 uppercase tracking-wider w-[100px] text-center">Aksi</th>
