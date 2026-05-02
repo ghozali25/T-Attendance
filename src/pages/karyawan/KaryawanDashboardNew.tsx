@@ -21,7 +21,7 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 import { useSystemSettings } from "@/hooks/useSystemSettings";
-import { attendanceApi, journalsApi, leaveApi } from "@/lib/api";
+import { attendanceApi, journalsApi, leaveApi, holidaysApi } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { format, subDays } from "date-fns";
 import { id as idLocale } from "date-fns/locale";
@@ -75,6 +75,8 @@ const KaryawanDashboardNew = () => {
     const [isActionLoading, setIsActionLoading] = useState(false);
     const [showConfirmDialog, setShowConfirmDialog] = useState(false);
     const [confirmAction, setConfirmAction] = useState<"in" | "out">("in");
+    const [isHoliday, setIsHoliday] = useState(false);
+    const [holidayName, setHolidayName] = useState("");
 
     // Journal states
     const [journalTitle, setJournalTitle] = useState("");
@@ -119,6 +121,7 @@ const KaryawanDashboardNew = () => {
 
     useEffect(() => {
         if (user) {
+            fetchHolidayStatus();
             fetchTodayAttendance();
             fetchMonthStats();
             fetchUsedLeaveDays();
@@ -128,6 +131,30 @@ const KaryawanDashboardNew = () => {
             fetchNotifCount();
         }
     }, [user]);
+
+    const fetchHolidayStatus = async () => {
+        const now = new Date();
+        const todayStr = formatJakartaDate(now, 'yyyy-MM-dd');
+        const isWeekend = now.getDay() === 0 || now.getDay() === 6;
+        
+        try {
+            const holidays = await holidaysApi.getAll({ year: now.getFullYear() }) as any[];
+            const todayHoliday = holidays?.find(h => h.date === todayStr);
+            
+            if (isWeekend || todayHoliday) {
+                setIsHoliday(true);
+                setHolidayName(todayHoliday ? todayHoliday.name : "Libur Akhir Pekan");
+            } else {
+                setIsHoliday(false);
+                setHolidayName("");
+            }
+        } catch (e) {
+            if (isWeekend) {
+                setIsHoliday(true);
+                setHolidayName("Libur Akhir Pekan");
+            }
+        }
+    };
 
     // Location tracking
     useEffect(() => {
@@ -530,10 +557,25 @@ const KaryawanDashboardNew = () => {
                                     </div>
                                 </div>
                             ) : (
-                                <button onClick={handleClockAction} disabled={isActionLoading}
-                                    className="w-full bg-blue-600 hover:bg-blue-500 text-white rounded-xl py-4 font-bold shadow-[0_0_20px_rgba(37,99,235,0.3)] transition-all hover:shadow-[0_0_25px_rgba(37,99,235,0.5)] flex justify-center items-center gap-2">
-                                    {isActionLoading ? <div className="w-5 h-5 animate-spin border-2 border-white/30 border-t-white rounded-full" /> : <><LogIn className="w-5 h-5" /> Masuk Sekarang</>}
-                                </button>
+                                <>
+                                    <button onClick={handleClockAction} disabled={isActionLoading || (isHoliday && !todayAttendance)}
+                                        className={cn(
+                                            "w-full rounded-xl py-4 font-bold shadow-lg transition-all flex justify-center items-center gap-2",
+                                            isHoliday && !todayAttendance 
+                                                ? "bg-slate-700 text-slate-500 cursor-not-allowed border border-slate-600 shadow-none" 
+                                                : "bg-blue-600 hover:bg-blue-500 text-white shadow-[0_0_20px_rgba(37,99,235,0.3)] hover:shadow-[0_0_25px_rgba(37,99,235,0.5)]"
+                                        )}>
+                                        {isActionLoading ? <div className="w-5 h-5 animate-spin border-2 border-white/30 border-t-white rounded-full" /> : 
+                                            isHoliday && !todayAttendance ? <><Calendar className="w-5 h-5" /> Hari Libur</> :
+                                            <><LogIn className="w-5 h-5" /> Masuk Sekarang</>
+                                        }
+                                    </button>
+                                    {isHoliday && !todayAttendance && (
+                                        <p className="mt-3 text-[10px] text-center text-amber-400 font-medium">
+                                            Hari ini {holidayName}. Gunakan fitur <Link to="/karyawan/permohonan-absen" className="underline hover:text-amber-300">Permohonan Absen</Link> jika Anda lembur.
+                                        </p>
+                                    )}
+                                </>
                             )}
                         </div>
                     </div>

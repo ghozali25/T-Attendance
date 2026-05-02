@@ -72,9 +72,11 @@ import leaveRoutes from './routes/leave.js';
 import usersRoutes from './routes/users.js';
 import dbRoutes from './routes/db.js';
 import holidayRoutes from './routes/holidays.js';
+import attendanceRequestRoutes from './routes/attendance_requests.js';
 
 app.use('/api/auth', authRoutes);
 app.use('/api/attendance', attendanceRoutes);
+app.use('/api/attendance-requests', attendanceRequestRoutes);
 app.use('/api/profiles', profilesRoutes);
 app.use('/api/journals', journalsRoutes);
 app.use('/api/leave', leaveRoutes);

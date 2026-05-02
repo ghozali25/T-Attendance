@@ -1,3 +1,4 @@
+// Attendance Management System - Main Entry Point
 import { lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -25,6 +26,7 @@ const RiwayatAbsensi = lazy(() => import("./pages/karyawan/RiwayatAbsensi"));
 const JurnalSaya = lazy(() => import("./pages/karyawan/JurnalSaya"));
 const ProfilKaryawan = lazy(() => import("./pages/karyawan/ProfilKaryawan"));
 const PengajuanCuti = lazy(() => import("./pages/karyawan/PengajuanCuti"));
+const PermohonanAbsen = lazy(() => import("@/pages/karyawan/PermohonanAbsen"));
 const LaporanKaryawan = lazy(() => import("./pages/karyawan/LaporanKaryawan"));
 
 // Admin
@@ -37,6 +39,7 @@ const Departemen = lazy(() => import("./pages/admin/Departemen"));
 const KelolaRole = lazy(() => import("./pages/admin/KelolaRole"));
 const Dokumentasi = lazy(() => import("./pages/admin/Dokumentasi"));
 const JurnalKerja = lazy(() => import("./pages/admin/JurnalKerja"));
+const KelolaPermohonanAbsen = lazy(() => import("@/pages/admin/KelolaPermohonanAbsen"));
 const ExportDatabase = lazy(() => import("./pages/admin/ExportDatabase"));
 
 // Manager
@@ -173,6 +176,14 @@ const App = () => (
                       }
                     />
                     <Route
+                      path="/karyawan/permohonan-absen"
+                      element={
+                        <ProtectedRoute>
+                          <PermohonanAbsen />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
                       path="/karyawan/laporan"
                       element={
                         <ProtectedRoute>
@@ -218,6 +229,14 @@ const App = () => (
                       element={
                         <ManagerRoute>
                           <ManagerCuti />
+                        </ManagerRoute>
+                      }
+                    />
+                    <Route
+                      path="/manager/permohonan-absen"
+                      element={
+                        <ManagerRoute>
+                          <KelolaPermohonanAbsen />
                         </ManagerRoute>
                       }
                     />
@@ -291,6 +310,14 @@ const App = () => (
                       element={
                         <AdminRoute>
                           <Dokumentasi />
+                        </AdminRoute>
+                      }
+                    />
+                    <Route
+                      path="/admin/permohonan-absen"
+                      element={
+                        <AdminRoute>
+                          <KelolaPermohonanAbsen />
                         </AdminRoute>
                       }
                     />

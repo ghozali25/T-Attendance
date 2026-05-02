@@ -27,6 +27,7 @@ export const ADMIN_MENU_SECTIONS = [
             { icon: Clock, title: "Rekap Absensi", href: "/admin/absensi" },
             { icon: Briefcase, title: "Jurnal Kerja", href: "/admin/jurnal" },
             { icon: BarChart3, title: "Laporan", href: "/admin/laporan" },
+            { icon: FileCheck, title: "Permohonan Absen", href: "/admin/permohonan-absen" },
         ],
     },
     {
@@ -50,6 +51,7 @@ export const MANAGER_MENU_SECTIONS = [
             { icon: Briefcase, title: "Jurnal Tim", href: "/manager/jurnal" },
             { icon: BarChart3, title: "Laporan", href: "/manager/laporan" },
             { icon: FileCheck, title: "Kelola Cuti", href: "/manager/cuti" },
+            { icon: Clock, title: "Permohonan Absen", href: "/manager/permohonan-absen" },
         ],
     },
 ];
@@ -68,6 +70,7 @@ export const KARYAWAN_MENU_SECTIONS = [
         title: "Lainnya",
         items: [
             { icon: CalendarDays, title: "Pengajuan Cuti", href: "/karyawan/cuti" },
+            { icon: Clock, title: "Permohonan Absen", href: "/karyawan/permohonan-absen" },
             { icon: BarChart3, title: "Laporan", href: "/karyawan/laporan" },
             { icon: User, title: "Profil", href: "/karyawan/profil" },
         ],

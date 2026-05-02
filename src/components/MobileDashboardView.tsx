@@ -63,6 +63,8 @@ export default function MobileDashboardView({ role }: { role: "admin" | "manager
     const [showConfirmDialog, setShowConfirmDialog] = useState(false);
     const [confirmAction, setConfirmAction] = useState<"in" | "out">("in");
     const [lateMinutes, setLateMinutes] = useState(0);
+    const [isHoliday, setIsHoliday] = useState(false);
+    const [holidayName, setHolidayName] = useState("");
 
     // Feature 1: Notification Badge
     const [notifCount, setNotifCount] = useState(0);
@@ -130,7 +132,28 @@ export default function MobileDashboardView({ role }: { role: "admin" | "manager
 
     const fetchData = async () => {
         const now = new Date();
-        const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+        const todayStr = formatJakartaDate(now, 'yyyy-MM-dd');
+
+        // Check if today is holiday or weekend
+        const isWeekend = now.getDay() === 0 || now.getDay() === 6;
+        try {
+            const holidays = await holidaysApi.getAll({ year: now.getFullYear() }) as any[];
+            const todayHoliday = holidays?.find(h => h.date === todayStr);
+            
+            if (isWeekend || todayHoliday) {
+                setIsHoliday(true);
+                setHolidayName(todayHoliday ? todayHoliday.name : "Libur Akhir Pekan");
+            } else {
+                setIsHoliday(false);
+                setHolidayName("");
+            }
+        } catch (e) {
+            console.warn("Failed to fetch holidays", e);
+            if (isWeekend) {
+                setIsHoliday(true);
+                setHolidayName("Libur Akhir Pekan");
+            }
+        }
 
         // Today's attendance
         const todayData = await attendanceApi.getAll({ user_id: user?.id, date: todayStr }) as any[];
@@ -549,11 +572,14 @@ export default function MobileDashboardView({ role }: { role: "admin" | "manager
                     <div className="bg-white p-2 rounded-[36px] shadow-sm border border-slate-100/80 mb-5">
                         <button
                             onClick={handleClockAction}
-                            disabled={isActionLoading || isFinished}
+                            disabled={isActionLoading || isFinished || (isHoliday && !todayAttendance)}
                             className={cn(
                                 "w-[148px] h-[148px] rounded-[28px] flex flex-col items-center justify-center gap-2 transition-transform active:scale-95 relative overflow-hidden",
-                                !todayAttendance ? "bg-gradient-to-br from-indigo-600 to-indigo-500 text-white shadow-lg shadow-indigo-500/30" :
-                                    isWorking ? "bg-gradient-to-br from-red-600 to-red-500 text-white shadow-lg shadow-red-500/30" :
+                                !todayAttendance 
+                                    ? (isHoliday 
+                                        ? "bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200" 
+                                        : "bg-gradient-to-br from-indigo-600 to-indigo-500 text-white shadow-lg shadow-indigo-500/30")
+                                    : isWorking ? "bg-gradient-to-br from-red-600 to-red-500 text-white shadow-lg shadow-red-500/30" :
                                         "bg-slate-50 text-slate-400 cursor-not-allowed border border-slate-200"
                             )}
                         >
@@ -563,7 +589,7 @@ export default function MobileDashboardView({ role }: { role: "admin" | "manager
                                 <>
                                     {!todayAttendance ? (
                                         <>
-                                            <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center mb-0.5 backdrop-blur-sm">
+                                            <div className={cn("w-12 h-12 rounded-full flex items-center justify-center mb-0.5 backdrop-blur-sm", isHoliday ? "bg-slate-200 text-slate-400" : "bg-white/20 text-white")}>
                                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" /><polyline points="10 17 15 12 10 7" /><line x1="15" y1="12" x2="3" y2="12" /></svg>
                                             </div>
                                             <span className="text-lg font-extrabold tracking-tight">MASUK</span>
@@ -585,6 +611,17 @@ export default function MobileDashboardView({ role }: { role: "admin" | "manager
                             )}
                         </button>
                     </div>
+
+                    {isHoliday && !todayAttendance && (
+                        <div className="px-6 mb-4 text-center">
+                            <div className="inline-flex items-center gap-2 bg-amber-50 dark:bg-amber-900/20 px-4 py-2 rounded-xl border border-amber-100 dark:border-amber-900/30">
+                                <AlertTriangle className="w-4 h-4 text-amber-500" />
+                                <span className="text-xs font-bold text-amber-700 dark:text-amber-400">
+                                    Hari ini {holidayName}. Gunakan fitur "Permohonan Absen" jika Anda lembur.
+                                </span>
+                            </div>
+                        </div>
+                    )}
 
                     {/* Working/Done Status Card */}
                     {todayAttendance && (
