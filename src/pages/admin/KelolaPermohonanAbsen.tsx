@@ -204,8 +204,8 @@ const KelolaPermohonanAbsen = () => {
                     <TableCell className="text-sm font-medium">
                       {new Date(req.date).toLocaleDateString("id-ID", { day: 'numeric', month: 'short', year: 'numeric' })}
                     </TableCell>
-                    <TableCell className="text-center font-mono text-xs font-bold text-blue-600">{formatTime(req.clock_in)}</TableCell>
-                    <TableCell className="text-center font-mono text-xs font-bold text-blue-600">{formatTime(req.clock_out)}</TableCell>
+                    <TableCell className="text-center font-mono text-xs font-bold text-slate-800 dark:text-slate-100">{formatTime(req.clock_in)}</TableCell>
+                    <TableCell className="text-center font-mono text-xs font-bold text-slate-800 dark:text-slate-100">{formatTime(req.clock_out)}</TableCell>
                     <TableCell className="max-w-[200px]">
                         <div className="flex flex-col gap-1">
                           <div className="flex items-center gap-2 group relative">

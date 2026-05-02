@@ -353,8 +353,8 @@ const EnterpriseLayout = ({
                         </div>
                         {!isCollapsed && (
                             <div className="flex-1 min-w-0">
-                                <p className="text-sm font-semibold text-slate-800 truncate">{userName}</p>
-                                <p className="text-[11px] text-slate-500 font-medium truncate">{roleLabel}</p>
+                                <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate">{userName}</p>
+                                <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium truncate">{roleLabel}</p>
                             </div>
                         )}
                     </div>
@@ -416,7 +416,7 @@ const EnterpriseLayout = ({
 
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" className="relative h-10 rounded-full pl-2.5 pr-4 border border-slate-200/60 bg-white/60 backdrop-blur-md hover:bg-white shadow-sm hover:shadow-md transition-all gap-2">
+                                    <Button variant="ghost" className="relative h-10 rounded-full pl-2.5 pr-4 border border-slate-200/60 dark:border-slate-700/60 bg-white/60 dark:bg-slate-800/60 backdrop-blur-md hover:bg-white dark:hover:bg-slate-800 shadow-sm hover:shadow-md transition-all gap-2">
                                         <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-indigo-500 to-blue-400 text-white flex items-center justify-center text-[11px] font-bold shadow-sm overflow-hidden">
                                             {user?.avatar_url ? (
                                                 <img src={user.avatar_url} alt="Profile" className="w-full h-full object-cover" />
@@ -424,7 +424,7 @@ const EnterpriseLayout = ({
                                                 getInitials(userName)
                                             )}
                                         </div>
-                                        <span className="text-sm font-semibold text-slate-700 hidden sm:block">{userName.split(' ')[0]}</span>
+                                        <span className="text-sm font-semibold text-slate-700 dark:text-slate-200 hidden sm:block">{userName.split(' ')[0]}</span>
                                     </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end" className="w-56 font-['Inter'] rounded-xl p-2 shadow-[0_8px_30px_rgb(0,0,0,0.06)] border-slate-100">
