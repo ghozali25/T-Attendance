@@ -169,9 +169,22 @@ const EnterpriseLayout = ({
     const mobileNav = isManager ? managerMobileNav : adminMobileNav;
 
     // Logo split logic for Talenta-style branding
-    const companyNameParts = settings.companyName.split(' ');
-    const firstPart = companyNameParts[0];
-    const secondPart = companyNameParts.slice(1).join(' ');
+    const companyName = settings.companyName || "T-Attendance";
+    let firstPart = "";
+    let secondPart = "";
+
+    if (companyName.includes(' ')) {
+        const parts = companyName.split(' ');
+        firstPart = parts[0];
+        secondPart = parts.slice(1).join(' ');
+    } else if (companyName.includes('-')) {
+        const index = companyName.indexOf('-');
+        firstPart = companyName.substring(0, index + 1);
+        secondPart = companyName.substring(index + 1);
+    } else {
+        firstPart = companyName;
+        secondPart = "";
+    }
 
     return (
         <div className="min-h-screen bg-slate-50/80 dark:bg-slate-950 font-['Inter',system-ui,sans-serif] pb-24 lg:pb-0 relative overflow-x-hidden">
@@ -198,7 +211,7 @@ const EnterpriseLayout = ({
                         {!isCollapsed && (
                             <div className="min-w-0 overflow-hidden ml-0.5">
                                 <h1 className="font-extrabold text-slate-900 dark:text-white text-[15px] leading-tight truncate tracking-tight">
-                                    {firstPart}<span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 ml-1">{secondPart || "Attendance"}</span>
+                                    {firstPart}{secondPart && <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 ml-1">{secondPart}</span>}
                                 </h1>
                                 <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-tight mt-0.5 font-bold tracking-[0.15em] uppercase flex items-center gap-1.5">
                                     <span className="relative flex h-1.5 w-1.5 shrink-0">
