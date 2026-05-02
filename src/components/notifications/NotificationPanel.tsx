@@ -34,6 +34,10 @@ export function useNotifications(role: 'admin' | 'manager' | 'karyawan') {
         const items: NotificationItem[] = [];
         const now = new Date();
 
+        // Get read/deleted IDs from localStorage
+        const storageKey = `notifications_state_${user.id}`;
+        const savedState = JSON.parse(localStorage.getItem(storageKey) || '{"readIds":[], "deletedIds":[]}');
+
         try {
             if (role === 'karyawan') {
                 // 1. Leaves approved/rejected last 7 days
@@ -44,17 +48,18 @@ export function useNotifications(role: 'admin' | 'manager' | 'karyawan') {
                 
                 allLeaves
                     .filter(leave => new Date(leave.updated_at) >= new Date(sevenDaysAgo))
-                    .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
-                    .slice(0, 5)
                     .forEach(leave => {
+                        const id = `leave-${leave.id}`;
+                        if (savedState.deletedIds.includes(id)) return;
+
                         const isApproved = leave.status === 'approved';
                         items.push({
-                            id: `leave-${leave.id}`,
+                            id,
                             type: isApproved ? 'leave_approved' : 'leave_rejected',
                             title: isApproved ? 'Cuti Disetujui' : 'Cuti Ditolak',
                             message: `Pengajuan cuti ${leave.leave_type} (${leave.start_date} s/d ${leave.end_date}) telah ${isApproved ? 'disetujui' : 'ditolak'}.`,
                             timestamp: new Date(leave.updated_at),
-                            read: false,
+                            read: savedState.readIds.includes(id),
                             icon: isApproved ? CheckCircle2 : AlertTriangle,
                             color: isApproved ? 'text-emerald-600' : 'text-red-600',
                             bgColor: isApproved ? 'bg-emerald-50 dark:bg-emerald-900/20' : 'bg-red-50 dark:bg-red-900/20',
@@ -70,42 +75,45 @@ export function useNotifications(role: 'admin' | 'manager' | 'karyawan') {
                     end_date: monthEnd 
                 });
                 
-                const lateData = (attendanceData || [])
+                (attendanceData || [])
                     .filter(att => att.status === 'late')
-                    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-                    .slice(0, 3);
+                    .forEach(att => {
+                        const id = `late-${att.id}`;
+                        if (savedState.deletedIds.includes(id)) return;
 
-                lateData?.forEach(att => {
-                    items.push({
-                        id: `late-${att.id}`,
-                        type: 'attendance_late',
-                        title: 'Terlambat Masuk',
-                        message: `Anda tercatat terlambat pada ${att.date}. Masuk: ${att.clock_in ? new Date(att.clock_in).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-'}.`,
-                        timestamp: new Date(att.clock_in || att.date),
-                        read: false,
-                        icon: Clock,
-                        color: 'text-amber-600',
-                        bgColor: 'bg-amber-50 dark:bg-amber-900/20',
+                        items.push({
+                            id,
+                            type: 'attendance_late',
+                            title: 'Terlambat Masuk',
+                            message: `Anda tercatat terlambat pada ${att.date}. Masuk: ${att.clock_in ? new Date(att.clock_in).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-'}.`,
+                            timestamp: new Date(att.clock_in || att.date),
+                            read: savedState.readIds.includes(id),
+                            icon: Clock,
+                            color: 'text-amber-600',
+                            bgColor: 'bg-amber-50 dark:bg-amber-900/20',
+                        });
                     });
-                });
 
                 // 3. Journal reminder (if no journal today)
                 const todayStr = format(now, 'yyyy-MM-dd');
-                const journalsToday = await journalsApi.getAll({ user_id: user.id, start_date: todayStr, end_date: todayStr });
-                const journalCount = (journalsToday || []).length;
+                const journalId = `reminder-journal-${todayStr}`;
+                if (!savedState.deletedIds.includes(journalId)) {
+                    const journalsToday = await journalsApi.getAll({ user_id: user.id, start_date: todayStr, end_date: todayStr });
+                    const journalCount = (journalsToday || []).length;
 
-                if (now.getHours() >= 15 && journalCount === 0) {
-                    items.push({
-                        id: `reminder-journal-${todayStr}`,
-                        type: 'journal_reminder',
-                        title: 'Jurnal Belum Diisi',
-                        message: 'Anda belum mengisi jurnal kerja hari ini. Jangan lupa mencatat aktivitas Anda.',
-                        timestamp: now,
-                        read: false,
-                        icon: FileText,
-                        color: 'text-blue-600',
-                        bgColor: 'bg-blue-50 dark:bg-blue-900/20',
-                    });
+                    if (now.getHours() >= 15 && journalCount === 0) {
+                        items.push({
+                            id: journalId,
+                            type: 'journal_reminder',
+                            title: 'Jurnal Belum Diisi',
+                            message: 'Anda belum mengisi jurnal kerja hari ini. Jangan lupa mencatat aktivitas Anda.',
+                            timestamp: now,
+                            read: savedState.readIds.includes(journalId),
+                            icon: FileText,
+                            color: 'text-blue-600',
+                            bgColor: 'bg-blue-50 dark:bg-blue-900/20',
+                        });
+                    }
                 }
 
                 // 4. Attendance Requests approved/rejected
@@ -114,14 +122,17 @@ export function useNotifications(role: 'admin' | 'manager' | 'karyawan') {
                     (attRequests || [])
                         .filter((ar: any) => ar.status !== 'pending' && new Date(ar.updated_at) >= new Date(Date.now() - 7 * 86400000))
                         .forEach((ar: any) => {
+                            const id = `att-req-${ar.id}`;
+                            if (savedState.deletedIds.includes(id)) return;
+
                             const isApproved = ar.status === 'approved';
                             items.push({
-                                id: `att-req-${ar.id}`,
+                                id,
                                 type: isApproved ? 'attendance_request_approved' : 'attendance_request_rejected',
                                 title: isApproved ? 'Permohonan Absen Disetujui' : 'Permohonan Absen Ditolak',
                                 message: `Permohonan absen tanggal ${ar.date} telah ${isApproved ? 'disetujui' : 'ditolak'}.`,
                                 timestamp: new Date(ar.updated_at),
-                                read: false,
+                                read: savedState.readIds.includes(id),
                                 icon: isApproved ? CheckCircle2 : XCircle,
                                 color: isApproved ? 'text-emerald-600' : 'text-red-600',
                                 bgColor: isApproved ? 'bg-emerald-50 dark:bg-emerald-900/20' : 'bg-red-50 dark:bg-red-900/20',
@@ -145,14 +156,17 @@ export function useNotifications(role: 'admin' | 'manager' | 'karyawan') {
                 const profileMap = new Map(profiles.filter(p => p).map(p => [p.user_id, p.full_name]));
 
                 recentPending?.forEach(leave => {
+                    const id = `pending-leave-${leave.id}`;
+                    if (savedState.deletedIds.includes(id)) return;
+
                     const empName = profileMap.get(leave.user_id) || 'Karyawan';
                     items.push({
-                        id: `pending-leave-${leave.id}`,
+                        id,
                         type: 'leave_pending',
                         title: 'Pengajuan Cuti Baru',
                         message: `${empName} mengajukan cuti ${leave.leave_type} mulai ${leave.start_date}. Menunggu persetujuan.`,
                         timestamp: new Date(leave.created_at),
-                        read: false,
+                        read: savedState.readIds.includes(id),
                         icon: Calendar,
                         color: 'text-indigo-600',
                         bgColor: 'bg-indigo-50 dark:bg-indigo-900/20',
@@ -161,39 +175,45 @@ export function useNotifications(role: 'admin' | 'manager' | 'karyawan') {
 
                 // 2. Late employees today
                 const todayStr = format(now, 'yyyy-MM-dd');
-                const todayAttendance = await attendanceApi.getAll({ start_date: todayStr, end_date: todayStr });
-                const lateCount = (todayAttendance || []).filter(att => att.status === 'late').length;
+                const lateTodayId = `late-today-${todayStr}`;
+                if (!savedState.deletedIds.includes(lateTodayId)) {
+                    const todayAttendance = await attendanceApi.getAll({ start_date: todayStr, end_date: todayStr });
+                    const lateCount = (todayAttendance || []).filter(att => att.status === 'late').length;
 
-                if (lateCount > 0) {
-                    items.push({
-                        id: `late-today-${todayStr}`,
-                        type: 'attendance_late',
-                        title: 'Karyawan Terlambat Hari Ini',
-                        message: `${lateCount} karyawan tercatat terlambat masuk hari ini.`,
-                        timestamp: now,
-                        read: false,
-                        icon: AlertTriangle,
-                        color: 'text-amber-600',
-                        bgColor: 'bg-amber-50 dark:bg-amber-900/20',
-                    });
+                    if (lateCount > 0) {
+                        items.push({
+                            id: lateTodayId,
+                            type: 'attendance_late',
+                            title: 'Karyawan Terlambat Hari Ini',
+                            message: `${lateCount} karyawan tercatat terlambat masuk hari ini.`,
+                            timestamp: now,
+                            read: savedState.readIds.includes(lateTodayId),
+                            icon: AlertTriangle,
+                            color: 'text-amber-600',
+                            bgColor: 'bg-amber-50 dark:bg-amber-900/20',
+                        });
+                    }
                 }
 
                 // 3. Recent journals submitted today
-                const journalsToday = await journalsApi.getAll({ start_date: todayStr, end_date: todayStr });
-                const journalToday = (journalsToday || []).length;
+                const journalTodayId = `journal-today-${todayStr}`;
+                if (!savedState.deletedIds.includes(journalTodayId)) {
+                    const journalsToday = await journalsApi.getAll({ start_date: todayStr, end_date: todayStr });
+                    const journalTodayCount = (journalsToday || []).length;
 
-                if (journalToday > 0) {
-                    items.push({
-                        id: `journal-today-${todayStr}`,
-                        type: 'system',
-                        title: 'Jurnal Masuk Hari Ini',
-                        message: `${journalToday} jurnal kerja telah disubmit oleh karyawan hari ini.`,
-                        timestamp: now,
-                        read: false,
-                        icon: FileText,
-                        color: 'text-blue-600',
-                        bgColor: 'bg-blue-50 dark:bg-blue-900/20',
-                    });
+                    if (journalTodayCount > 0) {
+                        items.push({
+                            id: journalTodayId,
+                            type: 'system',
+                            title: 'Jurnal Masuk Hari Ini',
+                            message: `${journalTodayCount} jurnal kerja telah disubmit oleh karyawan hari ini.`,
+                            timestamp: now,
+                            read: savedState.readIds.includes(journalTodayId),
+                            icon: FileText,
+                            color: 'text-blue-600',
+                            bgColor: 'bg-blue-50 dark:bg-blue-900/20',
+                        });
+                    }
                 }
 
                 // 4. Pending Attendance Requests for Admin
@@ -203,13 +223,16 @@ export function useNotifications(role: 'admin' | 'manager' | 'karyawan') {
                         .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
                         .slice(0, 5)
                         .forEach((ar: any) => {
+                            const id = `pending-att-req-${ar.id}`;
+                            if (savedState.deletedIds.includes(id)) return;
+
                             items.push({
-                                id: `pending-att-req-${ar.id}`,
+                                id,
                                 type: 'attendance_request_pending',
                                 title: 'Permohonan Absen Baru',
                                 message: `${ar.full_name || 'Karyawan'} mengajukan absen manual untuk tanggal ${ar.date}.`,
                                 timestamp: new Date(ar.created_at),
-                                read: false,
+                                read: savedState.readIds.includes(id),
                                 icon: Clock,
                                 color: 'text-orange-600',
                                 bgColor: 'bg-orange-50 dark:bg-orange-900/20',
@@ -232,22 +255,49 @@ export function useNotifications(role: 'admin' | 'manager' | 'karyawan') {
 
     useEffect(() => {
         fetchNotifications();
-        // Refresh every 60 seconds
         const interval = setInterval(fetchNotifications, 60000);
         return () => clearInterval(interval);
     }, [fetchNotifications]);
 
     const markAllRead = () => {
+        if (!user) return;
+        const storageKey = `notifications_state_${user.id}`;
+        const savedState = JSON.parse(localStorage.getItem(storageKey) || '{"readIds":[], "deletedIds":[]}');
+        
+        const newReadIds = Array.from(new Set([...savedState.readIds, ...notifications.map(n => n.id)]));
+        localStorage.setItem(storageKey, JSON.stringify({ ...savedState, readIds: newReadIds }));
+        
         setNotifications(prev => prev.map(n => ({ ...n, read: true })));
         setUnreadCount(0);
     };
 
     const clearAll = () => {
+        if (!user) return;
+        const storageKey = `notifications_state_${user.id}`;
+        const savedState = JSON.parse(localStorage.getItem(storageKey) || '{"readIds":[], "deletedIds":[]}');
+        
+        const newDeletedIds = Array.from(new Set([...savedState.deletedIds, ...notifications.map(n => n.id)]));
+        localStorage.setItem(storageKey, JSON.stringify({ ...savedState, deletedIds: newDeletedIds }));
+        
         setNotifications([]);
         setUnreadCount(0);
     };
 
-    return { notifications, unreadCount, markAllRead, clearAll, refresh: fetchNotifications };
+    const markRead = (id: string) => {
+        if (!user) return;
+        const storageKey = `notifications_state_${user.id}`;
+        const savedState = JSON.parse(localStorage.getItem(storageKey) || '{"readIds":[], "deletedIds":[]}');
+        
+        if (!savedState.readIds.includes(id)) {
+            const newReadIds = [...savedState.readIds, id];
+            localStorage.setItem(storageKey, JSON.stringify({ ...savedState, readIds: newReadIds }));
+            
+            setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+            setUnreadCount(prev => Math.max(0, prev - 1));
+        }
+    };
+
+    return { notifications, unreadCount, markAllRead, clearAll, markRead, refresh: fetchNotifications };
 }
 
 function timeAgo(date: Date): string {
@@ -266,7 +316,7 @@ function timeAgo(date: Date): string {
 
 export function NotificationPanel({ role, isDark = false }: NotificationPanelProps) {
     const [isOpen, setIsOpen] = useState(false);
-    const { notifications, unreadCount, markAllRead, clearAll } = useNotifications(role);
+    const { notifications, unreadCount, markAllRead, clearAll, markRead } = useNotifications(role);
 
     return (
         <div className="relative">
@@ -345,6 +395,7 @@ export function NotificationPanel({ role, isDark = false }: NotificationPanelPro
                                 {notifications.map((notif) => (
                                     <div
                                         key={notif.id}
+                                        onClick={() => markRead(notif.id)}
                                         className={cn(
                                             "px-4 py-3.5 flex items-start gap-3 transition-colors cursor-pointer border-b last:border-b-0",
                                             isDark
