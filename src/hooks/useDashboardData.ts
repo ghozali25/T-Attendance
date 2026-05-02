@@ -4,7 +4,7 @@ import { getJakartaDate, getJakartaStartOfDayISO, getJakartaEndOfDayISO } from "
 import { formatInTimeZone } from "date-fns-tz";
 import { startOfMonth, subMonths } from "date-fns";
 import { ABSENSI_WAJIB_ROLE, EXCLUDED_USER_NAMES } from "@/lib/constants";
-import { attendanceApi, profilesApi, journalsApi, leaveApi } from "@/lib/api";
+import { attendanceApi, profilesApi, journalsApi, leaveApi, usersApi } from "@/lib/api";
 import { db } from "@/integrations/mysql/client";
 
 // Type definitions for dashboard data
@@ -84,8 +84,8 @@ export const useEmployeeIds = () => {
         queryFn: async () => {
             try {
                 console.log('[useEmployeeIds] Fetching employee IDs...');
-                // Use API to get users
-                const users = await profilesApi.getAll();
+                // Use API to get users from users table (includes roles)
+                const users = await usersApi.getAll();
                 console.log('[useEmployeeIds] Users fetched:', users?.length);
                 console.log('[useEmployeeIds] Users data:', users);
                 
@@ -166,10 +166,12 @@ export const useDashboardStats = (karyawanUserIds: Set<string> | undefined) => {
                 const totalEmployees = filterIds.size > 0 ? filterIds.size : profiles.length;
                 console.log('[useDashboardStats] Total employees:', totalEmployees);
 
-                // Get attendance data using db.query for now (no API endpoint for complex queries)
+                const todayStr = formatInTimeZone(today, 'Asia/Jakarta', 'yyyy-MM-dd');
+
+                // Get attendance data using date column (more reliable for MySQL DATE type)
                 const attendance = await db.query(
-                    'SELECT user_id, status FROM attendance WHERE clock_in >= ? AND clock_in <= ?',
-                    [startIso, endIso]
+                    'SELECT user_id, status FROM attendance WHERE date = ?',
+                    [todayStr]
                 ) as any[];
                 console.log('[useDashboardStats] Attendance records:', attendance?.length);
 
@@ -396,12 +398,12 @@ export const useRealTimeMonitoring = (karyawanUserIds: Set<string> | undefined) 
                 });
             }
 
-            const attendance = await db.query(
-                'SELECT id, user_id, clock_in, clock_out, status FROM attendance WHERE clock_in >= ? AND clock_in <= ?',
-                [startIso, endIso]
-            ) as any[];
-
             const todayDateStr = formatInTimeZone(today, 'Asia/Jakarta', 'yyyy-MM-dd');
+
+            const attendance = await db.query(
+                'SELECT id, user_id, clock_in, clock_out, status FROM attendance WHERE date = ?',
+                [todayDateStr]
+            ) as any[];
 
             const leaves = await db.query(
                 'SELECT user_id, leave_type FROM leave_requests WHERE status = ? AND start_date <= ? AND end_date >= ?',
@@ -499,9 +501,12 @@ export const useMonthlyTrend = (karyawanUserIds: Set<string> | undefined) => {
                 const startIso = getJakartaStartOfDayISO(startOfMonth);
                 const endIso = getJakartaEndOfDayISO(endOfMonth);
 
+                const startStr = formatInTimeZone(startOfMonth, 'Asia/Jakarta', 'yyyy-MM-01');
+                const endStr = formatInTimeZone(endOfMonth, 'Asia/Jakarta', 'yyyy-MM-dd');
+
                 const monthAttendance = await db.query(
-                    'SELECT user_id, status FROM attendance WHERE clock_in >= ? AND clock_in <= ?',
-                    [startIso, endIso]
+                    'SELECT user_id, status FROM attendance WHERE date >= ? AND date <= ?',
+                    [startStr, endStr]
                 ) as any[];
 
                 const validRecords = karyawanUserIds && karyawanUserIds.size > 0

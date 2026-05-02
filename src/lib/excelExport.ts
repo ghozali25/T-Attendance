@@ -20,6 +20,7 @@ export interface AttendanceRecord {
 export interface EmployeeSummary {
     employeeName: string;
     department: string;
+    totalWorkingDays: number;
     totalPresent: number;
     totalLate: number;
     totalAbsent: number;
@@ -81,6 +82,7 @@ export const generateAttendanceExcel = async ({
         'No',
         'Nama Karyawan',
         'Departemen',
+        'Total Hari Kerja',
         'Total Hadir',
         'Total Terlambat',
         'Total Alpha',
@@ -115,6 +117,7 @@ export const generateAttendanceExcel = async ({
             index + 1,
             summary.employeeName,
             summary.department,
+            summary.totalWorkingDays,
             summary.totalPresent,
             summary.totalLate,
             summary.totalAbsent,
@@ -131,7 +134,7 @@ export const generateAttendanceExcel = async ({
                 bottom: { style: 'hair' },
                 right: { style: 'hair' }
             };
-            cell.alignment = { vertical: 'middle', horizontal: [1, 4, 5, 6, 7, 8, 9].includes(colNumber) ? 'center' : 'left' };
+            cell.alignment = { vertical: 'middle', horizontal: [1, 4, 5, 6, 7, 8, 9, 10].includes(colNumber) ? 'center' : 'left' };
             // Zebra striping
             if (index % 2 === 1) {
                 cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF8FAFC' } };
@@ -140,7 +143,7 @@ export const generateAttendanceExcel = async ({
     });
 
     // Auto Column Width for Summary Sheet
-    const summaryColWidths = [5, 25, 20, 15, 15, 15, 15, 20, 20];
+    const summaryColWidths = [5, 25, 20, 15, 15, 15, 15, 15, 20, 20];
     summarySheet.columns.forEach((col, idx) => {
         col.width = summaryColWidths[idx];
     });

@@ -123,6 +123,7 @@ interface EmployeeReport {
   late: number;
   absent: number;
   leave: number;
+  totalWorkingDays: number;
   remarks: string;
   absentDates: string[];
   lateDates: string[];
@@ -168,7 +169,17 @@ const ManagerLaporan = () => {
   const [filterDepartment, setFilterDepartment] = useState("all");
 
   // Date Range State - Initialize from URL or default
-  const [dateRange, setDateRange] = useState<DateRange | undefined>();
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(() => {
+    const fromParam = searchParams.get("from");
+    const toParam = searchParams.get("to");
+    if (fromParam) {
+      return {
+        from: new Date(`${fromParam}T00:00:00`),
+        to: toParam ? new Date(`${toParam}T23:59:59`) : new Date(`${fromParam}T23:59:59`)
+      };
+    }
+    return undefined;
+  });
 
   // Modals
   const [dialogOpen, setDialogOpen] = useState(false); // Reject Reason Modal
@@ -232,9 +243,10 @@ const ManagerLaporan = () => {
   useEffect(() => {
     if (dateRange?.from && dateRange?.to) {
       // Keeps export period val properly synced
-      const syncedPeriod = availablePeriods.find(p => p.from.getTime() === dateRange.from?.getTime() && p.to?.getTime() === dateRange.to?.getTime());
-      if (syncedPeriod) {
-        setExportPeriodVal(syncedPeriod.value);
+      const dateVal = `${format(dateRange.from, 'yyyy-MM-dd')}_${format(dateRange.to, 'yyyy-MM-dd')}`;
+      const exists = availablePeriods.some(p => p.value === dateVal);
+      if (exists) {
+        setExportPeriodVal(dateVal);
       } else {
         setExportPeriodVal("custom");
       }
@@ -412,6 +424,7 @@ const ManagerLaporan = () => {
           late: calcLate,
           absent: calcAbsent,
           leave: calcLeave,
+          totalWorkingDays: details.filter(d => !d.isWeekend && d.status !== 'holiday' && d.status !== 'future').length,
           details: details,
           remarks: remarks,
           lateMinutes: totalLateMinutes,
@@ -575,9 +588,9 @@ const ManagerLaporan = () => {
         const summaries = filteredReports.map(emp => {
           const totalWorkHours = emp.details.reduce((sum, d) => {
             if (!d.clockIn || !d.clockOut) return sum;
-            const [ih, im] = d.clockIn.split(':').map(Number);
-            const [oh, om] = d.clockOut.split(':').map(Number);
-            const diffMins = (oh * 60 + om) - (ih * 60 + im);
+            const startTime = new Date(d.clockIn).getTime();
+            const endTime = new Date(d.clockOut).getTime();
+            const diffMins = (endTime - startTime) / (1000 * 60);
             return diffMins > 0 ? sum + (diffMins / 60) : sum;
           }, 0);
 
@@ -588,6 +601,7 @@ const ManagerLaporan = () => {
             totalLate: emp.late,
             totalAbsent: emp.absent,
             totalLeave: emp.leave,
+            totalWorkingDays: emp.totalWorkingDays,
             totalMonthlyWorkHours: totalWorkHours,
             totalMonthlyOvertimeMins: 0
           };
@@ -605,16 +619,19 @@ const ManagerLaporan = () => {
 
             let workHours = 0;
             if (d.clockIn && d.clockOut) {
-              const [ih, im] = d.clockIn.split(':').map(Number);
-              const [oh, om] = d.clockOut.split(':').map(Number);
-              const diffMins = (oh * 60 + om) - (ih * 60 + im);
+              const startTime = new Date(d.clockIn).getTime();
+              const endTime = new Date(d.clockOut).getTime();
+              const diffMins = (endTime - startTime) / (1000 * 60);
               workHours = diffMins > 0 ? diffMins / 60 : 0;
             }
 
             let lateMins = 0;
             if (d.status === 'late' && d.clockIn) {
-              const [ih, im] = d.clockIn.split(':').map(Number);
-              lateMins = Math.max(0, (ih * 60 + im) - (8 * 60 + 0));
+              const clockInDate = new Date(d.clockIn);
+              const targetDate = new Date(d.clockIn);
+              targetDate.setHours(8, 0, 0, 0);
+              const diffMins = (clockInDate.getTime() - targetDate.getTime()) / (1000 * 60);
+              lateMins = Math.max(0, diffMins);
             }
 
             return {
@@ -786,12 +803,12 @@ const ManagerLaporan = () => {
                 handlePeriodChange(val);
               }}
             >
-              <SelectTrigger className="w-full sm:w-[220px] h-10 font-bold bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-xl focus:ring-blue-500">
+              <SelectTrigger className="w-full sm:w-[220px] h-10 font-bold bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-xl focus:ring-blue-500 text-slate-900 dark:text-slate-100">
                 <SelectValue placeholder="Pilih Periode/Bulan" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
                 {availablePeriods.map((p, idx) => (
-                  <SelectItem key={p.value} value={p.value} className={idx === 0 ? "font-semibold text-blue-700" : ""}>
+                  <SelectItem key={p.value} value={p.value} className={idx === 0 ? "font-semibold text-blue-700 dark:text-blue-400" : ""}>
                     {idx === 0 ? `📌 Bulan Ini (${p.label})` : idx === 1 ? `⏳ Bulan Lalu (${p.label})` : p.label}
                   </SelectItem>
                 ))}
@@ -960,7 +977,7 @@ const ManagerLaporan = () => {
               <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
                 <Filter className="h-4 w-4" />
                 <Select value={filterDepartment} onValueChange={setFilterDepartment}>
-                  <SelectTrigger className="h-9 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:bg-slate-800 w-[180px]">
+                  <SelectTrigger className="h-9 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:bg-slate-800 w-[180px] text-slate-900 dark:text-slate-100">
                     <SelectValue placeholder="All Departments" />
                   </SelectTrigger>
                   <SelectContent>
@@ -985,6 +1002,7 @@ const ManagerLaporan = () => {
                       <TableRow className="bg-slate-50/50 dark:bg-slate-800/50 hover:bg-slate-50/50 dark:bg-slate-800/50">
                         <TableHead className="w-12 py-4 font-black text-[10px] uppercase tracking-widest text-slate-400 dark:text-slate-500 pl-4">No</TableHead>
                         <TableHead className="py-4 font-black text-[10px] uppercase tracking-widest text-slate-400 dark:text-slate-500">Detail Karyawan</TableHead>
+                        <TableHead className="py-4 font-black text-[10px] uppercase tracking-widest text-slate-400 dark:text-slate-500 text-center">Hari Kerja</TableHead>
                         <TableHead className="py-4 font-black text-[10px] uppercase tracking-widest text-slate-400 dark:text-slate-500 text-center">Total Hadir</TableHead>
                         <TableHead className="py-4 font-black text-[10px] uppercase tracking-widest text-slate-400 dark:text-slate-500 text-center">Terlambat (Menit)</TableHead>
                         <TableHead className="py-4 font-black text-[10px] uppercase tracking-widest text-slate-400 dark:text-slate-500 text-center">Status Cuti / Izin</TableHead>
@@ -1023,6 +1041,11 @@ const ManagerLaporan = () => {
                                   <div className="text-xs text-slate-500 dark:text-slate-400">{emp.department} • {emp.position || "Staff"}</div>
                                 </div>
                               </div>
+                            </TableCell>
+                            <TableCell className="text-center font-bold text-slate-900 dark:text-white">
+                              <Badge variant="outline" className="bg-slate-50 dark:bg-slate-800 font-mono text-base px-3 py-1">
+                                {emp.totalWorkingDays}
+                              </Badge>
                             </TableCell>
                             <TableCell className="text-center font-bold text-slate-900 dark:text-white">
                               <Badge variant="outline" className="bg-slate-50 dark:bg-slate-800 font-mono text-base px-3 py-1">
@@ -1121,21 +1144,18 @@ const ManagerLaporan = () => {
                           </Button>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-3 bg-slate-50/50 dark:bg-slate-800/50 rounded-xl p-3 border border-slate-50">
+                        <div className="grid grid-cols-3 gap-3 bg-slate-50/50 dark:bg-slate-800/50 rounded-xl p-3 border border-slate-50">
                           <div className="flex flex-col">
-                            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Total Hadir</span>
-                            <span className="text-sm font-bold text-slate-800 dark:text-slate-100">{emp.present + emp.late} hari</span>
+                            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Hari Kerja</span>
+                            <span className="text-xs font-bold text-slate-800 dark:text-slate-100">{emp.totalWorkingDays}</span>
                           </div>
                           <div className="flex flex-col">
-                            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Keterlambatan</span>
-                            {emp.lateMinutes > 0 ? (
-                              <span className="text-sm font-semibold text-amber-600 flex items-center gap-1">
-                                <Clock className="w-3.5 h-3.5" />
-                                {emp.lateMinutes} min
-                              </span>
-                            ) : (
-                              <span className="text-sm font-semibold text-slate-400">-</span>
-                            )}
+                            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Hadir</span>
+                            <span className="text-xs font-bold text-slate-800 dark:text-slate-100">{emp.present + emp.late}</span>
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Terlambat</span>
+                            <span className="text-xs font-bold text-slate-800 dark:text-slate-100">{emp.late}</span>
                           </div>
                         </div>
 

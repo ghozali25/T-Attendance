@@ -30,7 +30,7 @@ const defaultSettings: SystemSettings = {
     autoClockOut: false,
     autoClockOutTime: "22:00",
     maxLeaveDays: 12,
-    attendanceStartDate: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split("T")[0], // Default to start of current month
+    attendanceStartDate: "2024-01-01", // Default to an earlier date so history is visible
 };
 
 // Helper function to safely parse integer with fallback

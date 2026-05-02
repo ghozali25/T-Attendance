@@ -61,8 +61,23 @@ export const generateAttendancePeriod = (
         const dateStr = format(currentDate, 'yyyy-MM-dd');
         const dayOfWeek = currentDate.getDay(); // 0 = Sunday, 6 = Saturday
 
-        // Check pre-employment
-        if (joinDateStr && dateStr < joinDateStr) {
+        // 1. Find existing attendance record
+        // First try matching via the 'date' column (most reliable for manual entries)
+        // Then fallback to normalizing clock_in timestamp to Jakarta timezone
+        const record = records.find(r => {
+            if (r.date) {
+                const recordDate = r.date.includes('T') ? r.date.split('T')[0] : r.date;
+                if (recordDate === dateStr) return true;
+            }
+            if (!r.clock_in) return false;
+            const recordDateJakarta = new Date(r.clock_in).toLocaleDateString('en-CA', {
+                timeZone: 'Asia/Jakarta'
+            });
+            return recordDateJakarta === dateStr;
+        });
+
+        // Check pre-employment (only if no record exists, to handle dummy data inconsistencies)
+        if (!record && joinDateStr && dateStr < joinDateStr) {
             normalized.push({
                 date: dateStr,
                 formattedDate: format(currentDate, 'd MMMM yyyy', { locale: id }),
@@ -78,23 +93,7 @@ export const generateAttendancePeriod = (
             continue;
         }
 
-        // 1. Find existing attendance record
-        // First try matching via the 'date' column (most reliable for manual entries)
-        // Then fallback to normalizing clock_in timestamp to Jakarta timezone
-        const record = records.find(r => {
-            // Priority 1: Match by explicit 'date' field (handle both ISO and YYYY-MM-DD formats)
-            if (r.date) {
-                // Extract YYYY-MM-DD from ISO string or use directly if already in that format
-                const recordDate = r.date.includes('T') ? r.date.split('T')[0] : r.date;
-                if (recordDate === dateStr) return true;
-            }
-            // Priority 2: Match by clock_in timezone conversion
-            if (!r.clock_in) return false;
-            const recordDateJakarta = new Date(r.clock_in).toLocaleDateString('en-CA', {
-                timeZone: 'Asia/Jakarta'
-            });
-            return recordDateJakarta === dateStr;
-        });
+
 
         // 2. Find Approved Leave
         // Check if dateStr is within any leave range

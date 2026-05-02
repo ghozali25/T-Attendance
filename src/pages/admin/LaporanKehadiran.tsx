@@ -30,7 +30,7 @@ import { Progress } from "@/components/ui/progress";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { db } from "@/integrations/mysql/client";
-import { usersApi, attendanceApi, leaveApi, profilesApi } from "@/lib/api";
+import { usersApi, attendanceApi, leaveApi, profilesApi, holidaysApi } from "@/lib/api";
 import { exportToPDF, exportToExcel } from "@/lib/exportUtils";
 import { AttendanceReportData } from "@/lib/attendanceExportUtils";
 import { ReportService } from "@/services/reportService";
@@ -121,6 +121,7 @@ interface EmployeeReport {
     details: DailyAttendanceStatus[];
     lateMinutes: number; // Add total late minutes
     dailyStatus: Record<string, string>; // Key: "YYYY-MM-DD", Value: Status Code
+    totalWorkingDays: number;
     present: number;
     late: number;
     absent: number;
@@ -170,7 +171,17 @@ const LaporanKehadiran = () => {
     const [filterDepartment, setFilterDepartment] = useState("all");
 
     // Date Range State - Initialize from URL or default
-    const [dateRange, setDateRange] = useState<DateRange | undefined>();
+    const [dateRange, setDateRange] = useState<DateRange | undefined>(() => {
+        const fromParam = searchParams.get("from");
+        const toParam = searchParams.get("to");
+        if (fromParam) {
+            return {
+                from: new Date(`${fromParam}T00:00:00`),
+                to: toParam ? new Date(`${toParam}T23:59:59`) : new Date(`${fromParam}T23:59:59`)
+            };
+        }
+        return undefined;
+    });
 
     // Modals
     const [dialogOpen, setDialogOpen] = useState(false); // Reject Reason Modal
@@ -244,9 +255,10 @@ const LaporanKehadiran = () => {
     useEffect(() => {
         if (dateRange?.from && dateRange?.to) {
             // Keeps export period val properly synced
-            const syncedPeriod = availablePeriods.find(p => p.from.getTime() === dateRange.from?.getTime() && p.to?.getTime() === dateRange.to?.getTime());
-            if (syncedPeriod) {
-                setExportPeriodVal(syncedPeriod.value);
+            const dateVal = `${format(dateRange.from, 'yyyy-MM-dd')}_${format(dateRange.to, 'yyyy-MM-dd')}`;
+            const exists = availablePeriods.some(p => p.value === dateVal);
+            if (exists) {
+                setExportPeriodVal(dateVal);
             } else {
                 setExportPeriodVal("custom");
             }
@@ -370,6 +382,39 @@ const LaporanKehadiran = () => {
             const leaves = await leaveApi.getAll({ status: 'approved' });
             const allLeaves = leaves?.filter((l: any) => l.status === 'approved' && l.end_date >= startDate && l.start_date <= endDate) || [];
 
+            // 3b. Fetch Holidays for the period
+            const fromYear = dateRange.from.getFullYear();
+            const toYear = (dateRange.to || dateRange.from).getFullYear();
+            let allHolidays: any[] = [];
+            try {
+                const h1 = await holidaysApi.getAll({ year: fromYear });
+                allHolidays = h1 || [];
+                if (toYear !== fromYear) {
+                    const h2 = await holidaysApi.getAll({ year: toYear });
+                    allHolidays = [...allHolidays, ...(h2 || [])];
+                }
+            } catch (e) {
+                console.warn('Could not fetch holidays:', e);
+            }
+
+            // 3c. Calculate totalWorkingDays from the calendar (same for ALL employees)
+            const holidayDateSet = new Set(allHolidays.map((h: any) => h.date));
+            let totalWorkingDays = 0;
+            {
+                const cursor = new Date(dateRange.from);
+                cursor.setHours(0, 0, 0, 0);
+                const endCursor = new Date(dateRange.to || dateRange.from);
+                endCursor.setHours(0, 0, 0, 0);
+                while (cursor <= endCursor) {
+                    const dow = cursor.getDay();
+                    const ds = format(cursor, 'yyyy-MM-dd');
+                    if (dow !== 0 && dow !== 6 && !holidayDateSet.has(ds)) {
+                        totalWorkingDays++;
+                    }
+                    cursor.setDate(cursor.getDate() + 1);
+                }
+            }
+
             // 4. Process Employee Reports
             const reports: EmployeeReport[] = candidates.map(employee => {
                 const empAtt = allAttendance.filter(a => a.user_id === employee.id);
@@ -381,23 +426,10 @@ const LaporanKehadiran = () => {
                     empAtt,
                     empLeaves,
                     employee.created_at,
-                    []
+                    allHolidays
                 );
 
-                const details: DailyAttendanceStatus[] = normalized.map(day => {
-                    const attRecord = empAtt.find(a => a.date === day.date);
-                    return {
-                        date: day.date,
-                        formattedDate: day.formattedDate,
-                        dayName: day.dayName,
-                        status: day.status,
-                        clockIn: attRecord?.clock_in || null,
-                        clockOut: attRecord?.clock_out || null,
-                        recordId: attRecord?.id || null,
-                        notes: attRecord?.notes || null,
-                        isWeekend: day.isWeekend,
-                    };
-                });
+                const details: DailyAttendanceStatus[] = normalized;
 
                 const present = details.filter(d => ['present', 'late', 'early_leave'].includes(d.status)).length;
                 const late = details.filter(d => d.status === 'late').length;
@@ -433,6 +465,8 @@ const LaporanKehadiran = () => {
                 if (absent > 2) remarks = "Perlu evaluasi kehadiran (Alpha > 2)";
                 else if (late > 4) remarks = "Sering terlambat";
 
+                // totalWorkingDays is calculated once above from the calendar, same for all employees
+
                 return {
                     user_id: employee.id,
                     full_name: employee.full_name || 'Unknown',
@@ -442,6 +476,7 @@ const LaporanKehadiran = () => {
                     late,
                     absent,
                     leave,
+                    totalWorkingDays,
                     details,
                     lateMinutes,
                     dailyStatus,
@@ -714,9 +749,7 @@ const LaporanKehadiran = () => {
                 const summaries = filteredReports.map(emp => {
                     const totalWorkHours = emp.details.reduce((sum, d) => {
                         if (!d.clockIn || !d.clockOut) return sum;
-                        const [ih, im] = d.clockIn.split(':').map(Number);
-                        const [oh, om] = d.clockOut.split(':').map(Number);
-                        const diffMins = (oh * 60 + om) - (ih * 60 + im);
+                        const diffMins = differenceInMinutes(new Date(d.clockOut), new Date(d.clockIn));
                         return diffMins > 0 ? sum + (diffMins / 60) : sum;
                     }, 0);
 
@@ -727,6 +760,7 @@ const LaporanKehadiran = () => {
                         totalLate: emp.late,
                         totalAbsent: emp.absent,
                         totalLeave: emp.leave,
+                        totalWorkingDays: emp.totalWorkingDays,
                         totalMonthlyWorkHours: totalWorkHours,
                         totalMonthlyOvertimeMins: 0
                     };
@@ -937,12 +971,12 @@ const LaporanKehadiran = () => {
                                 handlePeriodChange(val);
                             }}
                         >
-                            <SelectTrigger className="w-full sm:w-[220px] h-10 font-bold bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-xl focus:ring-blue-500">
+                            <SelectTrigger className="w-full sm:w-[220px] h-10 font-bold bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-xl focus:ring-blue-500 text-slate-900 dark:text-slate-100">
                                 <SelectValue placeholder="Pilih Periode/Bulan" />
                             </SelectTrigger>
-                            <SelectContent>
+                            <SelectContent className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
                                 {availablePeriods.map((p, idx) => (
-                                    <SelectItem key={p.value} value={p.value} className={idx === 0 ? "font-semibold text-blue-700" : ""}>
+                                    <SelectItem key={p.value} value={p.value} className={idx === 0 ? "font-semibold text-blue-700 dark:text-blue-400" : ""}>
                                         {idx === 0 ? `📌 Bulan Ini (${p.label})` : idx === 1 ? `⏳ Bulan Lalu (${p.label})` : p.label}
                                     </SelectItem>
                                 ))}
@@ -1098,7 +1132,7 @@ const LaporanKehadiran = () => {
                             <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
                                 <Filter className="h-4 w-4" />
                                 <Select value={filterDepartment} onValueChange={setFilterDepartment}>
-                                    <SelectTrigger className="h-9 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:bg-slate-800 w-[180px]">
+                                    <SelectTrigger className="h-9 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:bg-slate-800 w-[180px] text-slate-900 dark:text-slate-100">
                                         <SelectValue placeholder="All Departments" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -1123,6 +1157,7 @@ const LaporanKehadiran = () => {
                                             <TableRow className="bg-slate-50/50 dark:bg-slate-800/50 hover:bg-slate-50/50 dark:bg-slate-800/50">
                                                 <TableHead className="w-12 py-4 font-semibold text-xs uppercase text-slate-500 dark:text-slate-400 pl-4">No</TableHead>
                                                 <TableHead className="py-4 font-semibold text-xs uppercase text-slate-500 dark:text-slate-400">Employee Details</TableHead>
+                                                <TableHead className="py-4 font-semibold text-xs uppercase text-slate-500 dark:text-slate-400 text-center">Hari Kerja</TableHead>
                                                 <TableHead className="py-4 font-semibold text-xs uppercase text-slate-500 dark:text-slate-400 text-center">Total Hadir</TableHead>
                                                 <TableHead className="py-4 font-semibold text-xs uppercase text-slate-500 dark:text-slate-400 text-center">Terlambat (Menit)</TableHead>
                                                 <TableHead className="py-4 font-semibold text-xs uppercase text-slate-500 dark:text-slate-400 text-center">Status Cuti / Izin</TableHead>
@@ -1161,6 +1196,11 @@ const LaporanKehadiran = () => {
                                                                     <div className="text-xs text-slate-500 dark:text-slate-400">{emp.department} • {emp.position || "Staff"}</div>
                                                                 </div>
                                                             </div>
+                                                        </TableCell>
+                                                        <TableCell className="text-center font-bold text-slate-900 dark:text-white">
+                                                            <Badge variant="outline" className="bg-slate-50 dark:bg-slate-800 font-mono text-base px-3 py-1">
+                                                                {emp.totalWorkingDays}
+                                                            </Badge>
                                                         </TableCell>
                                                         <TableCell className="text-center font-bold text-slate-900 dark:text-white">
                                                             <Badge variant="outline" className="bg-slate-50 dark:bg-slate-800 font-mono text-base px-3 py-1">
@@ -1259,21 +1299,18 @@ const LaporanKehadiran = () => {
                                                     </Button>
                                                 </div>
 
-                                                <div className="grid grid-cols-2 gap-3 bg-slate-50/50 dark:bg-slate-800/50 rounded-xl p-3 border border-slate-50">
+                                                <div className="grid grid-cols-3 gap-3 bg-slate-50/50 dark:bg-slate-800/50 rounded-xl p-3 border border-slate-50">
                                                     <div className="flex flex-col">
-                                                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Total Hadir</span>
-                                                        <span className="text-sm font-bold text-slate-800 dark:text-slate-100">{emp.present + emp.late} hari</span>
+                                                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Hari Kerja</span>
+                                                        <span className="text-sm font-bold text-slate-800 dark:text-slate-100">{emp.totalWorkingDays}</span>
                                                     </div>
                                                     <div className="flex flex-col">
-                                                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Keterlambatan</span>
-                                                        {emp.lateMinutes > 0 ? (
-                                                            <span className="text-sm font-semibold text-amber-600 flex items-center gap-1">
-                                                                <Clock className="w-3.5 h-3.5" />
-                                                                {emp.lateMinutes} min
-                                                            </span>
-                                                        ) : (
-                                                            <span className="text-sm font-semibold text-slate-400">-</span>
-                                                        )}
+                                                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Hadir</span>
+                                                        <span className="text-sm font-bold text-slate-800 dark:text-slate-100">{emp.present + emp.late}</span>
+                                                    </div>
+                                                    <div className="flex flex-col">
+                                                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Terlambat</span>
+                                                        <span className="text-sm font-bold text-slate-800 dark:text-slate-100">{emp.late}</span>
                                                     </div>
                                                 </div>
 
