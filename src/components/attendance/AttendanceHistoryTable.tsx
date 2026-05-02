@@ -226,7 +226,7 @@ export function AttendanceHistoryTable({ data, isLoading, onAction }: Attendance
                                                             <Eye className="h-4 w-4" />
                                                         </Button>
                                                     </TooltipTrigger>
-                                                    <TooltipContent side="top" className="text-xs bg-slate-900 border-slate-700 font-semibold px-2.5 py-1.5 shadow-xl">
+                                                    <TooltipContent side="top" className="text-xs font-semibold px-2.5 py-1.5 shadow-xl">
                                                         Lihat Detail
                                                     </TooltipContent>
                                                 </Tooltip>
@@ -242,7 +242,7 @@ export function AttendanceHistoryTable({ data, isLoading, onAction }: Attendance
                                                             <MapPin className="h-4 w-4" />
                                                         </Button>
                                                     </TooltipTrigger>
-                                                    <TooltipContent side="top" className="text-xs bg-slate-900 border-slate-700 font-semibold px-2.5 py-1.5 shadow-xl">
+                                                    <TooltipContent side="top" className="text-xs font-semibold px-2.5 py-1.5 shadow-xl">
                                                         Cek Lokasi
                                                     </TooltipContent>
                                                 </Tooltip>
@@ -259,7 +259,7 @@ export function AttendanceHistoryTable({ data, isLoading, onAction }: Attendance
                                                                 <FileText className="h-4 w-4" />
                                                             </Button>
                                                         </TooltipTrigger>
-                                                        <TooltipContent side="top" className="text-xs bg-emerald-600 border-emerald-500 font-semibold px-2.5 py-1.5 shadow-xl">
+                                                        <TooltipContent side="top" className="text-xs font-semibold px-2.5 py-1.5 shadow-xl">
                                                             Unduh Bukti PDF
                                                         </TooltipContent>
                                                     </Tooltip>
@@ -276,7 +276,7 @@ export function AttendanceHistoryTable({ data, isLoading, onAction }: Attendance
                                                             <Clock className="h-4 w-4" />
                                                         </Button>
                                                     </TooltipTrigger>
-                                                    <TooltipContent side="top" className="text-xs bg-amber-600 border-amber-500 font-semibold px-2.5 py-1.5 shadow-xl text-white">
+                                                    <TooltipContent side="top" className="text-xs font-semibold px-2.5 py-1.5 shadow-xl">
                                                         Edit / Set Manual
                                                     </TooltipContent>
                                                 </Tooltip>

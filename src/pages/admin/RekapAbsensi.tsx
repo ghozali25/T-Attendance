@@ -109,16 +109,11 @@ const RekapAbsensi = () => {
 
   // Date Filters
   const [filterDate, setFilterDate] = useState(getTodayDate());
-  const [selectedMonth, setSelectedMonth] = useState(new Date(2026, 1, 1)); // February 2026
+  const [selectedMonth, setSelectedMonth] = useState(new Date());
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
     from: subDays(new Date(), 7),
     to: new Date(),
   });
-
-  // Force February 2026 on initial load
-  useEffect(() => {
-    setSelectedMonth(new Date(2026, 1, 1));
-  }, []);
 
   // Calculate Start/End based on view mode (Memoized)
   const queryRange = useMemo(() => {
