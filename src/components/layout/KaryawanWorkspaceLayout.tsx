@@ -29,7 +29,7 @@ export default function KaryawanWorkspaceLayout({ children, notifCount = 0 }: Ka
     const isMobile = useIsMobile();
     const location = useLocation();
 
-    const firstName = user?.user_metadata?.full_name?.split(' ')[0] || 'Karyawan';
+    const firstName = user?.full_name?.split(' ')[0] || 'Karyawan';
 
     const handleLogout = async () => {
         await signOut();
@@ -104,8 +104,12 @@ export default function KaryawanWorkspaceLayout({ children, notifCount = 0 }: Ka
                             <DropdownMenuTrigger asChild>
                                 <Button variant="ghost" className={cn("relative h-9 rounded-full pl-2 pr-4 border gap-2 focus:ring-4",
                                     isDark ? "border-slate-700 hover:bg-slate-800 focus:ring-slate-700" : "border-slate-200 hover:bg-slate-50 focus:ring-slate-100")}>
-                                    <div className="w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center text-[10px] font-bold text-white">
-                                        {firstName.substring(0, 2).toUpperCase()}
+                                    <div className="w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center text-[10px] font-bold text-white overflow-hidden">
+                                        {user?.avatar_url ? (
+                                            <img src={user.avatar_url} alt="Profile" className="w-full h-full object-cover" />
+                                        ) : (
+                                            firstName.substring(0, 2).toUpperCase()
+                                        )}
                                     </div>
                                     <span className={cn("text-xs font-semibold hidden sm:block",
                                         isDark ? "text-slate-300" : "text-slate-700")}>{firstName}</span>
@@ -116,7 +120,7 @@ export default function KaryawanWorkspaceLayout({ children, notifCount = 0 }: Ka
                                 <DropdownMenuLabel className="font-normal p-2">
                                     <div className="flex flex-col space-y-1">
                                         <p className={cn("text-sm font-semibold leading-none", isDark ? "text-white" : "")}>
-                                            {user?.user_metadata?.full_name || 'Karyawan'}
+                                            {user?.full_name || 'Karyawan'}
                                         </p>
                                         <p className="text-xs text-muted-foreground leading-none">Karyawan</p>
                                     </div>

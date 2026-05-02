@@ -9,6 +9,7 @@ interface User {
   full_name?: string;
   role?: AppRole;
   profile?: any;
+  avatar_url?: string;
 }
 
 interface AuthContextType {
@@ -19,6 +20,7 @@ interface AuthContextType {
   isAdmin: boolean;
   isManager: boolean;
   isAdminOrManager: boolean;
+  updateUser: (data: Partial<User>) => void;
   signOut: () => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, fullName: string) => Promise<void>;
@@ -32,6 +34,7 @@ const AuthContext = createContext<AuthContextType>({
   isAdmin: false,
   isManager: false,
   isAdminOrManager: false,
+  updateUser: () => { },
   signOut: async () => { },
   login: async () => { },
   register: async () => { },
@@ -79,6 +82,15 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     initializeAuth();
   }, []);
 
+  const updateUser = (data: Partial<User>) => {
+    setUser(prev => {
+      if (!prev) return null;
+      const updated = { ...prev, ...data };
+      localStorage.setItem('user', JSON.stringify(updated));
+      return updated;
+    });
+  };
+
   const login = async (email: string, password: string) => {
     try {
       const result = await authApi.login(email, password);
@@ -117,7 +129,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const isAdminOrManager = role === "admin" || role === "manager";
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, role, isAdmin, isManager, isAdminOrManager, signOut, login, register }}>
+    <AuthContext.Provider value={{ user, session, loading, role, isAdmin, isManager, isAdminOrManager, updateUser, signOut, login, register }}>
       {children}
     </AuthContext.Provider>
   );

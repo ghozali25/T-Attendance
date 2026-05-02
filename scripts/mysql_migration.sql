@@ -198,7 +198,7 @@ END;
 -- ============ 13. INSERT DEFAULT ADMIN USER ============
 -- Generate UUID for admin user
 INSERT INTO users (id, email, full_name, password_hash) 
-VALUES (UUID(), 'admin@talenta.com', 'Super Admin', '$2b$10$9V0MVeod.9H5P9PDOYlcJev3kp2HK55E4M/g6OwF8PiYD2ZiT.Ppm');
+VALUES (UUID(), 'admin@talenta.com', 'Super Admin', '$2b$10$PuH2MqcVYbmsQfQuHQa71eN6HBS3r5ZCJYJwdtOK36L2hDcXEU6ai');
 
 -- Insert admin role using subquery to get the admin user ID
 INSERT INTO user_roles (user_id, role) 
@@ -212,11 +212,11 @@ SELECT UUID(), id, 'Super Admin', 'Board of Directors', 'Administrator' FROM use
 -- Password for all demo accounts: 'password' (hashed with bcrypt)
 INSERT INTO users (id, email, full_name, password_hash) 
 VALUES 
-(UUID(), 'karyawan1@talenta.com', 'Budi Santoso', '$2b$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy'),
-(UUID(), 'karyawan2@talenta.com', 'Siti Aminah', '$2b$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy'),
-(UUID(), 'karyawan3@talenta.com', 'Ahmad Wijaya', '$2b$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy'),
-(UUID(), 'karyawan4@talenta.com', 'Dewi Kartika', '$2b$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy'),
-(UUID(), 'karyawan5@talenta.com', 'Rudi Hartono', '$2b$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy');
+(UUID(), 'karyawan1@talenta.com', 'Budi Santoso', '$2b$10$PuH2MqcVYbmsQfQuHQa71eN6HBS3r5ZCJYJwdtOK36L2hDcXEU6ai'),
+(UUID(), 'karyawan2@talenta.com', 'Siti Aminah', '$2b$10$PuH2MqcVYbmsQfQuHQa71eN6HBS3r5ZCJYJwdtOK36L2hDcXEU6ai'),
+(UUID(), 'karyawan3@talenta.com', 'Ahmad Wijaya', '$2b$10$PuH2MqcVYbmsQfQuHQa71eN6HBS3r5ZCJYJwdtOK36L2hDcXEU6ai'),
+(UUID(), 'karyawan4@talenta.com', 'Dewi Kartika', '$2b$10$PuH2MqcVYbmsQfQuHQa71eN6HBS3r5ZCJYJwdtOK36L2hDcXEU6ai'),
+(UUID(), 'karyawan5@talenta.com', 'Rudi Hartono', '$2b$10$PuH2MqcVYbmsQfQuHQa71eN6HBS3r5ZCJYJwdtOK36L2hDcXEU6ai');
 
 -- Insert employee roles
 INSERT INTO user_roles (user_id, role) 

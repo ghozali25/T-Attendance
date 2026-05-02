@@ -26,6 +26,7 @@ const profileSchema = z.object({
   address: z.string().optional(),
   department: z.string().optional(),
   position: z.string().optional(),
+  avatar_url: z.string().optional(),
 });
 
 type ProfileFormData = z.infer<typeof profileSchema>;
@@ -39,11 +40,12 @@ interface Profile {
   department: string | null;
   position: string | null;
   join_date: string | null;
+  avatar_url: string | null;
 }
 
 const ProfilKaryawan = () => {
   const navigate = useNavigate();
-  const { user, signOut } = useAuth();
+  const { user, signOut, updateUser } = useAuth();
   const isMobile = useIsMobile();
   const [isLoading, setIsLoading] = useState(false);
   const [isFetching, setIsFetching] = useState(true);
@@ -51,7 +53,7 @@ const ProfilKaryawan = () => {
 
   const form = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
-    defaultValues: { full_name: "", phone: "", address: "", department: "", position: "" },
+    defaultValues: { full_name: "", phone: "", address: "", department: "", position: "", avatar_url: "" },
   });
 
   useEffect(() => { if (user) fetchProfile(); }, [user]);
@@ -70,12 +72,16 @@ const ProfilKaryawan = () => {
 
       if (userProfile) {
         setProfile(userProfile);
+        if (userProfile.avatar_url) {
+          updateUser({ avatar_url: userProfile.avatar_url });
+        }
         form.reset({
           full_name: userProfile.full_name || "",
           phone: userProfile.phone || "",
           address: userProfile.address || "",
           department: userProfile.department || "",
           position: userProfile.position || "",
+          avatar_url: userProfile.avatar_url || "",
         });
       } else {
         // Create new profile if it doesn't exist using db.query (no API endpoint for profile creation)
@@ -100,6 +106,23 @@ const ProfilKaryawan = () => {
     }
   };
 
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+        toast({ variant: "destructive", title: "File terlalu besar", description: "Maksimal ukuran foto adalah 2MB" });
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        setProfile(prev => prev ? { ...prev, avatar_url: base64String } : null);
+        form.setValue("avatar_url", base64String);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const onSubmit = async (data: ProfileFormData) => {
     if (!user) return;
     setIsLoading(true);
@@ -108,8 +131,12 @@ const ProfilKaryawan = () => {
       await profilesApi.update(user.id, {
         full_name: data.full_name,
         phone: data.phone || null,
-        address: data.address || null
+        address: data.address || null,
+        avatar_url: data.avatar_url || null
       });
+      if (data.avatar_url) {
+        updateUser({ avatar_url: data.avatar_url, full_name: data.full_name });
+      }
       toast({ title: "Profil berhasil disimpan", description: "Data profil Anda telah diperbarui." });
     } catch (error) {
       console.error('Error updating profile:', error);
@@ -166,14 +193,26 @@ const ProfilKaryawan = () => {
 
               <div className="relative mb-5 mt-4">
                 <div className="w-[88px] h-[88px] rounded-full border-[3px] border-white/10 bg-slate-800/50 backdrop-blur-md flex items-center justify-center overflow-hidden shadow-2xl">
-                  {profile?.full_name ? (
+                  {profile?.avatar_url ? (
+                    <img src={profile.avatar_url} alt="Profile" className="w-full h-full object-cover" />
+                  ) : profile?.full_name ? (
                     <span className="text-4xl font-black text-white">{profile.full_name.charAt(0)}</span>
                   ) : (
                     <User className="w-8 h-8 text-white/50" />
                   )}
                 </div>
-                <div className="absolute -bottom-1 -right-1 w-8 h-8 bg-indigo-500 rounded-full border-[3px] border-[#1e293b] flex items-center justify-center shadow-lg active:scale-90 transition-transform">
+                <div 
+                  className="absolute -bottom-1 -right-1 w-8 h-8 bg-indigo-500 rounded-full border-[3px] border-[#1e293b] flex items-center justify-center shadow-lg active:scale-90 transition-transform cursor-pointer"
+                  onClick={() => document.getElementById('avatar-upload-mobile')?.click()}
+                >
                   <Camera className="w-3.5 h-3.5 text-white" />
+                  <input 
+                    id="avatar-upload-mobile" 
+                    type="file" 
+                    accept="image/*" 
+                    className="hidden" 
+                    onChange={handleImageUpload} 
+                  />
                 </div>
               </div>
 
@@ -385,9 +424,23 @@ const ProfilKaryawan = () => {
             <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 brightness-100 mix-blend-overlay"></div>
             <div className="absolute -bottom-12">
               <div className="h-24 w-24 rounded-full bg-white dark:bg-slate-900 flex items-center justify-center text-slate-400 border-4 border-white shadow-lg relative">
-                <span className="text-3xl font-extrabold text-slate-800 dark:text-slate-100">{profile?.full_name?.charAt(0) || "U"}</span>
-                <div className="absolute bottom-0 right-0 h-8 w-8 bg-blue-600 rounded-full border-2 border-white flex items-center justify-center shadow-md active:scale-95 transition-transform cursor-pointer">
+                {profile?.avatar_url ? (
+                  <img src={profile.avatar_url} alt="Profile" className="w-full h-full object-cover rounded-full" />
+                ) : (
+                  <span className="text-3xl font-extrabold text-slate-800 dark:text-slate-100">{profile?.full_name?.charAt(0) || "U"}</span>
+                )}
+                <div 
+                  className="absolute bottom-0 right-0 h-8 w-8 bg-blue-600 rounded-full border-2 border-white flex items-center justify-center shadow-md active:scale-95 transition-transform cursor-pointer"
+                  onClick={() => document.getElementById('avatar-upload-desktop')?.click()}
+                >
                   <Camera className="h-4 w-4 text-white" />
+                  <input 
+                    id="avatar-upload-desktop" 
+                    type="file" 
+                    accept="image/*" 
+                    className="hidden" 
+                    onChange={handleImageUpload} 
+                  />
                 </div>
               </div>
             </div>

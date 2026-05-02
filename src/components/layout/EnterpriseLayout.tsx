@@ -361,8 +361,12 @@ const EnterpriseLayout = ({
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                     <Button variant="ghost" className="relative h-10 rounded-full pl-2.5 pr-4 border border-slate-200/60 bg-white/60 backdrop-blur-md hover:bg-white shadow-sm hover:shadow-md transition-all gap-2">
-                                        <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-indigo-500 to-blue-400 text-white flex items-center justify-center text-[11px] font-bold shadow-sm">
-                                            {getInitials(userName)}
+                                        <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-indigo-500 to-blue-400 text-white flex items-center justify-center text-[11px] font-bold shadow-sm overflow-hidden">
+                                            {user?.avatar_url ? (
+                                                <img src={user.avatar_url} alt="Profile" className="w-full h-full object-cover" />
+                                            ) : (
+                                                getInitials(userName)
+                                            )}
                                         </div>
                                         <span className="text-sm font-semibold text-slate-700 hidden sm:block">{userName.split(' ')[0]}</span>
                                     </Button>
