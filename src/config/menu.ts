@@ -28,7 +28,7 @@ export const ADMIN_MENU_SECTIONS = [
             { icon: Briefcase, title: "Jurnal Kerja", href: "/admin/jurnal" },
             { icon: BarChart3, title: "Laporan", href: "/admin/laporan" },
             { icon: FileCheck, title: "Permohonan Absen", href: "/admin/permohonan-absen" },
-            { icon: CalendarDays, title: "Kelola Cuti", href: "/admin/cuti" },
+            { icon: CalendarDays, title: "Permohonan Cuti", href: "/admin/cuti" },
         ],
     },
     {

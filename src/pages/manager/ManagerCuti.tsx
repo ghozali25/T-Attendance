@@ -36,7 +36,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import EnterpriseLayout from "@/components/layout/EnterpriseLayout";
-import { MANAGER_MENU_SECTIONS } from "@/config/menu";
+import { MANAGER_MENU_SECTIONS, ADMIN_MENU_SECTIONS } from "@/config/menu";
 
 interface LeaveRequest {
   id: string;
@@ -257,15 +257,15 @@ const ManagerCuti = () => {
 
   return (
     <EnterpriseLayout
-      title="Kelola Cuti"
+      title="Permohonan Cuti"
       subtitle="Approve/reject pengajuan cuti"
-      roleLabel="Manager"
-      menuSections={MANAGER_MENU_SECTIONS}
+      roleLabel={user?.role === 'admin' ? "Administrator" : "Manager"}
+      menuSections={user?.role === 'admin' ? ADMIN_MENU_SECTIONS : MANAGER_MENU_SECTIONS}
       showRefresh={true}
       onRefresh={fetchLeaveRequests}
       breadcrumbs={[
-        { label: "Manager", href: "/manager" },
-        { label: "Kelola Cuti" },
+        { label: user?.role === 'admin' ? "Dashboard" : "Manager", href: user?.role === 'admin' ? "/dashboard" : "/manager" },
+        { label: "Permohonan Cuti" },
       ]}
     >
       <div className="space-y-8 pb-20 animate-in fade-in slide-in-from-bottom-8 duration-700">
