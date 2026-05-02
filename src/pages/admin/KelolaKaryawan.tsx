@@ -507,7 +507,14 @@ const KelolaKaryawan = () => {
       </div>
 
       {/* MAIN DIALOG - ADD/EDIT EMPLOYEE */}
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+      <Dialog open={dialogOpen} onOpenChange={(open) => {
+        setDialogOpen(open);
+        if (!open) {
+          // Nuclear cleanup when dialog is closed by any means (ESC, click outside, Cancel button)
+          document.body.style.pointerEvents = 'auto';
+          document.body.style.overflow = 'auto';
+        }
+      }}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
             <DialogTitle>{editingEmployee ? "Edit Employee" : "Add New Employee"}</DialogTitle>

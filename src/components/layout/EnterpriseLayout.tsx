@@ -95,19 +95,36 @@ const EnterpriseLayout = ({
 
     useEffect(() => {
         if (!showRefresh) return;
-        /*
-        const countdownInterval = setInterval(() => {
-            setNextRefresh(prev => {
-                if (prev <= 1) {
-                    onRefresh?.();
-                    return refreshInterval;
-                }
-                return prev - 1;
-            });
-        }, 1000);
-        return () => clearInterval(countdownInterval);
-        */
     }, [showRefresh, refreshInterval, onRefresh]);
+
+    // GLOBAL UI UNFREEZER
+    // Forces pointer-events: auto on route changes and component mount
+    // This is a fail-safe for Radix UI components that fail to cleanup body styles
+    useEffect(() => {
+        const cleanup = () => {
+            document.body.style.pointerEvents = 'auto';
+            document.body.style.overflow = 'auto';
+            
+            // Remove any leftover Radix overlays if they are stuck
+            const overlays = document.querySelectorAll('[data-radix-focus-guard], [data-radix-popper-content-wrapper]');
+            if (overlays.length > 0 && !document.querySelector('[role="dialog"]')) {
+                // If there are popper wrappers but no active dialog, someone might be stuck
+                // document.body.style.pointerEvents = 'auto'; // Already done
+            }
+        };
+
+        cleanup();
+        
+        // Also listen for escape key as a manual escape hatch
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') {
+                setTimeout(cleanup, 100);
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [location.pathname]); // Trigger on every navigation
 
     const handleLogout = async () => {
         await signOut();
@@ -375,7 +392,13 @@ const EnterpriseLayout = ({
 
                         if (item.href === "#menu") {
                             return (
-                                <Sheet key={item.label} open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+                                <Sheet key={item.label} open={isMobileMenuOpen} onOpenChange={(open) => {
+                                    setIsMobileMenuOpen(open);
+                                    if (!open) {
+                                        document.body.style.pointerEvents = 'auto';
+                                        document.body.style.overflow = 'auto';
+                                    }
+                                }}>
                                     <SheetTrigger asChild>
                                         <button className="flex flex-col items-center justify-center gap-1 text-slate-400 active:scale-95 transition-all outline-none">
                                             <div className="p-2 rounded-2xl bg-slate-50 text-slate-500"><item.icon className="w-5 h-5" /></div>

@@ -338,18 +338,23 @@ const Departemen = () => {
                     <div className="w-14 h-14 bg-indigo-50 dark:bg-white/5 rounded-2xl flex items-center justify-center border border-indigo-100 dark:border-white/10">
                       <Building2 className="w-7 h-7 text-indigo-600 dark:text-indigo-400" />
                     </div>
-                    <DropdownMenu>
+                    <DropdownMenu onOpenChange={(open) => {
+                      if (!open) {
+                        document.body.style.pointerEvents = 'auto';
+                        document.body.style.overflow = 'auto';
+                      }
+                    }}>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10">
                           <MoreHorizontal className="w-5 h-5" />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-48 rounded-2xl p-2 border-white/10 shadow-2xl dark:bg-slate-900">
-                        <DropdownMenuItem onClick={() => handleEdit(dept.name)} className="rounded-xl px-3 py-2.5 font-medium cursor-pointer focus:bg-indigo-50 dark:focus:bg-white/10">
+                        <DropdownMenuItem onSelect={(e) => { e.preventDefault(); handleEdit(dept.name); }} className="rounded-xl px-3 py-2.5 font-medium cursor-pointer focus:bg-indigo-50 dark:focus:bg-white/10">
                           <Edit className="h-4 w-4 mr-3 text-slate-500" /> Ubah Modul
                         </DropdownMenuItem>
                         <DropdownMenuSeparator className="bg-slate-100 dark:bg-white/10 my-1" />
-                        <DropdownMenuItem onClick={() => setDeleteTarget(dept.name)} className="rounded-xl px-3 py-2.5 font-medium cursor-pointer focus:bg-red-50 dark:focus:bg-red-500/10 text-red-600 dark:text-red-400 focus:text-red-600">
+                        <DropdownMenuItem onSelect={(e) => { e.preventDefault(); setDeleteTarget(dept.name); }} className="rounded-xl px-3 py-2.5 font-medium cursor-pointer focus:bg-red-50 dark:focus:bg-red-500/10 text-red-600 dark:text-red-400 focus:text-red-600">
                           <Trash2 className="h-4 w-4 mr-3" /> Hapus Entitas
                         </DropdownMenuItem>
                       </DropdownMenuContent>
@@ -402,7 +407,13 @@ const Departemen = () => {
         )}
 
         {/* Global Modal Create/Edit */}
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <Dialog open={dialogOpen} onOpenChange={(open) => {
+          setDialogOpen(open);
+          if (!open) {
+            document.body.style.pointerEvents = 'auto';
+            document.body.style.overflow = 'auto';
+          }
+        }}>
           <DialogContent className="sm:max-w-md rounded-[28px] dark:bg-slate-900 border-white/10 p-0 overflow-hidden">
             <div className="h-2 w-full bg-gradient-to-r from-indigo-500 to-blue-500" />
             <div className="p-6">
@@ -440,7 +451,13 @@ const Departemen = () => {
         </Dialog>
 
         {/* Delete Confirmation Modal */}
-        <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+        <AlertDialog open={!!deleteTarget} onOpenChange={(open) => {
+          if (!open) {
+            setDeleteTarget(null);
+            document.body.style.pointerEvents = 'auto';
+            document.body.style.overflow = 'auto';
+          }
+        }}>
           <AlertDialogContent className="sm:max-w-md rounded-[28px] dark:bg-slate-900 border-red-500/20 shadow-2xl">
             <AlertDialogHeader className="text-left">
               <div className="w-14 h-14 rounded-2xl bg-red-50 flex items-center justify-center dark:bg-red-500/10 border border-red-100 dark:border-red-500/20 mb-4">

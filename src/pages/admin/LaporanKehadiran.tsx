@@ -1380,7 +1380,13 @@ const LaporanKehadiran = () => {
             </div >
 
             {/* DETAIL MODAL */}
-            < Dialog open={detailModalOpen} onOpenChange={setDetailModalOpen} >
+            <Dialog open={detailModalOpen} onOpenChange={(open) => {
+                setDetailModalOpen(open);
+                if (!open) {
+                    document.body.style.pointerEvents = 'auto';
+                    document.body.style.overflow = 'auto';
+                }
+            }}>
                 <DialogContent className="flex flex-col h-[90vh] max-w-5xl overflow-hidden p-0 gap-0 bg-slate-50/50 dark:bg-slate-800/50">
                     <div className="bg-white dark:bg-slate-900 p-6 border-b border-slate-100 dark:border-slate-800 flex-shrink-0">
                         <DialogHeader className="hidden">
@@ -1467,7 +1473,13 @@ const LaporanKehadiran = () => {
             </Dialog >
 
             {/* MANUAL ATTENDANCE MODAL */}
-            <Dialog open={manualModalOpen} onOpenChange={setManualModalOpen}>
+            <Dialog open={manualModalOpen} onOpenChange={(open) => {
+                setManualModalOpen(open);
+                if (!open) {
+                    document.body.style.pointerEvents = 'auto';
+                    document.body.style.overflow = 'auto';
+                }
+            }}>
                 <DialogContent className="sm:max-w-[425px]">
                     <DialogHeader>
                         <DialogTitle>Set Absensi Manual</DialogTitle>
@@ -1543,7 +1555,13 @@ const LaporanKehadiran = () => {
             </Dialog>
 
             {/* Detail Modal */}
-            <Dialog open={attendanceDetailOpen} onOpenChange={setAttendanceDetailOpen}>
+            <Dialog open={attendanceDetailOpen} onOpenChange={(open) => {
+                setAttendanceDetailOpen(open);
+                if (!open) {
+                    document.body.style.pointerEvents = 'auto';
+                    document.body.style.overflow = 'auto';
+                }
+            }}>
                 <DialogContent className="sm:max-w-[480px] p-0 overflow-hidden border-slate-200 dark:border-slate-800 shadow-2xl">
                     <div className="bg-gradient-to-br from-blue-600 to-indigo-700 p-6 text-white flex justify-between items-start">
                         <div>
@@ -1623,7 +1641,13 @@ const LaporanKehadiran = () => {
             </Dialog>
 
             {/* Location Modal */}
-            <Dialog open={attendanceLocationOpen} onOpenChange={setAttendanceLocationOpen}>
+            <Dialog open={attendanceLocationOpen} onOpenChange={(open) => {
+                setAttendanceLocationOpen(open);
+                if (!open) {
+                    document.body.style.pointerEvents = 'auto';
+                    document.body.style.overflow = 'auto';
+                }
+            }}>
                 <DialogContent className="sm:max-w-[450px] p-0 overflow-hidden border-slate-200 dark:border-slate-800 shadow-2xl">
                     <div className="px-6 py-5 border-b border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900">
                         <DialogTitle className="text-lg font-bold flex items-center gap-2">

@@ -585,7 +585,13 @@ const Pengaturan = () => {
         </div>
 
         {/* Mobile Edit Sheet */}
-        <Sheet open={!!activeMobileSheet} onOpenChange={(open) => !open && setActiveMobileSheet(null)}>
+        <Sheet open={!!activeMobileSheet} onOpenChange={(open) => {
+          if (!open) {
+            setActiveMobileSheet(null);
+            document.body.style.pointerEvents = 'auto';
+            document.body.style.overflow = 'auto';
+          }
+        }}>
           <SheetContent side="bottom" className="h-[92vh] rounded-t-[32px] p-0 bg-[#09090b] border-t border-white/10 flex flex-col focus:outline-none focus-visible:outline-none">
             <SheetHeader className="p-0 border-b border-white/5">
               <div className="w-12 h-1.5 bg-white/10 rounded-full mx-auto my-3" />
@@ -605,7 +611,13 @@ const Pengaturan = () => {
         <FloatingActionBar />
 
         {/* Modal Confrim (Same for both) */}
-        <AlertDialog open={showSaveConfirm} onOpenChange={setShowSaveConfirm}>
+        <AlertDialog open={showSaveConfirm} onOpenChange={(open) => {
+          setShowSaveConfirm(open);
+          if (!open) {
+            document.body.style.pointerEvents = 'auto';
+            document.body.style.overflow = 'auto';
+          }
+        }}>
           <AlertDialogContent className="bg-slate-900 border-white/10 rounded-[28px] max-w-sm">
             <AlertDialogHeader>
               <AlertDialogTitle className="text-white text-xl">Deploy Configuration?</AlertDialogTitle>
@@ -623,7 +635,13 @@ const Pengaturan = () => {
         </AlertDialog>
 
         {/* Confirmation Dialog System Destructive Actions */}
-        <AlertDialog open={resetDialogOpen} onOpenChange={setResetDialogOpen}>
+        <AlertDialog open={resetDialogOpen} onOpenChange={(open) => {
+          setResetDialogOpen(open);
+          if (!open) {
+            document.body.style.pointerEvents = 'auto';
+            document.body.style.overflow = 'auto';
+          }
+        }}>
           <AlertDialogContent className="rounded-[28px] dark:bg-slate-900 border-red-500/20 shadow-2xl">
             <AlertDialogHeader>
               <div className="w-14 h-14 bg-red-500/10 flex items-center justify-center rounded-2xl mb-4 border border-red-500/20">
@@ -721,7 +739,13 @@ const Pengaturan = () => {
         <FloatingActionBar />
 
         {/* Desktop Save Confirm */}
-        <AlertDialog open={showSaveConfirm} onOpenChange={setShowSaveConfirm}>
+        <AlertDialog open={showSaveConfirm} onOpenChange={(open) => {
+          setShowSaveConfirm(open);
+          if (!open) {
+            document.body.style.pointerEvents = 'auto';
+            document.body.style.overflow = 'auto';
+          }
+        }}>
           <AlertDialogContent className="rounded-[28px] dark:bg-slate-900 border-white/10 shadow-2xl">
             <AlertDialogHeader>
               <div className="w-14 h-14 bg-indigo-500/10 flex items-center justify-center rounded-2xl mb-4 border border-indigo-500/20">
@@ -749,7 +773,13 @@ const Pengaturan = () => {
         </AlertDialog>
 
         {/* Confirmation Dialog System Destructive Actions */}
-        <AlertDialog open={resetDialogOpen} onOpenChange={setResetDialogOpen}>
+        <AlertDialog open={resetDialogOpen} onOpenChange={(open) => {
+          setResetDialogOpen(open);
+          if (!open) {
+            document.body.style.pointerEvents = 'auto';
+            document.body.style.overflow = 'auto';
+          }
+        }}>
           <AlertDialogContent className="rounded-[28px] dark:bg-slate-900 border-red-500/20 shadow-2xl">
             <AlertDialogHeader>
               <div className="w-14 h-14 bg-red-500/10 flex items-center justify-center rounded-2xl mb-4 border border-red-500/20">

@@ -204,7 +204,12 @@ export function EmployeeTable({
                                         {getStatusBadge(employee)}
                                     </TableCell>
                                     <TableCell className="text-right pr-6">
-                                        <DropdownMenu>
+                                        <DropdownMenu onOpenChange={(open) => {
+                                            if (!open) {
+                                                document.body.style.pointerEvents = 'auto';
+                                                document.body.style.overflow = 'auto';
+                                            }
+                                        }}>
                                             <DropdownMenuTrigger asChild>
                                                 <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-slate-600 dark:text-slate-300">
                                                     <MoreHorizontal className="h-4 w-4" />
@@ -214,10 +219,10 @@ export function EmployeeTable({
                                                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
                                                 {!isArchivedView ? (
                                                     <>
-                                                        <DropdownMenuItem onClick={() => onEdit(employee)}>
+                                                        <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onEdit(employee); }}>
                                                             <Edit className="mr-2 h-4 w-4" /> Edit Details
                                                         </DropdownMenuItem>
-                                                        <DropdownMenuItem className="text-red-600 focus:text-red-700 focus:bg-red-50" onClick={() => onDelete(employee)}>
+                                                        <DropdownMenuItem className="text-red-600 focus:text-red-700 focus:bg-red-50" onSelect={(e) => { e.preventDefault(); onDelete(employee); }}>
                                                             <Trash2 className="mr-2 h-4 w-4" /> Archive
                                                         </DropdownMenuItem>
                                                     </>
@@ -245,7 +250,12 @@ export function EmployeeTable({
                 ) : (
                     data.map((employee) => (
                         <div key={employee.id} className="bg-white dark:bg-slate-900 rounded-[20px] p-5 shadow-sm hover:shadow-md transition-all border border-slate-100 dark:border-slate-800 flex flex-col items-center text-center relative group">
-                            <DropdownMenu>
+                            <DropdownMenu onOpenChange={(open) => {
+                                if (!open) {
+                                    document.body.style.pointerEvents = 'auto';
+                                    document.body.style.overflow = 'auto';
+                                }
+                            }}>
                                 <DropdownMenuTrigger asChild>
                                     <Button variant="ghost" size="icon" className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 h-8 w-8 text-slate-400 hover:text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:bg-slate-800 transition-all">
                                         <MoreHorizontal className="h-4 w-4" />
@@ -255,10 +265,10 @@ export function EmployeeTable({
                                     <DropdownMenuLabel>Actions</DropdownMenuLabel>
                                     {!isArchivedView ? (
                                         <>
-                                            <DropdownMenuItem onClick={() => onEdit(employee)} className="cursor-pointer">
+                                            <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onEdit(employee); }} className="cursor-pointer">
                                                 <Edit className="mr-2 h-4 w-4 text-slate-500 dark:text-slate-400" /> Edit Details
                                             </DropdownMenuItem>
-                                            <DropdownMenuItem className="text-red-600 focus:text-red-700 cursor-pointer" onClick={() => onDelete(employee)}>
+                                            <DropdownMenuItem className="text-red-600 focus:text-red-700 cursor-pointer" onSelect={(e) => { e.preventDefault(); onDelete(employee); }}>
                                                 <Trash2 className="mr-2 h-4 w-4" /> Archive
                                             </DropdownMenuItem>
                                         </>
@@ -336,7 +346,12 @@ export function EmployeeTable({
                                     </div>
                                 </div>
                                 <div className="-mt-1 -mr-2">
-                                    <DropdownMenu>
+                                    <DropdownMenu onOpenChange={(open) => {
+                                        if (!open) {
+                                            document.body.style.pointerEvents = 'auto';
+                                            document.body.style.overflow = 'auto';
+                                        }
+                                    }}>
                                         <DropdownMenuTrigger asChild>
                                             <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-slate-600 dark:text-slate-300">
                                                 <MoreHorizontal className="h-4 w-4" />
@@ -346,10 +361,10 @@ export function EmployeeTable({
                                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
                                             {!isArchivedView ? (
                                                 <>
-                                                    <DropdownMenuItem onClick={() => onEdit(employee)}>
+                                                    <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onEdit(employee); }}>
                                                         <Edit className="mr-2 h-4 w-4" /> Edit Details
                                                     </DropdownMenuItem>
-                                                    <DropdownMenuItem className="text-red-600 focus:text-red-700 focus:bg-red-50" onClick={() => onDelete(employee)}>
+                                                    <DropdownMenuItem className="text-red-600 focus:text-red-700 focus:bg-red-50" onSelect={(e) => { e.preventDefault(); onDelete(employee); }}>
                                                         <Trash2 className="mr-2 h-4 w-4" /> Archive
                                                     </DropdownMenuItem>
                                                 </>
