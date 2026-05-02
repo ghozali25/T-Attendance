@@ -648,7 +648,7 @@ const KaryawanDashboardNew = () => {
                     </div>
 
                     {/* Quick Actions */}
-                    <div className="grid grid-cols-3 gap-3">
+                    <div className="grid grid-cols-4 gap-3">
                         <Link to="/karyawan/riwayat" className={cn(cardBase, "p-3 flex flex-col items-center gap-1.5 active:scale-95 transition-transform text-center")}>
                             <div className="w-9 h-9 bg-blue-50 rounded-xl flex items-center justify-center"><CalendarDays className="w-4 h-4 text-blue-600" /></div>
                             <span className={cn("text-[10px] font-bold", isDark ? "text-slate-300" : "text-slate-600")}>Riwayat</span>
@@ -656,6 +656,10 @@ const KaryawanDashboardNew = () => {
                         <Link to="/karyawan/cuti" className={cn(cardBase, "p-3 flex flex-col items-center gap-1.5 active:scale-95 transition-transform text-center")}>
                             <div className="w-9 h-9 bg-emerald-50 rounded-xl flex items-center justify-center"><FileCheck className="w-4 h-4 text-emerald-600" /></div>
                             <span className={cn("text-[10px] font-bold", isDark ? "text-slate-300" : "text-slate-600")}>Cuti</span>
+                        </Link>
+                        <Link to="/karyawan/permohonan-absen" className={cn(cardBase, "p-3 flex flex-col items-center gap-1.5 active:scale-95 transition-transform text-center")}>
+                            <div className="w-9 h-9 bg-amber-50 rounded-xl flex items-center justify-center"><Clock className="w-4 h-4 text-amber-600" /></div>
+                            <span className={cn("text-[10px] font-bold", isDark ? "text-slate-300" : "text-slate-600")}>Request</span>
                         </Link>
                         <Link to="/karyawan/jurnal" className={cn(cardBase, "p-3 flex flex-col items-center gap-1.5 active:scale-95 transition-transform text-center")}>
                             <div className="w-9 h-9 bg-violet-50 rounded-xl flex items-center justify-center"><TrendingUp className="w-4 h-4 text-violet-600" /></div>

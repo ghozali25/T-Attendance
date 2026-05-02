@@ -41,6 +41,7 @@ export default function KaryawanWorkspaceLayout({ children, notifCount = 0 }: Ka
         { path: "/dashboard", label: "Dashboard" },
         { path: "/karyawan/jurnal", label: "Jurnal" },
         { path: "/karyawan/cuti", label: "Cuti" },
+        { path: "/karyawan/permohonan-absen", label: "Permohonan" },
         { path: "/karyawan/laporan", label: "Laporan" },
     ];
 

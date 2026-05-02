@@ -59,12 +59,30 @@ router.get('/:user_id', async (req, res) => {
 // PUT /api/profiles/:user_id - Update profile
 router.put('/:user_id', async (req, res) => {
   try {
-    const { full_name, department, position, phone, address } = req.body;
+    const fields = req.body;
+    const allowedFields = ['full_name', 'department', 'position', 'phone', 'address', 'avatar_url'];
     
-    await req.db.query(
-      `UPDATE profiles SET full_name = ?, department = ?, position = ?, phone = ?, address = ? WHERE user_id = ?`,
-      [full_name, department, position, phone, address, req.params.user_id]
-    );
+    const updateParts = [];
+    const params = [];
+    
+    for (const field of allowedFields) {
+      if (fields[field] !== undefined) {
+        updateParts.push(`${field} = ?`);
+        params.push(fields[field]);
+      }
+    }
+    
+    if (updateParts.length === 0) {
+      return res.status(400).json({ error: 'No fields to update' });
+    }
+    
+    params.push(req.params.user_id);
+    
+    const query = `UPDATE profiles SET ${updateParts.join(', ')} WHERE user_id = ?`;
+    
+    console.log('[Profiles API] Update Query:', query);
+    
+    await req.db.query(query, params);
     
     res.json({ message: 'Profile updated successfully' });
   } catch (error) {

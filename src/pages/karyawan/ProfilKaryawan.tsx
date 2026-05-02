@@ -61,14 +61,8 @@ const ProfilKaryawan = () => {
   const fetchProfile = async () => {
     if (!user) return;
     try {
-      // Use API to get profiles
-      const profiles = await profilesApi.getAll();
-      if (!profiles || !Array.isArray(profiles)) {
-        setIsFetching(false);
-        return;
-      }
-
-      const userProfile = profiles.find((p: any) => p.id === user.id);
+      // Use API to get profile by user ID
+      const userProfile = await profilesApi.getById(user.id);
 
       if (userProfile) {
         setProfile(userProfile);
@@ -84,20 +78,7 @@ const ProfilKaryawan = () => {
           avatar_url: userProfile.avatar_url || "",
         });
       } else {
-        // Create new profile if it doesn't exist using db.query (no API endpoint for profile creation)
-        const profileId = crypto.randomUUID();
-        const newProfile = await db.query(
-          'INSERT INTO profiles (id, user_id, full_name) VALUES (?, ?, ?)',
-          [profileId, user.id, user.email || ""]
-        ) as any[];
-        
-        if (newProfile) {
-          const created = await db.query('SELECT * FROM profiles WHERE id = ?', [profileId]) as any[];
-          if (created && created.length > 0) {
-            setProfile(created[0]);
-            form.reset({ full_name: created[0].full_name || "", phone: "", address: "", department: "", position: "" });
-          }
-        }
+        // Handle no profile case (e.g., redirect or show message)
       }
     } catch (error) {
       console.error('Error fetching profile:', error);
@@ -134,8 +115,11 @@ const ProfilKaryawan = () => {
         address: data.address || null,
         avatar_url: data.avatar_url || null
       });
-      if (data.avatar_url) {
-        updateUser({ avatar_url: data.avatar_url, full_name: data.full_name });
+      if (data.avatar_url || data.full_name) {
+        updateUser({ 
+          avatar_url: data.avatar_url || profile?.avatar_url, 
+          full_name: data.full_name 
+        });
       }
       toast({ title: "Profil berhasil disimpan", description: "Data profil Anda telah diperbarui." });
     } catch (error) {
