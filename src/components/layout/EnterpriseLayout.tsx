@@ -102,29 +102,36 @@ const EnterpriseLayout = ({
     // This is a fail-safe for Radix UI components that fail to cleanup body styles
     useEffect(() => {
         const cleanup = () => {
-            document.body.style.pointerEvents = 'auto';
-            document.body.style.overflow = 'auto';
-            
-            // Remove any leftover Radix overlays if they are stuck
-            const overlays = document.querySelectorAll('[data-radix-focus-guard], [data-radix-popper-content-wrapper]');
-            if (overlays.length > 0 && !document.querySelector('[role="dialog"]')) {
-                // If there are popper wrappers but no active dialog, someone might be stuck
-                // document.body.style.pointerEvents = 'auto'; // Already done
+            if (document.body.style.pointerEvents === 'none') {
+                const hasOpenOverlay = document.querySelector('[data-state="open"]');
+                if (!hasOpenOverlay) {
+                    console.log("[GlobalUnfreezer] Forcing UI unlock...");
+                    document.body.style.pointerEvents = 'auto';
+                    document.body.style.overflow = 'auto';
+                }
             }
         };
 
+        // Run on every click to ensure we catch stuck states immediately
+        const handleInteraction = () => {
+            // Use a tiny delay to allow Radix UI to finish its own transitions
+            setTimeout(cleanup, 100);
+        };
+
+        window.addEventListener('mousedown', handleInteraction, true);
+        window.addEventListener('touchstart', handleInteraction, true);
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') handleInteraction();
+        });
+
+        // Run cleanup on route change
         cleanup();
         
-        // Also listen for escape key as a manual escape hatch
-        const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') {
-                setTimeout(cleanup, 100);
-            }
+        return () => {
+            window.removeEventListener('mousedown', handleInteraction, true);
+            window.removeEventListener('touchstart', handleInteraction, true);
         };
-
-        window.addEventListener('keydown', handleKeyDown);
-        return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [location.pathname]); // Trigger on every navigation
+    }, [location.pathname]); // Trigger on navigation and mount
 
     const handleLogout = async () => {
         await signOut();

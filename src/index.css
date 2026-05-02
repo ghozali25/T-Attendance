@@ -124,6 +124,12 @@
     @apply bg-background text-foreground antialiased;
     font-family: 'Inter', system-ui, sans-serif;
   }
+
+  /* Fail-safe for Radix UI stuck body lock */
+  /* If body is locked but no dialog/menu is open, force unlock */
+  body[style*="pointer-events: none"]:not(:has([data-state="open"])) {
+    pointer-events: auto !important;
+  }
 }
 
 @layer utilities {
