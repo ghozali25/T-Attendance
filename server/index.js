@@ -6,6 +6,17 @@ import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 
+// Import Routes
+import authRoutes from './routes/auth.js';
+import attendanceRoutes from './routes/attendance.js';
+import profilesRoutes from './routes/profiles.js';
+import journalsRoutes from './routes/journals.js';
+import leaveRoutes from './routes/leave.js';
+import usersRoutes from './routes/users.js';
+import dbRoutes from './routes/db.js';
+import holidayRoutes from './routes/holidays.js';
+import attendanceRequestRoutes from './routes/attendance_requests.js';
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
@@ -64,16 +75,6 @@ app.use((req, res, next) => {
 });
 
 // API Routes
-import authRoutes from './routes/auth.js';
-import attendanceRoutes from './routes/attendance.js';
-import profilesRoutes from './routes/profiles.js';
-import journalsRoutes from './routes/journals.js';
-import leaveRoutes from './routes/leave.js';
-import usersRoutes from './routes/users.js';
-import dbRoutes from './routes/db.js';
-import holidayRoutes from './routes/holidays.js';
-import attendanceRequestRoutes from './routes/attendance_requests.js';
-
 app.use('/api/auth', authRoutes);
 app.use('/api/attendance', attendanceRoutes);
 app.use('/api/attendance-requests', attendanceRequestRoutes);
@@ -92,7 +93,7 @@ app.get('/api/health', (req, res) => {
 // Error handling
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res.status(500).json({ error: 'Something went wrong!' });
+  res.status(500).json({ error: 'Something went wrong!', message: err.message });
 });
 
 // Start server (only if not on Vercel)
