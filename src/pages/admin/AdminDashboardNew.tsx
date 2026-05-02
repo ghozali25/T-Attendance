@@ -432,7 +432,7 @@ const AdminDashboardNew = () => {
                                     </div>
                                     <div className="flex items-center gap-3">
                                         {/* Filters */}
-                                        <div className="bg-slate-100/70 p-1 rounded-xl flex items-center text-sm font-semibold border border-slate-200/50 dark:border-slate-700/50 shadow-inner">
+                                        <div className="bg-slate-100/70 dark:bg-slate-800 p-1 rounded-xl flex items-center text-sm font-semibold border border-slate-200/50 dark:border-slate-700/50 shadow-inner">
                                             <button
                                                 onClick={() => setAttendanceFilter('all')}
                                                 className={cn("px-3 py-1.5 rounded-lg transition-all", attendanceFilter === 'all' ? "bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 shadow-sm" : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:text-slate-200")}
@@ -475,7 +475,7 @@ const AdminDashboardNew = () => {
                                             </TableRow>
                                         ) : (
                                             filteredAttendance.map((record) => (
-                                                <TableRow key={record.id} className="group hover:bg-slate-50/70 border-b border-slate-100 dark:border-slate-800 transition-colors">
+                                                <TableRow key={record.id} className="group hover:bg-slate-50/70 dark:hover:bg-slate-800 border-b border-slate-100 dark:border-slate-800 transition-colors">
                                                     <TableCell className="font-medium pl-6 py-4">
                                                         <div className="flex items-center gap-3 w-max">
                                                             <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center text-xs font-bold border shadow-sm transition-transform group-hover:scale-105", getAvatarColor(record.full_name), "border-white")}>

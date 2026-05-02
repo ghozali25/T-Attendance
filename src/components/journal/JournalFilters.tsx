@@ -43,7 +43,7 @@ export function JournalFilters({
             {/* Quick Segmented Control for Status */}
             <div className="flex flex-col md:flex-row items-center justify-between gap-4 w-full">
                 {/* Status Tabs */}
-                <div className="bg-slate-100/80 p-1.5 rounded-2xl w-full md:w-auto overflow-x-auto shadow-inner border border-slate-200/50 dark:border-slate-700/50">
+                <div className="bg-slate-100/80 dark:bg-slate-800 p-1.5 rounded-2xl w-full md:w-auto overflow-x-auto shadow-inner border border-slate-200/50 dark:border-slate-700/50">
                     <div className="flex items-center min-w-max gap-1">
                         {['all', 'submitted', 'approved', 'need_revision', 'rejected'].map(s => {
                             const labels: Record<string, string> = {
@@ -61,7 +61,7 @@ export function JournalFilters({
                                         "px-5 py-2.5 text-[13px] font-bold rounded-xl transition-all duration-300 relative overflow-hidden",
                                         status === s
                                             ? "bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-[0_2px_8px_-2px_rgba(0,0,0,0.08)] border border-slate-200/60"
-                                            : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:text-slate-100 hover:bg-slate-200/60"
+                                            : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 hover:bg-slate-200/60 dark:hover:bg-slate-700/50"
                                     )}
                                 >
                                     {labels[s]}
