@@ -11,7 +11,7 @@
     "preview": "vite preview",
     "migrate:fresh": "node scripts/migrate-fresh.js",
     "server": "node server/index.js",
-    "dev:full": "concurrently \"npm run server\" \"npm run dev\""
+    "dev:full": "concurrently --kill-others-on-fail --prefix-colors auto --names SERVER,FRONTEND \"npm run server\" \"wait-on http://localhost:3001/api/profiles && npm run dev\""
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
@@ -106,6 +106,7 @@
     "vite": "^5.4.19",
     "vite-plugin-compression": "^0.5.1",
     "vite-plugin-pwa": "^1.2.0",
+    "wait-on": "^9.0.5",
     "workbox-window": "^7.4.0"
   }
 }

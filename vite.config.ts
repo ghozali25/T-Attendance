@@ -11,20 +11,23 @@ export default defineConfig(({ mode }) => ({
     host: "0.0.0.0",
     port: 8080,
     proxy: {
-      '/api': {
-        target: 'http://localhost:3001',
+      "/api": {
+        target: "http://localhost:3001",
         changeOrigin: true,
-      }
-    }
+        secure: false,
+      },
+    },
   },
+
   plugins: [
     react(),
     mode === "development" && componentTagger(),
 
-    // PWA Plugin for mobile-like experience
+    // PWA Plugin
     VitePWA({
       registerType: "autoUpdate",
       includeAssets: ["favicon.ico", "favicon.png", "robots.txt"],
+
       manifest: {
         name: "T-Absensi - Sistem Absensi Karyawan",
         short_name: "T-Absensi",
@@ -36,112 +39,117 @@ export default defineConfig(({ mode }) => ({
         scope: "/",
         start_url: "/",
         categories: ["business", "productivity"],
+
         icons: [
           {
             src: "/favicon.png",
             sizes: "192x192",
             type: "image/png",
-            purpose: "any"
+            purpose: "any",
           },
           {
             src: "/favicon.png",
             sizes: "512x512",
             type: "image/png",
-            purpose: "any"
+            purpose: "any",
           },
           {
             src: "/favicon.png",
             sizes: "192x192",
             type: "image/png",
-            purpose: "maskable"
+            purpose: "maskable",
           },
           {
             src: "/favicon.png",
             sizes: "512x512",
             type: "image/png",
-            purpose: "maskable"
-          }
+            purpose: "maskable",
+          },
         ],
+
         shortcuts: [
           {
             name: "Clock In",
             short_name: "Clock In",
             description: "Record your attendance",
             url: "/karyawan/absensi",
-            icons: [{ src: "/favicon.png", sizes: "192x192" }]
+            icons: [{ src: "/favicon.png", sizes: "192x192" }],
           },
           {
             name: "History",
             short_name: "Riwayat",
             description: "View attendance history",
             url: "/karyawan/riwayat",
-            icons: [{ src: "/favicon.png", sizes: "192x192" }]
-          }
-        ]
+            icons: [{ src: "/favicon.png", sizes: "192x192" }],
+          },
+        ],
       },
+
       workbox: {
-        // Cache strategies for optimal performance
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff,woff2}"],
+
         runtimeCaching: [
           {
-            // Cache images
             urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp|ico)$/i,
             handler: "CacheFirst",
             options: {
               cacheName: "images-cache",
               expiration: {
                 maxEntries: 60,
-                maxAgeSeconds: 60 * 60 * 24 * 30 // 30 days
-              }
-            }
+                maxAgeSeconds: 60 * 60 * 24 * 30,
+              },
+            },
           },
+
           {
-            // Cache fonts
             urlPattern: /\.(?:woff|woff2|ttf|eot)$/i,
             handler: "CacheFirst",
             options: {
               cacheName: "fonts-cache",
               expiration: {
                 maxEntries: 20,
-                maxAgeSeconds: 60 * 60 * 24 * 365 // 1 year
-              }
-            }
+                maxAgeSeconds: 60 * 60 * 24 * 365,
+              },
+            },
           },
+
           {
-            // Cache Google Fonts
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
             handler: "CacheFirst",
             options: {
               cacheName: "google-fonts-cache",
               expiration: {
                 maxEntries: 10,
-                maxAgeSeconds: 60 * 60 * 24 * 365 // 1 year
-              }
-            }
-          }
+                maxAgeSeconds: 60 * 60 * 24 * 365,
+              },
+            },
+          },
         ],
-        // Skip waiting for faster updates
+
         skipWaiting: true,
-        clientsClaim: true
+        clientsClaim: true,
       },
+
       devOptions: {
-        enabled: false // Disable in development for faster HMR
-      }
+        enabled: false,
+      },
     }),
 
-    // Gzip compression for smaller bundles
-    mode === "production" && viteCompression({
-      algorithm: "gzip",
-      ext: ".gz",
-      threshold: 1024 // Only compress files > 1KB
-    }),
+    // Gzip compression
+    mode === "production" &&
+      viteCompression({
+        algorithm: "gzip",
+        ext: ".gz",
+        threshold: 1024,
+      }),
 
-    // Brotli compression (better compression ratio)
-    mode === "production" && viteCompression({
-      algorithm: "brotliCompress",
-      ext: ".br",
-      threshold: 1024
-    })
+    // Brotli compression
+    mode === "production" &&
+      viteCompression({
+        algorithm: "brotliCompress",
+        ext: ".br",
+        threshold: 1024,
+      }),
   ].filter(Boolean),
 
   resolve: {
@@ -150,37 +158,35 @@ export default defineConfig(({ mode }) => ({
     },
   },
 
-  // Production build optimizations
   build: {
-    // Target modern browsers for smaller bundles
     target: "esnext",
 
-    // Minification
     minify: "terser",
+
     terserOptions: {
       compress: {
-        drop_console: true, // Remove console.log in production
+        drop_console: true,
         drop_debugger: true,
-        pure_funcs: ["console.log", "console.info", "console.debug"],
+        pure_funcs: [
+          "console.log",
+          "console.info",
+          "console.debug",
+        ],
       },
-      mangle: true
+      mangle: true,
     },
 
-    // Enable source maps for debugging (can be disabled for smaller builds)
     sourcemap: false,
 
-    // Chunk size warnings
     chunkSizeWarningLimit: 500,
 
-    // Rollup options for code splitting
     rollupOptions: {
       output: {
-        // Manual chunk splitting for optimal caching
         manualChunks: {
-          // Vendor chunks
           "vendor-react": ["react", "react-dom"],
           "vendor-router": ["react-router-dom"],
           "vendor-query": ["@tanstack/react-query"],
+
           "vendor-ui": [
             "@radix-ui/react-dialog",
             "@radix-ui/react-dropdown-menu",
@@ -188,53 +194,70 @@ export default defineConfig(({ mode }) => ({
             "@radix-ui/react-tabs",
             "@radix-ui/react-toast",
             "@radix-ui/react-tooltip",
-            "@radix-ui/react-popover"
+            "@radix-ui/react-popover",
           ],
-          "vendor-form": ["react-hook-form", "@hookform/resolvers", "zod"],
+
+          "vendor-form": [
+            "react-hook-form",
+            "@hookform/resolvers",
+            "zod",
+          ],
+
           "vendor-charts": ["recharts"],
+
           "vendor-icons": ["lucide-react"],
-          "vendor-utils": ["date-fns", "clsx", "tailwind-merge", "class-variance-authority"]
+
+          "vendor-utils": [
+            "date-fns",
+            "clsx",
+            "tailwind-merge",
+            "class-variance-authority",
+          ],
         },
-        // Optimize chunk file names
+
         chunkFileNames: (chunkInfo) => {
           const facadeModuleId = chunkInfo.facadeModuleId || "";
+
           if (facadeModuleId.includes("node_modules")) {
             return "assets/vendor/[name]-[hash].js";
           }
+
           return "assets/chunks/[name]-[hash].js";
         },
+
         entryFileNames: "assets/[name]-[hash].js",
+
         assetFileNames: (assetInfo) => {
           const info = assetInfo.name?.split(".") || [];
           const ext = info[info.length - 1];
+
           if (/png|jpe?g|svg|gif|tiff|bmp|ico/i.test(ext)) {
             return "assets/images/[name]-[hash][extname]";
           }
+
           if (/woff2?|ttf|eot/i.test(ext)) {
             return "assets/fonts/[name]-[hash][extname]";
           }
+
           if (/css/i.test(ext)) {
             return "assets/css/[name]-[hash][extname]";
           }
+
           return "assets/[name]-[hash][extname]";
-        }
-      }
+        },
+      },
     },
 
-    // CSS code splitting
     cssCodeSplit: true,
 
-    // Asset inlining threshold (inline small assets)
-    assetsInlineLimit: 4096 // 4KB
+    assetsInlineLimit: 4096,
   },
 
-  // Preview server (for testing production builds locally)
   preview: {
     port: 8080,
-    host: "0.0.0.0"
+    host: "0.0.0.0",
   },
 
-  // Optimize dependencies
   optimizeDeps: {
     include: [
       "react",
@@ -243,8 +266,9 @@ export default defineConfig(({ mode }) => ({
       "@tanstack/react-query",
       "lucide-react",
       "zod",
-      "react-hook-form"
+      "react-hook-form",
     ],
-    exclude: ["mysql2"]
-  }
+
+    exclude: ["mysql2"],
+  },
 }));

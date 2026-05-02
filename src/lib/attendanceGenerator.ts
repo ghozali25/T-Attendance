@@ -82,8 +82,12 @@ export const generateAttendancePeriod = (
         // First try matching via the 'date' column (most reliable for manual entries)
         // Then fallback to normalizing clock_in timestamp to Jakarta timezone
         const record = records.find(r => {
-            // Priority 1: Match by explicit 'date' field (set by manual entries)
-            if (r.date && r.date === dateStr) return true;
+            // Priority 1: Match by explicit 'date' field (handle both ISO and YYYY-MM-DD formats)
+            if (r.date) {
+                // Extract YYYY-MM-DD from ISO string or use directly if already in that format
+                const recordDate = r.date.includes('T') ? r.date.split('T')[0] : r.date;
+                if (recordDate === dateStr) return true;
+            }
             // Priority 2: Match by clock_in timezone conversion
             if (!r.clock_in) return false;
             const recordDateJakarta = new Date(r.clock_in).toLocaleDateString('en-CA', {

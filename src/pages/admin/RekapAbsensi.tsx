@@ -47,7 +47,7 @@ import EnterpriseLayout from "@/components/layout/EnterpriseLayout";
 import { ABSENSI_WAJIB_ROLE, EXCLUDED_USER_NAMES } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/useIsMobile";
-import { startOfMonth, endOfMonth, format, addDays, subDays, getDaysInMonth, getDate, isSameMonth, startOfDay, endOfDay, differenceInMinutes, parseISO, isValid } from "date-fns";
+import { startOfMonth, endOfMonth, format, addDays, subDays, getDaysInMonth, getDate, isSameMonth, startOfDay, endOfDay, differenceInMinutes, parseISO, isValid, subMonths, addMonths } from "date-fns";
 import * as XLSX from "xlsx";
 import { id } from "date-fns/locale";
 import { DateRange } from "react-day-picker";
@@ -105,15 +105,20 @@ const RekapAbsensi = () => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   // View Modes
-  const [viewMode, setViewMode] = useState<"daily" | "monthly" | "range">("daily");
+  const [viewMode, setViewMode] = useState<"daily" | "monthly" | "range">("monthly");
 
   // Date Filters
   const [filterDate, setFilterDate] = useState(getTodayDate());
-  const [selectedMonth, setSelectedMonth] = useState(new Date());
+  const [selectedMonth, setSelectedMonth] = useState(new Date(2026, 1, 1)); // February 2026
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
     from: subDays(new Date(), 7),
     to: new Date(),
   });
+
+  // Force February 2026 on initial load
+  useEffect(() => {
+    setSelectedMonth(new Date(2026, 1, 1));
+  }, []);
 
   // Calculate Start/End based on view mode (Memoized)
   const queryRange = useMemo(() => {
@@ -122,16 +127,12 @@ const RekapAbsensi = () => {
       start = startOfDay(dateRange?.from || new Date());
       end = endOfDay(dateRange?.to || new Date());
     } else if (viewMode === "monthly") {
-      // Use Jakarta timezone for monthly range
-      const jakartaDate = getJakartaDate();
-      const jakartaMonth = selectedMonth ? getJakartaDate() : selectedMonth;
-      start = startOfMonth(jakartaMonth);
-      end = endOfMonth(jakartaMonth);
-      // Convert to ISO strings with Jakarta timezone
-      const startStr = getJakartaStartOfDayISO(start);
-      const endStr = getJakartaEndOfDayISO(end);
-      start = new Date(startStr);
-      end = new Date(endStr);
+      // For monthly view, use the selectedMonth directly
+      start = startOfMonth(selectedMonth);
+      end = endOfMonth(selectedMonth);
+      console.log('[RekapAbsensi] Monthly view - selectedMonth:', selectedMonth);
+      console.log('[RekapAbsensi] Monthly view - start:', format(start, 'yyyy-MM-dd'));
+      console.log('[RekapAbsensi] Monthly view - end:', format(end, 'yyyy-MM-dd'));
     } else {
       // Daily: Create Strict Jakarta Range
       // filterDate is "YYYY-MM-DD"
@@ -162,31 +163,34 @@ const RekapAbsensi = () => {
     return `${h}j ${m}m`;
   };
 
-  // 1. Fetch Data
+  // 1. Fetch Data - Simplified Version using direct db.query
   const fetchAttendance = useCallback(async () => {
     setIsLoading(true);
     try {
-      // A. Get Target Employees (Profiles) using API
-      const profiles = await profilesApi.getAll();
+      const { start, end } = queryRange;
+      const startDateStr = format(start, 'yyyy-MM-dd');
+      const endDateStr = format(end, 'yyyy-MM-dd');
       
-      // Get all users to check roles
-      const users = await usersApi.getAll();
-      const roleArray = [...ABSENSI_WAJIB_ROLE];
-      
-      // Merge profiles with user roles
-      let activeKaryawan = profiles?.map((p: any) => {
-        const user = users?.find((u: any) => u.id === p.user_id);
-        return {
-          ...p,
-          id: p.user_id,
-          role: user?.role || 'employee'
-        };
-      }).filter((u: any) => roleArray.includes(u.role)) || [];
+      console.log(`[RekapAbsensi] Fetching data for: ${startDateStr} to ${endDateStr}`);
 
-      // Filter Excluded Users
-      activeKaryawan = activeKaryawan.filter((p: any) => {
-        if (!p.full_name) return true;
-        const nameLower = p.full_name.toLowerCase();
+      // A. Get Target Employees using simple SQL query
+      const roleArray = [...ABSENSI_WAJIB_ROLE];
+      const rolePlaceholders = roleArray.map(() => '?').join(',');
+      
+      const employeesData = await db.query(
+        `SELECT DISTINCT p.user_id, p.full_name, p.department 
+         FROM profiles p 
+         JOIN user_roles ur ON p.user_id = ur.user_id 
+         WHERE ur.role IN (${rolePlaceholders})`,
+        roleArray
+      ) as any[];
+
+      console.log(`[RekapAbsensi] Found ${employeesData?.length || 0} employees`);
+
+      // Filter out excluded users
+      let activeKaryawan = (employeesData || []).filter((emp: any) => {
+        if (!emp.full_name) return true;
+        const nameLower = emp.full_name.toLowerCase();
         return !EXCLUDED_USER_NAMES.some(excluded => nameLower.includes(excluded.toLowerCase()));
       });
 
@@ -194,32 +198,33 @@ const RekapAbsensi = () => {
       const depts = Array.from(new Set(activeKaryawan.map((p: any) => p.department).filter(Boolean))) as string[];
       setDepartments(depts);
 
-      // B. Fetch Attendance Data using db.query (complex date range query)
-      const { start, end } = queryRange;
-
+      // B. Fetch Attendance Data using simple query
       const attendanceData = await db.query(
-        'SELECT * FROM attendance WHERE deleted_at IS NULL AND clock_in >= ? AND clock_in <= ?',
-        [start.toISOString(), end.toISOString()]
+        'SELECT * FROM attendance WHERE deleted_at IS NULL AND date >= ? AND date <= ?',
+        [startDateStr, endDateStr]
       ) as any[];
 
+      console.log(`[RekapAbsensi] Found ${attendanceData?.length || 0} attendance records`);
       setAllMonthData(attendanceData || []);
 
-      // C. Fetch Leaves using API
-      const leaves = await leaveApi.getAll({ status: 'approved' });
-      const leaveData = leaves?.filter((l: any) => 
-        l.status === 'approved' && l.end_date >= start.toISOString() && l.start_date <= end.toISOString()
-      ) || [];
+      // C. Fetch Leaves using simple query
+      const leavesData = await db.query(
+        'SELECT * FROM leave_requests WHERE status = ? AND start_date <= ? AND end_date >= ?',
+        ['approved', endDateStr, startDateStr]
+      ) as any[];
+
+      console.log(`[RekapAbsensi] Found ${leavesData?.length || 0} leave records`);
 
       // D. Process Monthly Stats Matrix
       const stats: MonthlyStats[] = activeKaryawan.map((employee: any) => {
-        const empRecords = attendanceData?.filter((r: any) => r.user_id === employee.id) || [];
-        const empLeaves = leaveData?.filter((l: any) => l.user_id === employee.id) || [];
+        const empRecords = attendanceData?.filter((r: any) => r.user_id === employee.user_id) || [];
+        const empLeaves = leavesData?.filter((l: any) => l.user_id === employee.user_id) || [];
 
         // Generate daily details using shared logic
-        const normalized = generateAttendancePeriod(start, end, empRecords, empLeaves, employee.created_at, []);
+        const normalized = generateAttendancePeriod(start, end, empRecords, empLeaves, null, []);
 
         const s: MonthlyStats = {
-          user_id: employee.id,
+          user_id: employee.user_id,
           name: employee.full_name || "Unknown",
           department: employee.department || "-",
           present: 0, late: 0, early_leave: 0, absent: 0, leave: 0, total_attendance: 0,
@@ -229,8 +234,6 @@ const RekapAbsensi = () => {
 
         // Aggregation Logic (Inclusive: Late & Early Leave count as Present)
         normalized.forEach(day => {
-          // Skip days before join date
-          if (employee.created_at && day.date < employee.created_at) return;
           // Skip days before system start date
           if (settings.attendanceStartDate && day.date < settings.attendanceStartDate) return;
 
@@ -250,13 +253,15 @@ const RekapAbsensi = () => {
           }
         });
 
+        console.log(`[RekapAbsensi] ${employee.full_name}: present=${s.present}, late=${s.late}, absent=${s.absent}, leave=${s.leave}`);
         return s;
       });
 
+      console.log(`[RekapAbsensi] Processed ${stats.length} employee stats`);
       setMonthlyStats(stats);
 
     } catch (err: any) {
-      console.error(err);
+      console.error('[RekapAbsensi] Error:', err);
       toast({ variant: "destructive", title: "Gagal memuat data", description: err.message });
     } finally {
       setIsLoading(false);
@@ -496,7 +501,7 @@ const RekapAbsensi = () => {
       const d = new Date(filterDate); d.setDate(d.getDate() - 1);
       setFilterDate(format(d, "yyyy-MM-dd")); // Use yyyy-MM-dd format for consistency
     } else {
-      setSelectedMonth(prev => subDays(prev, 30)); // Rough month nav
+      setSelectedMonth(prev => subMonths(prev, 1)); // Proper month navigation
     }
   };
 
@@ -505,7 +510,7 @@ const RekapAbsensi = () => {
       const d = new Date(filterDate); d.setDate(d.getDate() + 1);
       setFilterDate(format(d, "yyyy-MM-dd"));
     } else {
-      setSelectedMonth(prev => addDays(prev, 30));
+      setSelectedMonth(prev => addMonths(prev, 1)); // Proper month navigation
     }
   };
 
