@@ -4,7 +4,7 @@ import { getJakartaDate, getJakartaStartOfDayISO, getJakartaEndOfDayISO } from "
 import { formatInTimeZone } from "date-fns-tz";
 import { startOfMonth, subMonths } from "date-fns";
 import { ABSENSI_WAJIB_ROLE, EXCLUDED_USER_NAMES } from "@/lib/constants";
-import { attendanceApi, profilesApi, journalsApi, leaveApi, usersApi } from "@/lib/api";
+import { attendanceApi, profilesApi, journalsApi, leaveApi, usersApi, holidaysApi } from "@/lib/api";
 import { db } from "@/integrations/mysql/client";
 
 // Type definitions for dashboard data

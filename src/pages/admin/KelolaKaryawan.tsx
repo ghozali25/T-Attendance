@@ -233,7 +233,7 @@ const KelolaKaryawan = () => {
   const handleDelete = async (emp: EmployeeData) => {
     if (!confirm(`Are you sure you want to archive ${emp.full_name}?`)) return;
 
-    await db.query(
+    await db.execute(
       'UPDATE profiles SET deleted_at = ? WHERE id = ?',
       [new Date().toISOString(), emp.id]
     );
@@ -248,7 +248,7 @@ const KelolaKaryawan = () => {
     if (!confirm(`Are you sure you want to archive ${selectedIds.length} employees?`)) return;
 
     const placeholders = selectedIds.map(() => '?').join(',');
-    await db.query(
+    await db.execute(
       `UPDATE profiles SET deleted_at = ? WHERE id IN (${placeholders})`,
       [new Date().toISOString(), ...selectedIds]
     );
@@ -278,7 +278,7 @@ const KelolaKaryawan = () => {
   const handleRestore = async (emp: EmployeeData) => {
     if (!confirm(`Are you sure you want to restore ${emp.full_name}?`)) return;
 
-    await db.query(
+    await db.execute(
       'UPDATE profiles SET deleted_at = NULL WHERE id = ?',
       [emp.id]
     );
@@ -301,7 +301,7 @@ const KelolaKaryawan = () => {
         if (values.department === "__new__" && newDepartment) {
           const deptExists = await db.query('SELECT name FROM departments WHERE name = ?', [newDepartment]) as any[];
           if (!deptExists || deptExists.length === 0) {
-            await db.query('INSERT INTO departments (id, name) VALUES (?, ?)', [window.crypto.randomUUID(), newDepartment]);
+            await db.execute('INSERT INTO departments (id, name) VALUES (?, ?)', [window.crypto.randomUUID(), newDepartment]);
           }
         }
 
@@ -320,7 +320,7 @@ const KelolaKaryawan = () => {
         if (values.department === "__new__" && newDepartment) {
           const deptExists = await db.query('SELECT name FROM departments WHERE name = ?', [newDepartment]) as any[];
           if (!deptExists || deptExists.length === 0) {
-            await db.query('INSERT INTO departments (id, name) VALUES (?, ?)', [window.crypto.randomUUID(), newDepartment]);
+            await db.execute('INSERT INTO departments (id, name) VALUES (?, ?)', [window.crypto.randomUUID(), newDepartment]);
           }
         }
 

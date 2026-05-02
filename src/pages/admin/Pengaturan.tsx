@@ -162,8 +162,8 @@ const Pengaturan = () => {
   const logAuditAction = async (action: string, description: string) => {
     if (!user) return;
     try {
-      // Use db.query for audit logs (no API endpoint yet)
-      await db.query(
+      // Use db.execute for audit logs (no API endpoint yet)
+      await db.execute(
         'INSERT INTO audit_logs (user_id, action, target_table, description) VALUES (?, ?, ?, ?)',
         [user.id, action, 'system_settings', description]
       );
@@ -227,8 +227,8 @@ const Pengaturan = () => {
   const handleResetAttendance = async () => {
     setIsSaving(true);
     try {
-      // Use db.query for archive (no API endpoint yet)
-      await db.query(
+      // Use db.execute for archive (no API endpoint yet)
+      await db.execute(
         'UPDATE attendance SET deleted_at = ?, status = ? WHERE deleted_at IS NULL',
         [new Date().toISOString(), 'archived']
       );
@@ -245,8 +245,8 @@ const Pengaturan = () => {
   const handleResetLeave = async () => {
     setIsSaving(true);
     try {
-      // Use db.query for archive (no API endpoint yet)
-      await db.query(
+      // Use db.execute for archive (no API endpoint yet)
+      await db.execute(
         'UPDATE leave_requests SET status = ?, updated_at = ? WHERE status != ?',
         ['archived', new Date().toISOString(), 'archived']
       );
@@ -277,7 +277,7 @@ const Pengaturan = () => {
 
       let processedCount = 0;
       for (const record of attendanceToClose) {
-        await db.query(
+        await db.execute(
           'UPDATE attendance SET clock_out = ?, status = ? WHERE id = ?',
           [autoClockOutDateTime, 'auto_clocked_out', record.id]
         );

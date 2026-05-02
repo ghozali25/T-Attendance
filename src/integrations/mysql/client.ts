@@ -40,6 +40,35 @@ const db = {
       console.error('[MySQL Client] Error:', error);
       throw error;
     }
+  },
+  execute: async (sql: string, params?: any[]): Promise<any> => {
+    try {
+      console.log('[MySQL Client] Executing DML:', sql);
+      console.log('[MySQL Client] Params:', params);
+      
+      const token = localStorage.getItem('token');
+      
+      const response = await fetch(`${API_BASE}/db/execute`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token && { 'Authorization': `Bearer ${token}` })
+        },
+        body: JSON.stringify({ sql, params })
+      });
+      
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ error: response.statusText }));
+        throw new Error(`Database execution failed: ${error.error || error.details || response.statusText}`);
+      }
+      
+      const data = await response.json();
+      console.log('[MySQL Client] Execution result:', data);
+      return data;
+    } catch (error) {
+      console.error('[MySQL Client] Error:', error);
+      throw error;
+    }
   }
 };
 

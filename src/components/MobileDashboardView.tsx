@@ -157,7 +157,12 @@ export default function MobileDashboardView({ role }: { role: "admin" | "manager
         const monthLeaves = await leaveApi.getAll({ user_id: user?.id, status: 'approved' }) as any[];
         const filteredMonthLeaves = monthLeaves.filter((l: any) => l.start_date <= endStr && l.end_date >= startStr);
 
-        const profileData = await profilesApi.getById(user?.id) as any;
+        let profileData = null;
+        try {
+            profileData = await profilesApi.getById(user?.id) as any;
+        } catch (e) {
+            console.warn('[fetchData] Could not fetch profile data:', e);
+        }
 
         const normalizedMonth = generateAttendancePeriod(
             monthStart,
@@ -1008,15 +1013,17 @@ export default function MobileDashboardView({ role }: { role: "admin" | "manager
             {/* Quick Journal Dialog */}
             <Dialog open={showQuickJournal} onOpenChange={setShowQuickJournal}>
                 <DialogContent className="max-w-[400px] rounded-[24px] p-0 bg-white mx-auto w-[92%] border-none overflow-hidden">
-                    <div className="bg-gradient-to-r from-indigo-600 to-violet-600 p-5 flex items-center justify-between">
+                    <DialogHeader className="bg-gradient-to-r from-indigo-600 to-violet-600 p-5 flex-row items-center justify-between space-y-0">
                         <div>
-                            <h2 className="text-base font-bold text-white">Log Cepat</h2>
-                            <p className="text-[11px] text-indigo-100/80">{format(new Date(), 'EEEE, d MMM yyyy', { locale: idLocale })}</p>
+                            <DialogTitle className="text-base font-bold text-white">Log Cepat</DialogTitle>
+                            <DialogDescription className="text-[11px] text-indigo-100/80">
+                                {format(new Date(), 'EEEE, d MMM yyyy', { locale: idLocale })}
+                            </DialogDescription>
                         </div>
                         <button onClick={() => setShowQuickJournal(false)} className="w-8 h-8 rounded-full bg-white/15 flex items-center justify-center">
                             <X className="w-4 h-4 text-white" />
                         </button>
-                    </div>
+                    </DialogHeader>
                     <div className="p-5 space-y-3.5">
                         <Input
                             placeholder="Judul aktivitas..."

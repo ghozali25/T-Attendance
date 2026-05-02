@@ -13,7 +13,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/contexts/ThemeContext";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { NotificationPanel } from "@/components/notifications/NotificationPanel";
@@ -121,7 +121,7 @@ const EnterpriseLayout = ({
         toast({ title: "Data diperbarui", description: "Dashboard telah di-refresh" });
     };
 
-    const userName = user?.user_metadata?.full_name || "Administrator";
+    const userName = user?.full_name || "Administrator";
 
     // ADMIN MOBILE NAV ITEMS
     const adminMobileNav = [
@@ -382,17 +382,16 @@ const EnterpriseLayout = ({
                                             <span className="text-[10px] font-medium">Menu</span>
                                         </button>
                                     </SheetTrigger>
-                                    <SheetContent side="bottom" className="h-[85vh] rounded-t-[28px] p-0 flex flex-col border-0 shadow-2xl">
-                                        {/* Header */}
-                                        <div className="px-6 py-5 border-b border-slate-100/80 flex items-center gap-4 bg-slate-50/30 rounded-t-[28px]">
+                                     <SheetContent side="bottom" className="h-[85vh] rounded-t-[28px] p-0 flex flex-col border-0 shadow-2xl">
+                                        <SheetHeader className="px-6 py-5 border-b border-slate-100/80 flex flex-row items-center gap-4 bg-slate-50/30 rounded-t-[28px] space-y-0 text-left">
                                             <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-slate-700 to-slate-500 flex items-center justify-center text-white font-bold text-lg shadow-lg">
                                                 {getInitials(userName)}
                                             </div>
                                             <div>
-                                                <p className="font-extrabold text-slate-800 text-lg tracking-tight">{userName}</p>
-                                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">{roleLabel}</p>
+                                                <SheetTitle className="font-extrabold text-slate-800 text-lg tracking-tight">{userName}</SheetTitle>
+                                                <SheetDescription className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">{roleLabel}</SheetDescription>
                                             </div>
-                                        </div>
+                                        </SheetHeader>
 
                                         {/* Grid Menu */}
                                         <div className="flex-1 overflow-y-auto p-5 grid grid-cols-2 gap-3 content-start bg-white">

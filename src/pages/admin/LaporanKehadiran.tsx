@@ -592,8 +592,8 @@ const LaporanKehadiran = () => {
     }, [employeeReports, dateRange]);
 
     const handleApprove = async (request: LeaveRequest) => {
-        // Use db.query for leave approval (no API endpoint yet)
-        await db.query(
+        // Use db.execute for leave approval (no API endpoint yet)
+        await db.execute(
             'UPDATE leave_requests SET status = ?, approved_by = ?, approved_at = ? WHERE id = ?',
             ['approved', user?.id, new Date().toISOString(), request.id]
         );
@@ -604,8 +604,8 @@ const LaporanKehadiran = () => {
 
     const handleReject = async () => {
         if (!selectedRequest) return;
-        // Use db.query for leave rejection (no API endpoint yet)
-        await db.query(
+        // Use db.execute for leave rejection (no API endpoint yet)
+        await db.execute(
             'UPDATE leave_requests SET status = ?, approved_by = ?, approved_at = ?, rejection_reason = ? WHERE id = ?',
             ['rejected', user?.id, new Date().toISOString(), rejectionReason, selectedRequest.id]
         );
@@ -698,14 +698,14 @@ const LaporanKehadiran = () => {
             };
 
             if (existingId) {
-                // Update existing record using db.query (no API endpoint yet)
-                await db.query(
+                // Update existing record using db.execute (no API endpoint yet)
+                await db.execute(
                     'UPDATE attendance SET clock_in = ?, clock_out = ?, status = ?, notes = ?, date = ?, updated_at = ? WHERE id = ?',
                     [payload.clock_in, payload.clock_out, payload.status, payload.notes, payload.date, payload.updated_at, existingId]
                 );
             } else {
-                // Insert new record using db.query (no API endpoint yet)
-                await db.query(
+                // Insert new record using db.execute (no API endpoint yet)
+                await db.execute(
                     'INSERT INTO attendance (user_id, clock_in, clock_out, status, notes, date, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
                     [selectedEmployee.user_id, payload.clock_in, payload.clock_out, payload.status, payload.notes, payload.date, payload.updated_at]
                 );
@@ -1385,6 +1385,9 @@ const LaporanKehadiran = () => {
                     <div className="bg-white dark:bg-slate-900 p-6 border-b border-slate-100 dark:border-slate-800 flex-shrink-0">
                         <DialogHeader className="hidden">
                             <DialogTitle>Detail Kehadiran</DialogTitle>
+                            <DialogDescription>
+                                Menampilkan rincian riwayat kehadiran karyawan yang dipilih untuk periode tertentu.
+                            </DialogDescription>
                         </DialogHeader>
 
                         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">

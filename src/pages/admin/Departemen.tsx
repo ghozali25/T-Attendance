@@ -133,13 +133,13 @@ const Departemen = () => {
 
     try {
       if (editingDepartment) {
-        // Update department name using db.query for now (no API endpoint yet)
-        await db.query(
+        // Update department name using db.execute for now (no API endpoint yet)
+        await db.execute(
           'UPDATE profiles SET department = ? WHERE department = ?',
           [data.name, editingDepartment]
         );
         // Also update in departments table
-        await db.query(
+        await db.execute(
           'UPDATE departments SET name = ? WHERE name = ?',
           [data.name, editingDepartment]
         );
@@ -153,7 +153,7 @@ const Departemen = () => {
         } else {
           // Insert new department into departments table
           const id = window.crypto.randomUUID();
-          await db.query(
+          await db.execute(
             'INSERT INTO departments (id, name) VALUES (?, ?)',
             [id, data.name]
           );
@@ -186,8 +186,8 @@ const Departemen = () => {
     const deptName = deleteTarget;
     setDeleteTarget(null);
 
-    // Delete department using db.query for now (no API endpoint yet)
-    await db.query(
+    // Delete department using db.execute for now (no API endpoint yet)
+    await db.execute(
       'UPDATE profiles SET department = NULL WHERE department = ?',
       [deptName]
     );
