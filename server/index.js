@@ -96,8 +96,12 @@ app.get('/api/ping', (req, res) => {
 
 // Error handling
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ error: 'Something went wrong!', message: err.message });
+  console.error('SERVER ERROR:', err);
+  res.status(500).json({ 
+    error: 'Something went wrong!', 
+    message: err.message,
+    stack: process.env.NODE_ENV === 'production' ? 'Check server logs' : err.stack
+  });
 });
 
 // Start server (only if not on Vercel)
