@@ -341,11 +341,15 @@ const KelolaKaryawan = () => {
       // 1. Close dialog immediately
       setDialogOpen(false);
       
+      // Force manual cleanup of body styles (Fail-safe for stuck Radix backdrops)
+      document.body.style.pointerEvents = 'auto';
+      document.body.style.overflow = 'auto';
+      
       // 2. Clear editing state
       setTimeout(() => {
         setEditingEmployee(null);
         form.reset();
-      }, 100);
+      }, 50);
       
       // 3. Refresh all data after a small delay to ensure UI is unblocked
       setTimeout(async () => {
@@ -354,10 +358,15 @@ const KelolaKaryawan = () => {
           fetchStats(),
           fetchDepartments()
         ]);
-      }, 300);
+        // Double check cleanup after refresh
+        document.body.style.pointerEvents = 'auto';
+        document.body.style.overflow = 'auto';
+      }, 150);
 
     } catch (err: any) {
       toast({ variant: "destructive", title: "Error", description: err.message || "Unknown error" });
+      document.body.style.pointerEvents = 'auto';
+      document.body.style.overflow = 'auto';
     } finally {
       setIsSubmitting(false);
     }

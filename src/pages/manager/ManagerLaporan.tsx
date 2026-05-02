@@ -118,6 +118,7 @@ interface EmployeeReport {
   position: string | null;
   details: DailyAttendanceStatus[];
   lateMinutes: number;
+  lateCount: number;
   dailyStatus: Record<string, string>;
   present: number;
   late: number;

@@ -124,11 +124,16 @@ const Pengaturan = () => {
       });
       setShowSaveConfirm(false);
       
+      // Force cleanup
+      document.body.style.pointerEvents = 'auto';
+      document.body.style.overflow = 'auto';
+      
       setTimeout(() => {
         setHasChanges(false);
         setFormData(dataToSave);
         inputRefs.current = {};
         setActiveMobileSheet(null);
+        document.body.style.pointerEvents = 'auto';
       }, 100);
     } catch (error: any) {
       toast({
@@ -136,9 +141,11 @@ const Pengaturan = () => {
         title: "Gagal Menyimpan",
         description: error.message || "Terjadi kesalahan.",
       });
+      document.body.style.pointerEvents = 'auto';
     } finally {
       setTimeout(() => {
         setIsSaving(false);
+        document.body.style.pointerEvents = 'auto';
       }, 200);
     }
   };

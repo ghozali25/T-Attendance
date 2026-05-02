@@ -160,13 +160,18 @@ const Departemen = () => {
           toast({ title: "Departemen Tersimpan", description: `Struktur divisi "${data.name}" siap digunakan.` });
           toast({ title: "Info Integrasi", description: "Silakan tetapkan karyawan ke departemen ini agar muncul di daftar metrik." });
           setDialogOpen(false);
+          document.body.style.pointerEvents = 'auto';
           fetchDepartments();
         }
       }
     } catch (err: any) {
       toast({ variant: "destructive", title: "Error", description: err.message || "Gagal menyimpan departemen" });
+      document.body.style.pointerEvents = 'auto';
     } finally {
       setIsSubmitting(false);
+      setTimeout(() => {
+        document.body.style.pointerEvents = 'auto';
+      }, 500);
     }
   };
 
