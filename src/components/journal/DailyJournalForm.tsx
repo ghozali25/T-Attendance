@@ -54,7 +54,7 @@ export function DailyJournalForm({
     return (
         <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
             {/* Header */}
-            <div className="px-6 sm:px-8 py-6 border-b border-slate-100 dark:border-slate-800 bg-gradient-to-r from-slate-50/50 to-white">
+            <div className="px-6 sm:px-8 py-6 border-b border-slate-100 dark:border-slate-800 bg-gradient-to-r from-slate-50/50 to-white dark:from-slate-900 dark:to-slate-900">
                 <div className="flex items-center gap-4">
                     <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/20 text-white shrink-0">
                         <Edit3 className="w-5 h-5" />

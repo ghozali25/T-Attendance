@@ -547,18 +547,20 @@ const RekapAbsensi = () => {
       <div className="space-y-6">
 
         {/* 1. Header & Filters Card */}
-        <Card className="border-white/60 shadow-sm shadow-slate-200/40 bg-white dark:bg-slate-900/70 backdrop-blur-md rounded-[20px] vibe-glass-card">
+        <Card className="border-white/60 dark:border-slate-800 shadow-sm shadow-slate-200/40 bg-white dark:bg-slate-900 rounded-[20px]">
           <div className="p-4 flex flex-col lg:flex-row gap-4 justify-between lg:items-center">
 
             {/* View Switcher */}
-            <div className="flex bg-slate-100/80 p-1 rounded-xl shrink-0 w-fit">
+            <div className="flex bg-slate-100/80 dark:bg-slate-800 p-1 rounded-xl shrink-0 w-fit">
               {(['daily', 'monthly', 'range'] as const).map((m) => (
                 <button
                   key={m}
                   onClick={() => setViewMode(m)}
                   className={cn(
                     "px-4 py-2 text-sm font-semibold rounded-lg transition-all capitalize",
-                    viewMode === m ? "bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 shadow-sm" : "text-slate-400 hover:text-slate-600 dark:text-slate-300"
+                    viewMode === m
+                      ? "bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 shadow-sm"
+                      : "text-slate-400 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
                   )}
                 >
                   {m === 'range' ? 'Periode' : (m === 'daily' ? 'Harian' : 'Bulanan')}
@@ -567,7 +569,7 @@ const RekapAbsensi = () => {
             </div>
 
             {/* Date Navigation */}
-            <div className="flex items-center gap-3 bg-white dark:bg-slate-900/50 p-1.5 rounded-xl border border-slate-200/60">
+            <div className="flex items-center gap-3 bg-white dark:bg-slate-800 p-1.5 rounded-xl border border-slate-200/60 dark:border-slate-700">
               {viewMode === 'range' ? (
                 <Popover>
                   <PopoverTrigger asChild>
@@ -607,12 +609,12 @@ const RekapAbsensi = () => {
           </div>
 
           {/* Filters */}
-          <div className="px-4 pb-4 flex flex-col sm:flex-row gap-3 border-t border-slate-50 pt-3">
+          <div className="px-4 pb-4 flex flex-col sm:flex-row gap-3 border-t border-slate-100 dark:border-slate-800 pt-3">
             <div className="relative flex-1">
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <Input
                 placeholder="Cari karyawan..."
-                className="pl-10 bg-white dark:bg-slate-900/50 border-slate-200/60 rounded-xl h-10 font-medium"
+                className="pl-10 bg-white dark:bg-slate-800 border-slate-200/60 dark:border-slate-700 rounded-xl h-10 font-medium dark:text-slate-200 dark:placeholder:text-slate-500"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -632,8 +634,8 @@ const RekapAbsensi = () => {
 
         {/* 2. Stat Cards Summary */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4 vibe-stat-grid">
-          <Card className="bg-white dark:bg-slate-900/70 backdrop-blur-md border-white/60 shadow-sm shadow-slate-200/40 p-4 flex items-center gap-4 rounded-[18px]">
-            <div className="h-10 w-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
+          <Card className="bg-white dark:bg-slate-900 dark:border-slate-800 border-white/60 shadow-sm p-4 flex items-center gap-4 rounded-[18px]">
+            <div className="h-10 w-10 rounded-xl bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-600">
               <CheckCircle2 className="w-5 h-5" />
             </div>
             <div>
@@ -641,8 +643,8 @@ const RekapAbsensi = () => {
               <p className="text-xl font-extrabold text-slate-900 dark:text-white tracking-tight">{currentStats.totalPresent}</p>
             </div>
           </Card>
-          <Card className="bg-white dark:bg-slate-900/70 backdrop-blur-md border-white/60 shadow-sm shadow-slate-200/40 p-4 flex items-center gap-4 rounded-[18px]">
-            <div className="h-10 w-10 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600">
+          <Card className="bg-white dark:bg-slate-900 dark:border-slate-800 border-white/60 shadow-sm p-4 flex items-center gap-4 rounded-[18px]">
+            <div className="h-10 w-10 rounded-xl bg-amber-50 dark:bg-amber-900/30 flex items-center justify-center text-amber-600">
               <AlertCircle className="w-5 h-5" />
             </div>
             <div>
@@ -650,8 +652,8 @@ const RekapAbsensi = () => {
               <p className="text-xl font-extrabold text-slate-900 dark:text-white tracking-tight">{currentStats.totalLate}</p>
             </div>
           </Card>
-          <Card className="bg-white dark:bg-slate-900/70 backdrop-blur-md border-white/60 shadow-sm shadow-slate-200/40 p-4 flex items-center gap-4 rounded-[18px]">
-            <div className="h-10 w-10 rounded-xl bg-red-50 flex items-center justify-center text-red-600">
+          <Card className="bg-white dark:bg-slate-900 dark:border-slate-800 border-white/60 shadow-sm p-4 flex items-center gap-4 rounded-[18px]">
+            <div className="h-10 w-10 rounded-xl bg-red-50 dark:bg-red-900/30 flex items-center justify-center text-red-600">
               <XCircle className="w-5 h-5" />
             </div>
             <div>
@@ -659,8 +661,8 @@ const RekapAbsensi = () => {
               <p className="text-xl font-extrabold text-slate-900 dark:text-white tracking-tight">{currentStats.totalAbsent}</p>
             </div>
           </Card>
-          <Card className="bg-white dark:bg-slate-900/70 backdrop-blur-md border-white/60 shadow-sm shadow-slate-200/40 p-4 flex items-center gap-4 rounded-[18px]">
-            <div className="h-10 w-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
+          <Card className="bg-white dark:bg-slate-900 dark:border-slate-800 border-white/60 shadow-sm p-4 flex items-center gap-4 rounded-[18px]">
+            <div className="h-10 w-10 rounded-xl bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center text-blue-600">
               <FileText className="w-5 h-5" />
             </div>
             <div>
@@ -671,11 +673,11 @@ const RekapAbsensi = () => {
         </div>
 
         {/* 3. Data Table */}
-        <Card className="border-white/60 shadow-sm shadow-slate-200/40 bg-white dark:bg-slate-900/70 backdrop-blur-md overflow-hidden rounded-[20px] vibe-glass-card">
+        <Card className="border-slate-200/60 dark:border-slate-800 shadow-sm bg-white dark:bg-slate-900 overflow-hidden rounded-[20px]">
           {/* Desktop Table View */}
           <div className="hidden md:block overflow-x-auto">
             <Table>
-              <TableHeader className="bg-slate-50/50 dark:bg-slate-800/50">
+              <TableHeader className="bg-slate-50 dark:bg-slate-800">
                 <TableRow className="border-b border-slate-100 dark:border-slate-800">
                   <TableHead className="w-[50px] font-bold text-slate-400 text-[10px] uppercase tracking-wider">No</TableHead>
                   <TableHead className="font-bold text-slate-400 text-[10px] uppercase tracking-wider">Karyawan</TableHead>
@@ -721,7 +723,7 @@ const RekapAbsensi = () => {
                   </TableRow>
                 ) : (
                   currentStats.filtered.map((row: any, i) => (
-                    <TableRow key={row.user_id} className="hover:bg-slate-50/50 dark:bg-slate-800/50">
+                    <TableRow key={row.user_id} className="hover:bg-slate-50 dark:hover:bg-slate-800 dark:border-slate-800 transition-colors">
                       <TableCell className="text-slate-500 dark:text-slate-400 text-xs">{i + 1}</TableCell>
                       <TableCell>
                         <div className="font-medium text-slate-800 dark:text-slate-100 text-sm">{row.name}</div>

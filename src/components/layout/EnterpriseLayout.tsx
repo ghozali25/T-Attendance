@@ -232,18 +232,18 @@ const EnterpriseLayout = ({
     return (
         <div className="min-h-screen bg-slate-50/80 dark:bg-slate-950 font-['Inter',system-ui,sans-serif] pb-24 lg:pb-0 relative overflow-x-hidden">
             {/* Background Graphic Abstract - Subtle SaaS Effect */}
-            <div className="fixed top-0 right-0 -z-10 w-[50vw] h-[40vh] bg-blue-100/30 rounded-full blur-[120px] pointer-events-none opacity-60 transform translate-x-1/3 -translate-y-1/4"></div>
-            <div className="fixed bottom-0 left-0 -z-10 w-[40vw] h-[35vh] bg-indigo-100/20 rounded-full blur-[120px] pointer-events-none opacity-50 transform -translate-x-1/3 translate-y-1/4"></div>
+            <div className="fixed top-0 right-0 -z-10 w-[50vw] h-[40vh] bg-blue-100/30 dark:bg-blue-900/10 rounded-full blur-[120px] pointer-events-none opacity-60 transform translate-x-1/3 -translate-y-1/4"></div>
+            <div className="fixed bottom-0 left-0 -z-10 w-[40vw] h-[35vh] bg-indigo-100/20 dark:bg-indigo-900/10 rounded-full blur-[120px] pointer-events-none opacity-50 transform -translate-x-1/3 translate-y-1/4"></div>
             {/* LIGHT SIDEBAR - DESKTOP ONLY */}
             <aside
                 className={cn(
                     "hidden md:flex fixed left-0 top-0 bottom-0 z-50 flex-col transition-all duration-300 ease-out",
-                    "bg-white/40 dark:bg-slate-900/40 backdrop-blur-2xl border-r border-slate-200/50 dark:border-slate-700/50 shadow-[4px_0_24px_-12px_rgba(0,0,0,0.1)]",
+                    "bg-white dark:bg-slate-900 border-r border-slate-200/60 dark:border-slate-800 shadow-[4px_0_24px_-12px_rgba(0,0,0,0.1)]",
                     isCollapsed ? "w-[72px]" : "w-[240px]"
                 )}
             >
                 {/* Logo - Added Safe Area Support */}
-                <div className="flex items-center h-[calc(4rem+env(safe-area-inset-top))] pt-[env(safe-area-inset-top)] px-4 border-b border-slate-100/80 dark:border-slate-700/80 bg-white/50 dark:bg-slate-900/50">
+                <div className="flex items-center h-[calc(4rem+env(safe-area-inset-top))] pt-[env(safe-area-inset-top)] px-4 border-b border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900">
                     <div className="flex items-center gap-3 min-w-0">
                         <div
                             className="flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center shadow-lg bg-gradient-to-br from-indigo-600 via-blue-600 to-blue-700 border border-blue-400/30 relative overflow-hidden group"
@@ -274,11 +274,11 @@ const EnterpriseLayout = ({
                 </div>
 
                 {/* Navigation */}
-                <nav className="flex-1 px-3 py-4 overflow-y-auto vibe-scrollbar">
+                <nav className="flex-1 px-3 py-4 overflow-y-auto vibe-scrollbar bg-white dark:bg-slate-900">
                     {menuSections.map((section, sectionIndex) => (
                         <div key={sectionIndex} className="mb-6">
                             {!isCollapsed && (
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-3 mb-2">
+                                <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest px-3 mb-2">
                                     {section.title}
                                 </p>
                             )}
@@ -290,10 +290,10 @@ const EnterpriseLayout = ({
                                             key={item.title}
                                             to={item.href}
                                             className={cn(
-                                                "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-200 group relative overflow-hidden",
+                                                "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-200 group relative overflow-visible",
                                                 isActive
-                                                    ? "text-blue-700 dark:text-blue-400 bg-gradient-to-r from-blue-50 to-blue-50/30 dark:from-blue-900/20 dark:to-blue-900/5 font-semibold shadow-sm border border-blue-100/60 dark:border-blue-800/30"
-                                                    : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 font-medium"
+                                                    ? "text-blue-700 dark:text-blue-400 bg-gradient-to-r from-blue-50 to-blue-50/30 dark:from-blue-900/30 dark:to-blue-900/10 font-semibold shadow-sm border border-blue-100/60 dark:border-blue-800/40"
+                                                    : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 font-medium"
                                             )}
                                         >
                                             {/* Left Accent Indicator */}
@@ -346,7 +346,7 @@ const EnterpriseLayout = ({
                 </button>
 
                 {/* Profile Profile simplified at bottom */}
-                <div className="p-3 border-t border-slate-100 bg-white/50">
+                <div className="p-3 border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900">
                     <div className={cn("flex items-center gap-3", isCollapsed && "justify-center")}>
                         <div className="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center bg-primary/10 text-primary font-bold text-sm">
                             {getInitials(userName)}
@@ -367,7 +367,7 @@ const EnterpriseLayout = ({
                 isCollapsed ? "md:ml-[72px]" : "md:ml-[240px]"
             )}>
                 {/* Header - Modern Top Nav */}
-                <header className="sticky top-0 z-40 w-full bg-white/40 dark:bg-slate-900/40 backdrop-blur-2xl border-b border-slate-200/50 dark:border-slate-700/50 shadow-sm pt-[env(safe-area-inset-top)]">
+                <header className="sticky top-0 z-40 w-full bg-white/80 dark:bg-slate-900/95 backdrop-blur-xl border-b border-slate-200/60 dark:border-slate-800 shadow-sm pt-[env(safe-area-inset-top)]">
                     <div className="flex items-center justify-between h-16 px-4 lg:px-8">
                         <div className="flex items-center gap-4">
                             {/* Mobile Logo Only */}

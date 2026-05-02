@@ -151,7 +151,7 @@ export default function JurnalSaya() {
 
             {/* Stats Row */}
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
-                <div className="bg-white dark:bg-slate-900/70 backdrop-blur-md p-5 rounded-[24px] border border-white/40 shadow-sm relative overflow-hidden vibe-glass-card group">
+                <div className="bg-white dark:bg-slate-900 p-5 rounded-[24px] border border-slate-100 dark:border-slate-800 shadow-sm relative overflow-hidden group">
                     <div className="absolute right-0 top-1/2 -translate-y-1/2 opacity-5 transition-transform duration-500 group-hover:scale-110 group-hover:-rotate-12 pointer-events-none">
                         <FileText className="w-24 h-24 text-blue-600" />
                     </div>
@@ -162,7 +162,7 @@ export default function JurnalSaya() {
                     </div>
                 </div>
 
-                <div className="bg-white dark:bg-slate-900/70 backdrop-blur-md p-5 rounded-[24px] border border-white/40 shadow-sm relative overflow-hidden vibe-glass-card group">
+                <div className="bg-white dark:bg-slate-900 p-5 rounded-[24px] border border-slate-100 dark:border-slate-800 shadow-sm relative overflow-hidden group">
                     <div className="absolute right-0 top-1/2 -translate-y-1/2 opacity-5 transition-transform duration-500 group-hover:scale-110 group-hover:-rotate-12 pointer-events-none">
                         <CheckCircle2 className="w-24 h-24 text-emerald-600" />
                     </div>
@@ -173,7 +173,7 @@ export default function JurnalSaya() {
                     </div>
                 </div>
 
-                <div className="hidden md:block bg-white dark:bg-slate-900/70 backdrop-blur-md p-5 rounded-[24px] border border-white/40 shadow-sm relative overflow-hidden vibe-glass-card group">
+                <div className="hidden md:block bg-white dark:bg-slate-900 p-5 rounded-[24px] border border-slate-100 dark:border-slate-800 shadow-sm relative overflow-hidden group">
                     <div className="absolute right-0 top-1/2 -translate-y-1/2 opacity-5 transition-transform duration-500 group-hover:scale-110 group-hover:-rotate-12 pointer-events-none">
                         <Clock className="w-24 h-24 text-amber-600" />
                     </div>
@@ -230,7 +230,7 @@ export default function JurnalSaya() {
                             </DropdownMenu>
                         </div>
 
-                        <div className="bg-white dark:bg-slate-900/40 rounded-2xl p-2 min-h-[400px]">
+                        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-2 min-h-[400px]">
                             {isLoading ? (
                                 <div className="space-y-3">
                                     {[1, 2, 3].map(i => (
