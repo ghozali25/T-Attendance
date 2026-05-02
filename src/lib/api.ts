@@ -168,6 +168,10 @@ export const attendanceRequestsApi = {
         const query = params ? `?${new URLSearchParams(params).toString()}` : '';
         return api.get<any[]>(`/attendance-requests${query}`);
     },
+    getStats: (params?: { user_id?: string }) => {
+        const query = params?.user_id ? `?user_id=${params.user_id}` : '';
+        return api.get<any[]>(`/attendance-requests/stats${query}`);
+    },
     getById: (id: string) => api.get<any>(`/attendance-requests/${id}`),
     create: (data: any) => api.post<{ message: string; id: string }>('/attendance-requests', data),
     update: (id: string, data: any) => api.put<{ message: string }>(`/attendance-requests/${id}`, data),

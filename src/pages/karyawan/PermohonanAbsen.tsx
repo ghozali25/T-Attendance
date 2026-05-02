@@ -28,6 +28,7 @@ const requestSchema = z.object({
   clock_in: z.string().min(1, "Jam masuk harus diisi"),
   clock_out: z.string().min(1, "Jam pulang harus diisi"),
   reason: z.string().min(5, "Alasan minimal 5 karakter"),
+  attachment: z.string().optional(),
 });
 
 type RequestFormData = z.infer<typeof requestSchema>;
@@ -59,6 +60,7 @@ const PermohonanAbsen = () => {
       clock_in: "08:00",
       clock_out: "17:00",
       reason: "",
+      attachment: "",
     },
   });
 
@@ -94,7 +96,8 @@ const PermohonanAbsen = () => {
         date: data.date,
         clock_in: clockInFull,
         clock_out: clockOutFull,
-        reason: data.reason
+        reason: data.reason,
+        attachment_url: data.attachment
       });
 
       toast({
@@ -205,18 +208,51 @@ const PermohonanAbsen = () => {
                 </div>
 
                 <FormField
-                  control={form.control}
-                  name="reason"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs font-bold uppercase tracking-wider">Alasan / Keterangan</FormLabel>
-                      <FormControl>
-                        <Textarea {...field} placeholder="Misal: Lupa klik absen saat datang karena terburu-buru rapat..." rows={3} className="rounded-xl resize-none" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                control={form.control}
+                name="reason"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>ALASAN / KETERANGAN</FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        placeholder="Contoh: Lupa tap in karena terburu-buru rapat" 
+                        className="min-h-[100px] bg-slate-50 border-slate-200 focus:border-blue-500 focus:ring-blue-500 rounded-xl"
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormItem>
+                <FormLabel>LAMPIRAN FILE (OPSIONAL)</FormLabel>
+                <FormControl>
+                  <div className="space-y-2">
+                    <Input 
+                      type="file" 
+                      accept="image/*,application/pdf"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          if (file.size > 2 * 1024 * 1024) {
+                            toast({ title: "File terlalu besar", description: "Maksimal ukuran file adalah 2MB", variant: "destructive" });
+                            e.target.value = '';
+                            return;
+                          }
+                          const reader = new FileReader();
+                          reader.onloadend = () => {
+                            form.setValue('attachment', reader.result as string);
+                          };
+                          reader.readAsDataURL(file);
+                        }
+                      }}
+                      className="bg-slate-50 border-slate-200 cursor-pointer rounded-xl file:mr-4 file:py-1 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                    />
+                    <p className="text-[10px] text-muted-foreground italic">* Upload foto bukti atau dokumen pendukung (Maks 2MB)</p>
+                  </div>
+                </FormControl>
+              </FormItem>
 
                 <div className="flex gap-3 pt-4">
                   <Button type="button" variant="outline" className="flex-1 rounded-xl h-11 font-bold" onClick={() => setDialogOpen(false)}>

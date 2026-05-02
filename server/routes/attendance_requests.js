@@ -3,6 +3,26 @@ import crypto from 'crypto';
 const router = express.Router();
 
 // GET /api/attendance-requests - Get attendance requests
+router.get('/stats', async (req, res) => {
+  try {
+    const { user_id } = req.query;
+    let query = 'SELECT status, COUNT(*) as count FROM attendance_requests';
+    const params = [];
+
+    if (user_id) {
+      query += ' WHERE user_id = ?';
+      params.push(user_id);
+    }
+    
+    query += ' GROUP BY status';
+    const [rows] = await req.db.query(query, params);
+    res.json(rows);
+  } catch (error) {
+    console.error('Fetch stats error:', error);
+    res.status(500).json({ error: 'Failed to fetch statistics' });
+  }
+});
+
 router.get('/', async (req, res) => {
   try {
     const { user_id, status } = req.query;
@@ -41,14 +61,12 @@ router.get('/', async (req, res) => {
 // POST /api/attendance-requests - Create attendance request
 router.post('/', async (req, res) => {
   try {
-    const { user_id, date, clock_in, clock_out, reason } = req.body;
-    
+    const { user_id, date, clock_in, clock_out, reason, attachment_url } = req.body;
     const id = crypto.randomUUID();
     
     await req.db.query(
-      `INSERT INTO attendance_requests (id, user_id, date, clock_in, clock_out, reason, status) 
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [id, user_id, date, clock_in, clock_out, reason, 'pending']
+      'INSERT INTO attendance_requests (id, user_id, date, clock_in, clock_out, reason, attachment_url, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+      [id, user_id, date, clock_in, clock_out, reason, attachment_url || null, 'pending']
     );
     
     res.status(201).json({ message: 'Attendance request created successfully', id });
@@ -108,6 +126,38 @@ router.put('/:id', async (req, res) => {
       }
     }
     
+    // If approved, sync to attendance table
+    if (status === 'approved') {
+      // 1. Get request details
+      const [requests] = await req.db.query('SELECT * FROM attendance_requests WHERE id = ?', [id]);
+      if (requests.length > 0) {
+        const ar = requests[0];
+        
+        // 2. Calculate work hours
+        let workHours = 0;
+        if (ar.clock_in && ar.clock_out) {
+          const inTime = new Date(ar.clock_in);
+          const outTime = new Date(ar.clock_out);
+          workHours = (outTime.getTime() - inTime.getTime()) / (1000 * 60 * 60);
+        }
+
+        // 3. Insert into attendance table
+        const attendanceId = crypto.randomUUID();
+        const periodMonth = ar.date ? ar.date.toString().substring(0, 7) : null;
+        
+        await req.db.query(
+          `INSERT INTO attendance (id, user_id, date, clock_in, clock_out, work_hours, period_month, status, notes) 
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+           ON DUPLICATE KEY UPDATE 
+           clock_in = VALUES(clock_in), 
+           clock_out = VALUES(clock_out), 
+           work_hours = VALUES(work_hours), 
+           status = 'present'`,
+          [attendanceId, ar.user_id, ar.date, ar.clock_in, ar.clock_out, workHours, periodMonth, 'present', `Approved request: ${ar.reason}`]
+        );
+      }
+    }
+
     res.json({ message: 'Attendance request updated successfully' });
   } catch (error) {
     console.error('Update attendance request error:', error);

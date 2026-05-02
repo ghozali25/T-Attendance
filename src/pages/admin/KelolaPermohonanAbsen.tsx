@@ -37,6 +37,7 @@ interface AttendanceRequest {
   clock_out: string | null;
   reason: string | null;
   status: string;
+  attachment_url: string | null;
   rejection_reason: string | null;
   created_at: string;
 }
@@ -208,10 +209,20 @@ const KelolaPermohonanAbsen = () => {
                     <TableCell>
                       <div className="flex items-center gap-2 group relative">
                         <Info className="h-4 w-4 text-slate-400 shrink-0" />
-                        <span className="text-xs text-slate-600 dark:text-slate-400 line-clamp-1 max-w-[200px] italic">
-                          {req.reason}
-                        </span>
-                      </div>
+                    <TableCell className="max-w-[200px]">
+                        <div className="flex flex-col gap-1">
+                          <span className="truncate text-xs text-slate-600 italic">"{req.reason}"</span>
+                          {req.attachment_url && (
+                            <a 
+                              href={req.attachment_url} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-1 text-[10px] text-blue-600 hover:underline font-medium"
+                            >
+                              <FileText className="w-3 h-3" /> Lihat Lampiran
+                            </a>
+                          )}
+                        </div>
                     </TableCell>
                     <TableCell className="text-center">
                       {getStatusBadge(req.status)}
@@ -268,6 +279,28 @@ const KelolaPermohonanAbsen = () => {
               <div className="pt-2 border-t border-slate-200">
                 <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Alasan Karyawan</p>
                 <p className="text-xs italic text-slate-600">{selectedRequest?.reason}</p>
+                {selectedRequest?.attachment_url && (
+                  <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 mt-2">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase mb-2">Lampiran File</p>
+                    {selectedRequest.attachment_url.startsWith('data:image') ? (
+                      <img 
+                        src={selectedRequest.attachment_url} 
+                        alt="Lampiran" 
+                        className="max-h-[200px] rounded-lg border border-slate-200 cursor-zoom-in hover:opacity-90 transition-opacity"
+                        onClick={() => window.open(selectedRequest.attachment_url!, '_blank')}
+                      />
+                    ) : (
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="w-full gap-2 text-xs h-10 rounded-lg"
+                        onClick={() => window.open(selectedRequest.attachment_url!, '_blank')}
+                      >
+                        <FileText className="w-4 h-4" /> Buka Dokumen Pendukung
+                      </Button>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
             <DialogFooter className="gap-2 sm:gap-0">

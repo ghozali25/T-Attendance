@@ -17,6 +17,7 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTr
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { NotificationPanel } from "@/components/notifications/NotificationPanel";
+import { attendanceRequestsApi } from "@/lib/api";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -90,6 +91,48 @@ const EnterpriseLayout = ({
     const [isCollapsed, setIsCollapsed] = useState(false);
     const [nextRefresh, setNextRefresh] = useState(refreshInterval);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [pendingRequests, setPendingRequests] = useState(0);
+    const [hasNewNotif, setHasNewNotif] = useState(false);
+
+    // Fetch attendance stats for notifications
+    useEffect(() => {
+        const fetchStats = async () => {
+            try {
+                const stats = await attendanceRequestsApi.getStats(isAdmin ? undefined : { user_id: user?.id });
+                // For admin, we care about 'pending'
+                // For user, we care about 'approved' or 'rejected'
+                const targetStatus = isAdmin ? 'pending' : ['approved', 'rejected'];
+                
+                let count = 0;
+                if (isAdmin) {
+                    const pending = stats.find((s: any) => s.status === 'pending');
+                    count = pending ? parseInt(pending.count) : 0;
+                } else {
+                    const approved = stats.find((s: any) => s.status === 'approved');
+                    const rejected = stats.find((s: any) => s.status === 'rejected');
+                    count = (approved ? parseInt(approved.count) : 0) + (rejected ? parseInt(rejected.count) : 0);
+                }
+
+                if (count > pendingRequests) {
+                    setHasNewNotif(true);
+                }
+                setPendingRequests(count);
+            } catch (error) {
+                console.error("Error fetching menu stats:", error);
+            }
+        };
+
+        fetchStats();
+        const interval = setInterval(fetchStats, 30000); // Every 30 seconds
+        return () => clearInterval(interval);
+    }, [user, isAdmin, pendingRequests]);
+
+    // Reset notification when navigating to permohonan
+    useEffect(() => {
+        if (location.pathname.includes('permohonan-absen')) {
+            setHasNewNotif(false);
+        }
+    }, [location.pathname]);
 
     const getInitials = (name: string) => {
         return name.split(" ").map(n => n.charAt(0)).slice(0, 2).join("").toUpperCase();
@@ -263,9 +306,22 @@ const EnterpriseLayout = ({
                                                 isActive ? "text-blue-600 dark:text-blue-400 bg-blue-100/60 dark:bg-blue-800/30" : "text-slate-400 dark:text-slate-500 group-hover:text-slate-600 dark:group-hover:text-slate-300"
                                             )}>
                                                 <item.icon className="h-4 w-4 flex-shrink-0" />
+                                                
+                                                {/* Pulsing Red Dot Notification */}
+                                                {item.title.toLowerCase().includes('permohonan') && pendingRequests > 0 && hasNewNotif && (
+                                                    <span className="absolute -top-0.5 -right-0.5 flex h-2.5 w-2.5">
+                                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500 border border-white dark:border-slate-900"></span>
+                                                    </span>
+                                                )}
                                             </div>
                                             {!isCollapsed && <span className="truncate">{item.title}</span>}
-                                            {!isCollapsed && item.badge && item.badge > 0 && (
+                                            {!isCollapsed && item.title.toLowerCase().includes('permohonan') && pendingRequests > 0 && (
+                                                <span className="ml-auto text-[10px] font-bold bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-2 py-0.5 rounded-full ring-1 ring-red-200 dark:ring-red-800/30">
+                                                    {pendingRequests}
+                                                </span>
+                                            )}
+                                            {!isCollapsed && !item.title.toLowerCase().includes('permohonan') && item.badge && item.badge > 0 && (
                                                 <span className="ml-auto text-[10px] font-bold bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded-full">{item.badge}</span>
                                             )}
                                             {isCollapsed && (
