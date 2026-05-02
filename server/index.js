@@ -90,6 +90,10 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'API server is running' });
 });
 
+app.get('/api/ping', (req, res) => {
+  res.json({ status: 'pong', message: 'Express server is reachable' });
+});
+
 // Error handling
 app.use((err, req, res, next) => {
   console.error(err.stack);
