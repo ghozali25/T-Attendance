@@ -14,6 +14,7 @@ import { Switch } from "@/components/ui/switch";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { useSystemSettings } from "@/hooks/useSystemSettings";
 
 // ─── Schema ──────────────────────────────────────────────
 const loginSchema = z.object({
@@ -27,6 +28,7 @@ type LoginFormData = z.infer<typeof loginSchema>;
 const Auth = () => {
   const navigate = useNavigate();
   const { user, role, loading, login } = useAuth();
+  const { settings } = useSystemSettings();
 
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -128,7 +130,7 @@ const Auth = () => {
               <img src={talentaLogo} alt="T-Absensi" className="h-10 w-auto object-contain drop-shadow-md relative z-10" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold tracking-tight text-white leading-none">T-Absensi</h1>
+              <h1 className="text-2xl font-bold tracking-tight text-white leading-none">{settings.companyName}</h1>
               <p className="text-sm text-indigo-300 font-medium tracking-wide">Smart Workforce Attendance Platform</p>
             </div>
           </div>
@@ -202,7 +204,7 @@ const Auth = () => {
         {/* Footer */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-6 text-[13px] text-slate-500 font-medium">
-            <span>© 2026 T-Attendance</span>
+            <span>© {new Date().getFullYear()} {settings.companyName}</span>
             <div className="w-1 h-1 rounded-full bg-slate-700 hidden xl:block" />
             <a href="#" className="hover:text-slate-300 transition-colors hidden xl:block">Privacy Policy</a>
             <div className="w-1 h-1 rounded-full bg-slate-700 hidden xl:block" />
@@ -229,7 +231,7 @@ const Auth = () => {
           <div className="bg-white/5 backdrop-blur-md p-3.5 rounded-2xl border border-white/10 shadow-xl mb-5">
             <img src={talentaLogo} alt="T-Absensi" className="h-14 w-auto object-contain drop-shadow-md relative z-10" />
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white leading-none mb-2">T-Absensi</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white leading-none mb-2">{settings.companyName}</h1>
           <p className="text-xs sm:text-sm text-indigo-300 font-medium tracking-wide">Smart Workforce Platform</p>
         </div>
 
@@ -242,7 +244,7 @@ const Auth = () => {
           {/* Form Header */}
           <div className="mb-8">
             <h2 className="text-2xl sm:text-[26px] font-bold text-white tracking-tight mb-1.5">Welcome Back</h2>
-            <p className="text-sm text-slate-400 font-light">Login to T-Absensi HRIS Platform</p>
+            <p className="text-sm text-slate-400 font-light">Login to {settings.companyName} HRIS Platform</p>
           </div>
 
           <Form {...form}>
@@ -337,7 +339,7 @@ const Auth = () => {
                     </span>
                   ) : (
                     <span className="flex items-center justify-center gap-2 relative z-10">
-                      Sign In to T-Absensi
+                      Sign In to {settings.companyName}
                       <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
                     </span>
                   )}
@@ -377,7 +379,7 @@ const Auth = () => {
             </div>
             <span className="text-[11px] font-medium text-emerald-400">System Operational</span>
           </div>
-          <p className="text-[11px] text-slate-500 mb-2">© 2026 T-Attendance | <a href="#" className="underline decoration-slate-600 underline-offset-2">Privacy</a></p>
+          <p className="text-[11px] text-slate-500 mb-2">© {new Date().getFullYear()} {settings.companyName} | <a href="#" className="underline decoration-slate-600 underline-offset-2">Privacy</a></p>
         </div>
 
       </div>

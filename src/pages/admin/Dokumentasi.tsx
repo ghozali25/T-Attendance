@@ -10,9 +10,11 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
 import jsPDF from "jspdf";
+import { useSystemSettings } from "@/hooks/useSystemSettings";
 
 const Dokumentasi = () => {
   const [isGenerating, setIsGenerating] = useState(false);
+  const { settings } = useSystemSettings();
 
   const generatePDF = async () => {
     setIsGenerating(true);
@@ -105,7 +107,7 @@ const Dokumentasi = () => {
       pdf.setFontSize(16);
       pdf.text("Sistem Absensi & Manajemen Karyawan", margin, 52);
       pdf.setFontSize(10);
-      pdf.text("Talenta Digital Indonesia", margin, 65);
+      pdf.text(settings.companyName, margin, 65);
 
       pdf.setTextColor(0, 0, 0);
       yPosition = 100;

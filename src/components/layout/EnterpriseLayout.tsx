@@ -25,6 +25,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useSystemSettings } from "@/hooks/useSystemSettings";
 
 interface MenuItem {
     icon: React.ElementType;
@@ -83,6 +84,7 @@ const EnterpriseLayout = ({
 }: EnterpriseLayoutProps) => {
     const { user, signOut } = useAuth();
     const { isDark, toggleTheme } = useTheme();
+    const { settings } = useSystemSettings();
     const navigate = useNavigate();
     const location = useLocation();
     const [isCollapsed, setIsCollapsed] = useState(false);
@@ -166,6 +168,11 @@ const EnterpriseLayout = ({
     const isManager = roleLabel?.toLowerCase().includes('manager');
     const mobileNav = isManager ? managerMobileNav : adminMobileNav;
 
+    // Logo split logic for Talenta-style branding
+    const companyNameParts = settings.companyName.split(' ');
+    const firstPart = companyNameParts[0];
+    const secondPart = companyNameParts.slice(1).join(' ');
+
     return (
         <div className="min-h-screen bg-slate-50/80 dark:bg-slate-950 font-['Inter',system-ui,sans-serif] pb-24 lg:pb-0 relative overflow-x-hidden">
             {/* Background Graphic Abstract - Subtle SaaS Effect */}
@@ -191,14 +198,14 @@ const EnterpriseLayout = ({
                         {!isCollapsed && (
                             <div className="min-w-0 overflow-hidden ml-0.5">
                                 <h1 className="font-extrabold text-slate-900 dark:text-white text-[15px] leading-tight truncate tracking-tight">
-                                    Talenta<span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 ml-1">T-Attendance</span>
+                                    {firstPart}<span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 ml-1">{secondPart || "Attendance"}</span>
                                 </h1>
                                 <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-tight mt-0.5 font-bold tracking-[0.15em] uppercase flex items-center gap-1.5">
                                     <span className="relative flex h-1.5 w-1.5 shrink-0">
                                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                                         <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
                                     </span>
-                                    Indonesia
+                                    {settings.companyName.includes('T-') ? 'Indonesia' : 'Official Platform'}
                                 </p>
                             </div>
                         )}
@@ -294,7 +301,7 @@ const EnterpriseLayout = ({
                                 <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-600 via-blue-600 to-blue-700 flex items-center justify-center shadow-lg border border-blue-400/30 relative overflow-hidden">
                                     <img src={logoImage} alt="Logo" className="h-5 w-5 object-contain brightness-0 invert drop-shadow-sm relative z-10" />
                                 </div>
-                                <span className="font-extrabold text-slate-900 dark:text-white text-sm tracking-tight"><span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 ml-0.5">T-Attendance</span></span>
+                                <span className="font-extrabold text-slate-900 dark:text-white text-sm tracking-tight"><span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 ml-0.5">{secondPart || firstPart}</span></span>
                             </div>
 
                             {/* Global Search */}

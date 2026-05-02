@@ -2,11 +2,13 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Home, ArrowLeft, Search, Compass } from "lucide-react";
+import { useSystemSettings } from "@/hooks/useSystemSettings";
 
 const NotFound = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [mounted, setMounted] = useState(false);
+  const { settings } = useSystemSettings();
 
   useEffect(() => {
     console.error("404 Error: User attempted to access non-existent route:", location.pathname);
@@ -79,7 +81,7 @@ const NotFound = () => {
 
         {/* Footer hint */}
         <p className="text-xs text-slate-400 mt-10 font-medium">
-          Talenta Digital Absensi • Enterprise HRIS Platform
+          {settings.companyName} • Enterprise HRIS Platform
         </p>
       </div>
     </div>
