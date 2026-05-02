@@ -1,15 +1,15 @@
 import { useState, useEffect, useCallback } from "react";
-import { Bell, CheckCircle2, Clock, Calendar, FileText, AlertTriangle, X, CheckCheck, Trash2 } from "lucide-react";
+import { Bell, CheckCircle2, Clock, Calendar, FileText, AlertTriangle, X, CheckCheck, Trash2, XCircle } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { id as idLocale } from "date-fns/locale";
 import { Button } from "@/components/ui/button";
-import { leaveApi, attendanceApi, journalsApi, profilesApi } from "@/lib/api";
+import { leaveApi, attendanceApi, journalsApi, profilesApi, attendanceRequestsApi } from "@/lib/api";
 
 export interface NotificationItem {
     id: string;
-    type: 'leave_approved' | 'leave_rejected' | 'attendance_late' | 'journal_reminder' | 'system' | 'leave_pending';
+    type: 'leave_approved' | 'leave_rejected' | 'attendance_late' | 'journal_reminder' | 'system' | 'leave_pending' | 'attendance_request_pending' | 'attendance_request_approved' | 'attendance_request_rejected';
     title: string;
     message: string;
     timestamp: Date;
@@ -107,6 +107,29 @@ export function useNotifications(role: 'admin' | 'manager' | 'karyawan') {
                         bgColor: 'bg-blue-50 dark:bg-blue-900/20',
                     });
                 }
+
+                // 4. Attendance Requests approved/rejected
+                try {
+                    const attRequests = await attendanceRequestsApi.getAll({ user_id: user.id });
+                    (attRequests || [])
+                        .filter((ar: any) => ar.status !== 'pending' && new Date(ar.updated_at) >= new Date(Date.now() - 7 * 86400000))
+                        .forEach((ar: any) => {
+                            const isApproved = ar.status === 'approved';
+                            items.push({
+                                id: `att-req-${ar.id}`,
+                                type: isApproved ? 'attendance_request_approved' : 'attendance_request_rejected',
+                                title: isApproved ? 'Permohonan Absen Disetujui' : 'Permohonan Absen Ditolak',
+                                message: `Permohonan absen tanggal ${ar.date} telah ${isApproved ? 'disetujui' : 'ditolak'}.`,
+                                timestamp: new Date(ar.updated_at),
+                                read: false,
+                                icon: isApproved ? CheckCircle2 : XCircle,
+                                color: isApproved ? 'text-emerald-600' : 'text-red-600',
+                                bgColor: isApproved ? 'bg-emerald-50 dark:bg-emerald-900/20' : 'bg-red-50 dark:bg-red-900/20',
+                            });
+                        });
+                } catch (e) {
+                    console.error("Error fetching attendance request notifications:", e);
+                }
             }
 
             if (role === 'admin' || role === 'manager') {
@@ -171,6 +194,29 @@ export function useNotifications(role: 'admin' | 'manager' | 'karyawan') {
                         color: 'text-blue-600',
                         bgColor: 'bg-blue-50 dark:bg-blue-900/20',
                     });
+                }
+
+                // 4. Pending Attendance Requests for Admin
+                try {
+                    const pendingAttRequests = await attendanceRequestsApi.getAll({ status: 'pending' });
+                    (pendingAttRequests || [])
+                        .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+                        .slice(0, 5)
+                        .forEach((ar: any) => {
+                            items.push({
+                                id: `pending-att-req-${ar.id}`,
+                                type: 'attendance_request_pending',
+                                title: 'Permohonan Absen Baru',
+                                message: `${ar.full_name || 'Karyawan'} mengajukan absen manual untuk tanggal ${ar.date}.`,
+                                timestamp: new Date(ar.created_at),
+                                read: false,
+                                icon: Clock,
+                                color: 'text-orange-600',
+                                bgColor: 'bg-orange-50 dark:bg-orange-900/20',
+                            });
+                        });
+                } catch (e) {
+                    console.error("Error fetching admin attendance requests:", e);
                 }
             }
 

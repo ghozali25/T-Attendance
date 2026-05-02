@@ -100,62 +100,42 @@ router.put('/:id', async (req, res) => {
       [status, approved_by, rejection_reason, req.params.id]
     );
     
-    // 3. If approved, create or update attendance record
+    // 3. If approved, sync to attendance table
     if (status === 'approved') {
-      // Check if attendance already exists for that user and date
-      const [existing] = await req.db.query(
-        'SELECT id FROM attendance WHERE user_id = ? AND date = ?',
-        [request.user_id, request.date]
-      );
-      
-      if (existing && existing.length > 0) {
-        // Update existing
-        await req.db.query(
-          `UPDATE attendance SET clock_in = ?, clock_out = ?, status = 'present', notes = ? 
-           WHERE id = ?`,
-          [request.clock_in, request.clock_out, request.reason, existing[0].id]
-        );
-      } else {
-        // Create new
-        const attId = crypto.randomUUID();
-        await req.db.query(
-          `INSERT INTO attendance (id, user_id, date, clock_in, clock_out, status, notes) 
-           VALUES (?, ?, ?, ?, ?, 'present', ?)`,
-          [attId, request.user_id, request.date, request.clock_in, request.clock_out, request.reason]
-        );
+      // Calculate work hours
+      let workHours = 0;
+      if (request.clock_in && request.clock_out) {
+        const inTime = new Date(request.clock_in);
+        const outTime = new Date(request.clock_out);
+        workHours = (outTime.getTime() - inTime.getTime()) / (1000 * 60 * 60);
       }
-    }
-    
-    // If approved, sync to attendance table
-    if (status === 'approved') {
-      // 1. Get request details
-      const [requests] = await req.db.query('SELECT * FROM attendance_requests WHERE id = ?', [id]);
-      if (requests.length > 0) {
-        const ar = requests[0];
-        
-        // 2. Calculate work hours
-        let workHours = 0;
-        if (ar.clock_in && ar.clock_out) {
-          const inTime = new Date(ar.clock_in);
-          const outTime = new Date(ar.clock_out);
-          workHours = (outTime.getTime() - inTime.getTime()) / (1000 * 60 * 60);
-        }
 
-        // 3. Insert into attendance table
-        const attendanceId = crypto.randomUUID();
-        const periodMonth = ar.date ? ar.date.toString().substring(0, 7) : null;
-        
-        await req.db.query(
-          `INSERT INTO attendance (id, user_id, date, clock_in, clock_out, work_hours, period_month, status, notes) 
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-           ON DUPLICATE KEY UPDATE 
-           clock_in = VALUES(clock_in), 
-           clock_out = VALUES(clock_out), 
-           work_hours = VALUES(work_hours), 
-           status = 'present'`,
-          [attendanceId, ar.user_id, ar.date, ar.clock_in, ar.clock_out, workHours, periodMonth, 'present', `Approved request: ${ar.reason}`]
-        );
-      }
+      const attendanceId = crypto.randomUUID();
+      // Format date to YYYY-MM for period_month
+      const dateObj = new Date(request.date);
+      const periodMonth = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}`;
+      
+      await req.db.query(
+        `INSERT INTO attendance (id, user_id, date, clock_in, clock_out, work_hours, period_month, status, notes) 
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+         ON DUPLICATE KEY UPDATE 
+         clock_in = VALUES(clock_in), 
+         clock_out = VALUES(clock_out), 
+         work_hours = VALUES(work_hours), 
+         status = 'present',
+         notes = VALUES(notes)`,
+        [
+          attendanceId, 
+          request.user_id, 
+          request.date, 
+          request.clock_in, 
+          request.clock_out, 
+          workHours, 
+          periodMonth, 
+          'present', 
+          `Approved request: ${request.reason}`
+        ]
+      );
     }
 
     res.json({ message: 'Attendance request updated successfully' });
