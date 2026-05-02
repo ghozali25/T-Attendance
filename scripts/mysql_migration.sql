@@ -25,6 +25,7 @@ DROP TABLE IF EXISTS user_roles;
 DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS departments;
 DROP TABLE IF EXISTS holidays;
+DROP TABLE IF EXISTS attendance_requests;
 DROP TABLE IF EXISTS system_settings;
 
 -- ============ 3. CREATE users TABLE ============
@@ -137,6 +138,24 @@ CREATE TABLE IF NOT EXISTS leave_requests (
     FOREIGN KEY (approved_by) REFERENCES users(id) ON DELETE SET NULL
 );
 
+-- ============ 9.5. CREATE attendance_requests TABLE ============
+CREATE TABLE IF NOT EXISTS attendance_requests (
+    id CHAR(36) PRIMARY KEY,
+    user_id CHAR(36) NOT NULL,
+    date DATE NOT NULL,
+    clock_in TIMESTAMP NULL,
+    clock_out TIMESTAMP NULL,
+    reason TEXT,
+    status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
+    approved_by CHAR(36),
+    rejection_reason TEXT,
+    approved_at TIMESTAMP NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (approved_by) REFERENCES users(id) ON DELETE SET NULL
+);
+
 -- ============ 10. CREATE audit_logs TABLE ============
 CREATE TABLE IF NOT EXISTS audit_logs (
     id CHAR(36) PRIMARY KEY,
@@ -163,6 +182,9 @@ CREATE INDEX idx_audit_logs_user_id ON audit_logs(user_id);
 CREATE INDEX idx_audit_logs_action ON audit_logs(action);
 CREATE INDEX idx_audit_logs_target_table ON audit_logs(target_table);
 CREATE INDEX idx_audit_logs_created_at ON audit_logs(created_at);
+CREATE INDEX idx_attendance_requests_user_id ON attendance_requests(user_id);
+CREATE INDEX idx_attendance_requests_status ON attendance_requests(status);
+CREATE INDEX idx_attendance_requests_date ON attendance_requests(date);
 
 /* 
 -- ============ 11. CREATE TRIGGER FOR period_month ============
