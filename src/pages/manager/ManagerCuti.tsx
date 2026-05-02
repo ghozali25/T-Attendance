@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft, Calendar, Check, X, Clock, Search,
-  RefreshCw, FileText, User, Building2
+  RefreshCw, FileText, User, Building2, Info
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -337,11 +337,12 @@ const ManagerCuti = () => {
                   <TableHeader>
                     <TableRow className="bg-slate-50/80 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800">
                       <TableHead className="font-black text-slate-400 text-[10px] uppercase tracking-widest py-4">Karyawan</TableHead>
-                      <TableHead className="hidden sm:table-cell font-black text-slate-400 text-[10px] uppercase tracking-widest">Jenis Cuti</TableHead>
-                      <TableHead className="hidden md:table-cell font-black text-slate-400 text-[10px] uppercase tracking-widest">Tanggal</TableHead>
-                      <TableHead className="hidden lg:table-cell font-black text-slate-400 text-[10px] uppercase tracking-widest">Durasi</TableHead>
-                      <TableHead className="font-black text-slate-400 text-[10px] uppercase tracking-widest">Status</TableHead>
-                      <TableHead className="font-black text-slate-400 text-[10px] uppercase tracking-widest">Aksi</TableHead>
+                      <TableHead className="hidden sm:table-cell font-black text-slate-400 text-[10px] uppercase tracking-widest text-center">Jenis Cuti</TableHead>
+                      <TableHead className="hidden md:table-cell font-black text-slate-400 text-[10px] uppercase tracking-widest text-center">Tanggal</TableHead>
+                      <TableHead className="hidden lg:table-cell font-black text-slate-400 text-[10px] uppercase tracking-widest text-center">Durasi</TableHead>
+                      <TableHead className="font-black text-slate-400 text-[10px] uppercase tracking-widest">Alasan</TableHead>
+                      <TableHead className="font-black text-slate-400 text-[10px] uppercase tracking-widest text-center">Status</TableHead>
+                      <TableHead className="font-black text-slate-400 text-[10px] uppercase tracking-widest text-center">Aksi</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -363,32 +364,44 @@ const ManagerCuti = () => {
                               </div>
                             </div>
                           </TableCell>
-                          <TableCell className="hidden sm:table-cell">
+                          <TableCell className="hidden sm:table-cell text-center">
                             <span className="px-2.5 py-1 text-[10px] font-black uppercase tracking-widest bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-lg border border-slate-200/50 dark:border-slate-700/50">{getLeaveTypeLabel(request.leave_type)}</span>
                           </TableCell>
-                          <TableCell className="hidden md:table-cell">
+                          <TableCell className="hidden md:table-cell text-center">
                             <div className="text-sm">
                               <p className="font-semibold text-slate-700 dark:text-slate-200">{format(new Date(request.start_date), "dd MMM yyyy", { locale: id })}</p>
                               <p className="text-xs text-slate-400 font-medium">s/d {format(new Date(request.end_date), "dd MMM yyyy", { locale: id })}</p>
                             </div>
                           </TableCell>
-                          <TableCell className="hidden lg:table-cell">
+                          <TableCell className="hidden lg:table-cell text-center">
                             <span className="font-black text-slate-700 dark:text-slate-200 text-sm">{duration} hari</span>
                           </TableCell>
-                          <TableCell>{getStatusBadge(request.status)}</TableCell>
-                          <TableCell>
-                            {request.status === "pending" ? (
-                              <div className="flex gap-2">
-                                <Button size="sm" className="gap-1.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl shadow-sm shadow-emerald-500/20 h-9 font-bold text-xs" onClick={() => handleApprove(request)}>
-                                  <Check className="h-3.5 w-3.5" /> Setujui
-                                </Button>
-                                <Button size="sm" variant="outline" className="gap-1.5 text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-500/10 border-rose-200 dark:border-rose-800/50 rounded-xl h-9 font-bold text-xs" onClick={() => handleReject(request)}>
-                                  <X className="h-3.5 w-3.5" /> Tolak
-                                </Button>
-                              </div>
-                            ) : (
-                              <span className="text-sm text-slate-400 font-medium">—</span>
-                            )}
+                          <TableCell className="max-w-[200px]">
+                            <div className="flex items-center gap-2 group relative">
+                              <Info className="h-4 w-4 text-slate-400 shrink-0" />
+                              <span className="truncate text-xs text-slate-600 italic">"{request.reason || '-'}"</span>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <div className="flex justify-center">
+                              {getStatusBadge(request.status)}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <div className="flex justify-center gap-2">
+                              {request.status === "pending" ? (
+                                <>
+                                  <Button size="sm" className="gap-1.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl shadow-sm shadow-emerald-500/20 h-9 font-bold text-xs" onClick={() => handleApprove(request)}>
+                                    <Check className="h-3.5 w-3.5" /> Setujui
+                                  </Button>
+                                  <Button size="sm" variant="outline" className="gap-1.5 text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-500/10 border-rose-200 dark:border-rose-800/50 rounded-xl h-9 font-bold text-xs" onClick={() => handleReject(request)}>
+                                    <X className="h-3.5 w-3.5" /> Tolak
+                                  </Button>
+                                </>
+                              ) : (
+                                <span className="text-sm text-slate-400 font-medium">—</span>
+                              )}
+                            </div>
                           </TableCell>
                         </TableRow>
                       );

@@ -130,6 +130,13 @@ const KelolaPermohonanAbsen = () => {
     return matchesSearch && matchesStatus;
   });
 
+  const stats = {
+    total: requests.length,
+    pending: requests.filter((r) => r.status === "pending").length,
+    approved: requests.filter((r) => r.status === "approved").length,
+    rejected: requests.filter((r) => r.status === "rejected").length,
+  };
+
   return (
     <EnterpriseLayout
       title="Kelola Permohonan Absen"
@@ -137,50 +144,69 @@ const KelolaPermohonanAbsen = () => {
       menuSections={menuSections}
       roleLabel={isAdmin ? "Admin" : "Manager"}
     >
-      <div className="space-y-6">
-        {/* Filter Bar */}
-        <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-white dark:bg-slate-900/70 p-4 rounded-2xl border border-slate-200/60 shadow-sm">
-          <div className="relative w-full md:w-96">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-            <Input 
-              placeholder="Cari nama atau departemen..." 
-              className="pl-10 h-10 rounded-xl"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-          <div className="flex items-center gap-3 w-full md:w-auto">
-            <Select value={filterStatus} onValueChange={setFilterStatus}>
-              <SelectTrigger className="w-full md:w-[180px] h-10 rounded-xl">
-                <SelectValue placeholder="Filter Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Semua Status</SelectItem>
-                <SelectItem value="pending">Menunggu</SelectItem>
-                <SelectItem value="approved">Disetujui</SelectItem>
-                <SelectItem value="rejected">Ditolak</SelectItem>
-              </SelectContent>
-            </Select>
-            <Button variant="outline" size="icon" className="h-10 w-10 rounded-xl shrink-0" onClick={fetchRequests}>
-              <HistoryIcon className={cn("h-4 w-4", isLoading && "animate-spin")} />
-            </Button>
-          </div>
+      <div className="space-y-8 pb-20 animate-in fade-in slide-in-from-bottom-8 duration-700">
+        {/* Stats */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-5">
+          {[
+            { icon: FileText, label: "Total", value: stats.total, gradient: "from-indigo-500 to-blue-600", shadow: "shadow-indigo-500/20", bg: "border-indigo-200/40 dark:border-indigo-800/30 bg-gradient-to-br from-white to-indigo-50/30 dark:from-slate-900 dark:to-indigo-950/20", color: "text-indigo-600 dark:text-indigo-400" },
+            { icon: Clock, label: "Menunggu", value: stats.pending, gradient: "from-amber-500 to-orange-600", shadow: "shadow-amber-500/20", bg: "border-amber-200/40 dark:border-amber-800/30 bg-gradient-to-br from-white to-amber-50/30 dark:from-slate-900 dark:to-amber-950/20", color: "text-amber-600 dark:text-amber-400" },
+            { icon: Check, label: "Disetujui", value: stats.approved, gradient: "from-emerald-500 to-green-600", shadow: "shadow-emerald-500/20", bg: "border-emerald-200/40 dark:border-emerald-800/30 bg-gradient-to-br from-white to-emerald-50/30 dark:from-slate-900 dark:to-emerald-950/20", color: "text-emerald-600 dark:text-emerald-400" },
+            { icon: X, label: "Ditolak", value: stats.rejected, gradient: "from-rose-500 to-red-600", shadow: "shadow-rose-500/20", bg: "border-rose-200/40 dark:border-rose-800/30 bg-gradient-to-br from-white to-rose-50/30 dark:from-slate-900 dark:to-rose-950/20", color: "text-rose-600 dark:text-rose-400" },
+          ].map((s, i) => (
+            <div key={i} className={`group relative p-5 rounded-[24px] border overflow-hidden hover:shadow-lg transition-all duration-300 ${s.bg}`}>
+              <div className="absolute top-0 right-0 w-24 h-24 bg-black/[.02] rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 group-hover:scale-125 transition-transform duration-500" />
+              <div className="relative flex items-center gap-3.5">
+                <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${s.gradient} flex items-center justify-center shadow-lg ${s.shadow} shrink-0`}>
+                  <s.icon className="h-5 w-5 text-white" />
+                </div>
+                <div>
+                  <p className={`text-2xl font-black tracking-tighter ${s.color}`}>{s.value}</p>
+                  <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest">{s.label}</p>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
 
-        {/* Desktop Table */}
-        <Card className="bg-white dark:bg-slate-900 border-slate-200/60 dark:border-slate-800 shadow-sm overflow-hidden rounded-[24px]">
-          <Table>
-            <TableHeader className="bg-slate-50 dark:bg-slate-800">
-              <TableRow>
-                <TableHead className="font-bold">Karyawan</TableHead>
-                <TableHead className="font-bold">Tanggal</TableHead>
-                <TableHead className="font-bold text-center">Masuk</TableHead>
-                <TableHead className="font-bold text-center">Pulang</TableHead>
-                <TableHead className="font-bold">Alasan</TableHead>
-                <TableHead className="font-bold text-center">Status</TableHead>
-                <TableHead className="font-bold text-right">Aksi</TableHead>
-              </TableRow>
-            </TableHeader>
+        {/* Filters */}
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <Input
+              placeholder="Cari nama, departemen..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-11 h-12 bg-white/90 dark:bg-slate-900/70 backdrop-blur-md border-slate-200/50 dark:border-slate-700/50 rounded-2xl shadow-sm font-semibold text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-300"
+            />
+          </div>
+          <Select value={filterStatus} onValueChange={setFilterStatus}>
+            <SelectTrigger className="w-full sm:w-[200px] h-12 border-slate-200/50 dark:border-slate-700/50 rounded-2xl bg-white/90 dark:bg-slate-900/70 backdrop-blur-md font-bold">
+              <SelectValue placeholder="Filter status" />
+            </SelectTrigger>
+            <SelectContent className="rounded-xl">
+              <SelectItem value="all">Semua Status</SelectItem>
+              <SelectItem value="pending">Pending</SelectItem>
+              <SelectItem value="approved">Disetujui</SelectItem>
+              <SelectItem value="rejected">Ditolak</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Table */}
+        <div className="rounded-[28px] border border-slate-200/50 dark:border-slate-800/50 shadow-sm bg-white/90 dark:bg-slate-900/70 backdrop-blur-md overflow-hidden">
+          <div className="hidden md:block overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-slate-50/80 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800">
+                  <TableHead className="font-black text-slate-400 text-[10px] uppercase tracking-widest py-4">Karyawan</TableHead>
+                  <TableHead className="font-black text-slate-400 text-[10px] uppercase tracking-widest text-center">Tanggal</TableHead>
+                  <TableHead className="font-black text-slate-400 text-[10px] uppercase tracking-widest text-center">Masuk</TableHead>
+                  <TableHead className="font-black text-slate-400 text-[10px] uppercase tracking-widest text-center">Pulang</TableHead>
+                  <TableHead className="font-black text-slate-400 text-[10px] uppercase tracking-widest">Alasan</TableHead>
+                  <TableHead className="font-black text-slate-400 text-[10px] uppercase tracking-widest text-center">Status</TableHead>
+                  <TableHead className="font-black text-slate-400 text-[10px] uppercase tracking-widest text-center">Aksi</TableHead>
+                </TableRow>
+              </TableHeader>
             <TableBody>
               {isLoading ? (
                 [...Array(5)].map((_, i) => (
@@ -196,21 +222,30 @@ const KelolaPermohonanAbsen = () => {
                 </TableRow>
               ) : (
                 filteredRequests.map((req) => (
-                  <TableRow key={req.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800 border-b border-slate-100 dark:border-slate-800 transition-colors">
+                  <TableRow key={req.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
                     <TableCell>
-                      <div className="font-bold text-slate-800 dark:text-slate-100">{req.full_name}</div>
-                      <div className="text-[10px] uppercase font-bold text-slate-400">{req.department}</div>
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-indigo-100 to-indigo-50 dark:from-indigo-900/50 dark:to-indigo-800/30 flex items-center justify-center shadow-sm shrink-0">
+                          <User className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+                        </div>
+                        <div>
+                          <p className="font-bold text-slate-800 dark:text-slate-100 text-sm">{req.full_name}</p>
+                          <p className="text-[11px] text-slate-400 flex items-center gap-1 font-semibold">
+                            <Building2 className="h-3 w-3" />
+                            {req.department}
+                          </p>
+                        </div>
+                      </div>
                     </TableCell>
-                    <TableCell className="text-sm font-medium">
+                    <TableCell className="text-center font-semibold text-slate-700 dark:text-slate-200 text-sm">
                       {new Date(req.date).toLocaleDateString("id-ID", { day: 'numeric', month: 'short', year: 'numeric' })}
                     </TableCell>
-                    <TableCell className="text-center font-mono text-xs font-bold text-slate-800 dark:text-slate-100">{formatTime(req.clock_in)}</TableCell>
-                    <TableCell className="text-center font-mono text-xs font-bold text-slate-800 dark:text-slate-100">{formatTime(req.clock_out)}</TableCell>
+                    <TableCell className="text-center font-mono text-sm font-bold text-slate-800 dark:text-slate-100">{formatTime(req.clock_in)}</TableCell>
+                    <TableCell className="text-center font-mono text-sm font-bold text-slate-800 dark:text-slate-100">{formatTime(req.clock_out)}</TableCell>
                     <TableCell className="max-w-[200px]">
                         <div className="flex flex-col gap-1">
                           <div className="flex items-center gap-2 group relative">
-                            <Info className="h-4 w-4 text-slate-400 shrink-0" />
-                            <span className="truncate text-xs text-slate-600 italic">"{req.reason}"</span>
+                              <span className="truncate text-xs text-slate-600 italic">{req.reason || "-"}</span>
                           </div>
                           {req.attachment_url && (
                             <button 
@@ -218,7 +253,7 @@ const KelolaPermohonanAbsen = () => {
                                 e.stopPropagation();
                                 window.open(req.attachment_url!, '_blank');
                               }}
-                              className="flex items-center gap-1 text-[10px] text-blue-600 hover:text-blue-800 hover:underline font-bold mt-1 ml-6 bg-blue-50 px-2 py-0.5 rounded-full"
+                              className="flex items-center gap-1 text-[10px] text-blue-600 hover:text-blue-800 hover:underline font-bold mt-1 ml-6 bg-blue-50 px-2 py-0.5 rounded-full w-fit"
                             >
                               <FileText className="w-3 h-3" /> Lihat Lampiran
                             </button>
@@ -226,31 +261,25 @@ const KelolaPermohonanAbsen = () => {
                         </div>
                     </TableCell>
                     <TableCell className="text-center">
-                      {getStatusBadge(req.status)}
+                      <div className="flex justify-center">
+                        {getStatusBadge(req.status)}
+                      </div>
                     </TableCell>
-                    <TableCell className="text-right">
-                      {req.status === 'pending' ? (
-                        <div className="flex justify-end gap-2">
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-8 w-8 text-emerald-600 hover:bg-emerald-50 rounded-lg"
-                            onClick={() => { setSelectedRequest(req); setIsProcessOpen(true); }}
-                          >
-                            <Check className="h-4 w-4" />
-                          </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-8 w-8 text-red-600 hover:bg-red-50 rounded-lg"
-                            onClick={() => { setSelectedRequest(req); setIsRejectOpen(true); }}
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      ) : (
-                        <span className="text-[10px] font-bold text-slate-300">DIPROSES</span>
-                      )}
+                    <TableCell className="text-center">
+                      <div className="flex justify-center gap-2">
+                        {req.status === 'pending' ? (
+                          <>
+                            <Button size="sm" className="gap-1.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl shadow-sm shadow-emerald-500/20 h-9 font-bold text-xs" onClick={() => { setSelectedRequest(req); setIsProcessOpen(true); }}>
+                              <Check className="h-3.5 w-3.5" /> Setujui
+                            </Button>
+                            <Button size="sm" variant="outline" className="gap-1.5 text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-500/10 border-rose-200 dark:border-rose-800/50 rounded-xl h-9 font-bold text-xs" onClick={() => { setSelectedRequest(req); setIsRejectOpen(true); }}>
+                              <X className="h-3.5 w-3.5" /> Tolak
+                            </Button>
+                          </>
+                        ) : (
+                          <span className="text-sm text-slate-400 font-medium">—</span>
+                        )}
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))
