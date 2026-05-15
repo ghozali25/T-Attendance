@@ -2,7 +2,7 @@
   <img src="https://capsule-render.vercel.app/api?type=waving&height=300&color=timeAuto&text=T-Attendance&reversal=true&textBg=false&fontAlign=50&animation=fadeIn&descAlign=100&descAlignY=100" width="100%" />
 </div>
 
-# T-Absensi
+# T-Attendance
 
 ![T-Attendance](public/T-Attendance.png)
 
