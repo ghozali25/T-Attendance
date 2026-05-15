@@ -129,14 +129,11 @@ const RekapAbsensi = () => {
       console.log('[RekapAbsensi] Monthly view - start:', format(start, 'yyyy-MM-dd'));
       console.log('[RekapAbsensi] Monthly view - end:', format(end, 'yyyy-MM-dd'));
     } else {
-      // Daily: Create Strict Jakarta Range
-      // filterDate is "YYYY-MM-DD"
-      // Start: YYYY-MM-DDT00:00:00+07:00
-      // End: YYYY-MM-DDT23:59:59.999+07:00
-      const startStr = `${filterDate}T00:00:00+07:00`;
-      const endStr = `${filterDate}T23:59:59.999+07:00`;
-      start = new Date(startStr);
-      end = new Date(endStr);
+      // Daily: Create date range as local dates (not ISO strings with timezone)
+      // The backend expects "YYYY-MM-DD" format for date column comparison
+      const date = new Date(filterDate + 'T00:00:00');
+      start = startOfDay(date);
+      end = endOfDay(date);
     }
     return { start, end };
   }, [viewMode, dateRange, selectedMonth, filterDate]);

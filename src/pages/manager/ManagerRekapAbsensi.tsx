@@ -100,17 +100,11 @@ const ManagerRekapAbsensi = () => {
 
       setTotalEmployees(candidates.length);
 
-      // 2. Fetch Attendance for Date using API
-      const startIso = `${filterDate}T00:00:00+07:00`;
-      const endIso = `${filterDate}T23:59:59.999+07:00`;
-
-      const startUtc = new Date(startIso).toISOString();
-      const endUtc = new Date(endIso).toISOString();
-
-      // Use db.query for attendance (complex date range query not available in API yet)
+      // 2. Fetch Attendance for Date using db.query
+      // Query uses date column (YYYY-MM-DD format), not clock_in timestamps
       const attendanceData = await db.query(
-        'SELECT * FROM attendance WHERE deleted_at IS NULL AND clock_in >= ? AND clock_in <= ?',
-        [startUtc, endUtc]
+        'SELECT * FROM attendance WHERE deleted_at IS NULL AND date = ?',
+        [filterDate]
       ) as any[];
 
       // 3. Fetch Leaves using API

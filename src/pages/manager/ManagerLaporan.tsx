@@ -237,34 +237,39 @@ const ManagerLaporan = () => {
   const handlePeriodChange = (val: string) => {
     if (val === "custom") return;
     const [startStr, endStr] = val.split("_");
-    const newRange = { from: new Date(startStr), to: new Date(endStr) };
+    const newRange = { from: new Date(`${startStr}T00:00:00`), to: new Date(`${endStr}T23:59:59`) };
     handleDateRangeChange(newRange);
   };
 
+  // Initialize dateRange effect - must run after availablePeriods is ready
   useEffect(() => {
+    if (settingsLoading || availablePeriods.length === 0) return;
+
+    // Check if there's already a dateRange set (from URL or state)
     if (dateRange?.from && dateRange?.to) {
-      // Keeps export period val properly synced
-      const dateVal = `${format(dateRange.from, 'yyyy-MM-dd')}_${format(dateRange.to, 'yyyy-MM-dd')}`;
-      const exists = availablePeriods.some(p => p.value === dateVal);
-      if (exists) {
-        setExportPeriodVal(dateVal);
-      } else {
-        setExportPeriodVal("custom");
-      }
+      // Keep existing dateRange
       return;
     }
-    if (settingsLoading) return;
 
-    if (availablePeriods.length > 0) {
-      const defaultPeriod = availablePeriods[0];
-      setDateRange({ from: defaultPeriod.from, to: defaultPeriod.to });
+    // Initialize to current month
+    const defaultPeriod = availablePeriods[0];
+    const newRange = { from: defaultPeriod.from, to: defaultPeriod.to };
+    setDateRange(newRange);
 
-      const newParams = new URLSearchParams(searchParams);
-      newParams.set("from", format(defaultPeriod.from, "yyyy-MM-dd"));
-      newParams.set("to", format(defaultPeriod.to, "yyyy-MM-dd"));
-      setSearchParams(newParams, { replace: true });
-    }
-  }, [settingsLoading, searchParams, availablePeriods, dateRange]);
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set("from", format(defaultPeriod.from, "yyyy-MM-dd"));
+    newParams.set("to", format(defaultPeriod.to, "yyyy-MM-dd"));
+    setSearchParams(newParams, { replace: true });
+  }, [settingsLoading, availablePeriods]);
+
+  // Separate effect to keep export period val synced
+  useEffect(() => {
+    if (!dateRange?.from || !dateRange?.to) return;
+
+    const dateVal = `${format(dateRange.from, 'yyyy-MM-dd')}_${format(dateRange.to, 'yyyy-MM-dd')}`;
+    const exists = availablePeriods.some(p => p.value === dateVal);
+    setExportPeriodVal(exists ? dateVal : "custom");
+  }, [dateRange, availablePeriods]);
 
   const toTitleCase = (str: string | null): string => {
     if (!str) return "—";

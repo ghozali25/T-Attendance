@@ -140,6 +140,12 @@ npm run dev
 
 Aplikasi akan berjalan di `http://localhost:8080`
 
+### Jalan backend dan frontend
+
+```bash
+npm run dev:full
+```
+
 ## Build untuk Production
 
 ```bash

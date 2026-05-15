@@ -20,23 +20,14 @@ router.get('/', async (req, res) => {
       params.push(date);
     }
     
-    // Date range using date column
+    // Date range using date column (primary query path)
     if (start_date && end_date) {
       query += ' AND date BETWEEN ? AND ?';
       params.push(start_date, end_date);
-    }
-    
-    // Clock-in timestamp range
-    if (clock_in_start && clock_in_end) {
+    } else if (clock_in_start && clock_in_end) {
+      // Fallback: Clock-in timestamp range if date params not provided
       query += ' AND clock_in BETWEEN ? AND ?';
       params.push(clock_in_start, clock_in_end);
-    }
-    
-    // Support both start_date/end_date for clock_in range as well
-    if (start_date && end_date && !date) {
-      // Also check clock_in range for backward compatibility
-      query += ' OR (clock_in BETWEEN ? AND ?)';
-      params.push(start_date, end_date);
     }
     
     query += ' ORDER BY date DESC, clock_in DESC';
