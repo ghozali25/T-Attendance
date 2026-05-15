@@ -2,8 +2,6 @@
   <img src="https://capsule-render.vercel.app/api?type=waving&height=300&color=808080&text=T-Attendance&reversal=true&textBg=false&fontAlign=50&animation=fadeIn&descAlign=100&descAlignY=100&fontColor=FFFFFF" width="100%" />
 </div>
 
-# T-Attendance
-
 ![T-Attendance](public/T-Attendance.png)
 
 Sistem manajemen absensi berbasis web yang dibangun dengan React, TypeScript, dan MySQL.
