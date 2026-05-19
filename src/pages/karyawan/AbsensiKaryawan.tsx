@@ -59,6 +59,7 @@ const AbsensiKaryawan = () => {
   const [faceCaptureMode, setFaceCaptureMode] = useState<"register" | "verify">("verify");
   const [faceCapturedForAction, setFaceCapturedForAction] = useState<"clockin" | "clockout" | null>(null);
   const [faceDescriptor, setFaceDescriptor] = useState<number[] | null>(null);
+  const [lastCaptureDescriptor, setLastCaptureDescriptor] = useState<number[] | null>(null); // Hasil capture terakhir untuk clock in
   const [modelsLoading, setModelsLoading] = useState(true);
   const [hasLoadedModels, setHasLoadedModels] = useState(false);
   const [faceRegistered, setFaceRegistered] = useState(false);
@@ -280,8 +281,10 @@ const AbsensiKaryawan = () => {
     setShowFaceCapture(false);
     
     if (faceCapturedForAction === "clockin") {
-      // Face verified, proceed with clock in
-      await proceedClockIn();
+      // Simpan descriptor hasil capture untuk dikirim ke server
+      setLastCaptureDescriptor(descriptor);
+      // Face captured, proceed with clock in
+      await proceedClockIn(descriptor);
     } else if (faceCapturedForAction === "clockout") {
       // Face verified for clock out
       setShowClockOutConfirm(true);
@@ -290,22 +293,13 @@ const AbsensiKaryawan = () => {
     setFaceCapturedForAction(null);
   };
 
-  const handleClockInClick = () => {
+  // Fungsi tunggal untuk semua entry point clock in
+  const startClockIn = () => {
     if (!user) return;
 
     // Validate location
     if (settings.enableLocationTracking && !coordinates) {
       toast({ variant: "destructive", title: "Lokasi Belum Terdeteksi", description: "Mohon tunggu hingga indikator lokasi muncul." });
-      return;
-    }
-
-    // Check if user has registered face - BLOCK ABSOLUTE (hanya untuk employee)
-    if (isFaceRequired && (!faceRegistered || !faceDescriptor)) {
-      toast({ 
-        variant: "destructive", 
-        title: "Wajah Belum Terdaftar", 
-        description: "Silakan daftarkan wajah Anda terlebih dahulu di halaman Profil sebelum dapat melakukan absensi."
-      });
       return;
     }
 
@@ -319,23 +313,37 @@ const AbsensiKaryawan = () => {
       return;
     }
 
-    // Start face verification
-    setFaceCaptureMode("verify");
-    setFaceCapturedForAction("clockin");
-    setIsCapturingClockIn(true);
-    setShowFaceCapture(true);
+    // WAJIB: Setiap clock in harus melalui face capture dulu (hanya employee)
+    if (isFaceRequired) {
+      // Langsung buka face capture, tidak perlu cek faceRegistered dulu
+      setFaceCaptureMode("verify");
+      setFaceCapturedForAction("clockin");
+      setIsCapturingClockIn(true);
+      setShowFaceCapture(true);
+      return;
+    }
+
+    // Admin/Manager langsung lanjut ke proses clock in tanpa face capture
+    proceedClockIn(null);
   };
 
+  // handleClockInClick (Desktop) diarahkan ke startClockIn
+  const handleClockInClick = startClockIn;
+
+  // handleClockIn (Mobile) diarahkan ke startClockIn
+  const handleClockIn = startClockIn;
+
   // Separate the actual clock in logic after face verification
-  const proceedClockIn = async () => {
+  // Parameter capturedDescriptor adalah hasil face capture (null untuk admin/manager)
+  const proceedClockIn = async (capturedDescriptor: number[] | null) => {
     if (!user) return;
 
-    // SAFETY NET: Pastikan face sudah terverifikasi sebelum absen (hanya untuk employee)
-    if (isFaceRequired && (!faceRegistered || !faceDescriptor)) {
+    // SAFETY NET: Employee WAJIB memiliki hasil face capture
+    if (isFaceRequired && !capturedDescriptor) {
       toast({ 
         variant: "destructive", 
-        title: "Wajah Belum Terdaftar", 
-        description: "Silakan daftarkan wajah Anda terlebih dahulu di halaman Profil sebelum dapat melakukan absensi."
+        title: "Wajib Scan Wajah", 
+        description: "Anda harus melakukan scan wajah untuk melakukan absensi."
       });
       setIsCapturingClockIn(false);
       return;
@@ -379,6 +387,11 @@ const AbsensiKaryawan = () => {
       }
 
       // Insert new attendance record using API
+      // Sertakan face_descriptor hasil capture di notes untuk admin review
+      const faceVerifiedNote = capturedDescriptor 
+        ? `[FACE_VERIFIED:${JSON.stringify(capturedDescriptor.slice(0, 5))}...]` 
+        : '[FACE_SKIP:Admin]';
+      
       await attendanceApi.create({
         id: crypto.randomUUID(),
         user_id: user.id,
@@ -386,7 +399,8 @@ const AbsensiKaryawan = () => {
         clock_in: toMySQLDateTime(now),
         clock_in_lat: coordinates?.lat,
         clock_in_lng: coordinates?.lng,
-        status: status
+        status: status,
+        notes: faceVerifiedNote
       });
 
       toast({ title: "Clock In Berhasil", description: `Anda masuk pada ${now.toLocaleTimeString("id-ID")}` });
@@ -405,107 +419,7 @@ const AbsensiKaryawan = () => {
     }
   };
 
-  // handleClockIn - Mobile fallback with face check, diarahkan ke handleClockInClick
-  const handleClockIn = async () => {
-    if (!user) return;
-
-    // Validate location
-    if (settings.enableLocationTracking && !coordinates) {
-      toast({ variant: "destructive", title: "Lokasi Belum Terdeteksi", description: "Mohon tunggu hingga indikator lokasi muncul." });
-      return;
-    }
-
-    // Check if user has registered face - BLOCK ABSOLUTE (hanya untuk employee)
-    if (isFaceRequired && (!faceRegistered || !faceDescriptor)) {
-      toast({ 
-        variant: "destructive", 
-        title: "Wajah Belum Terdaftar", 
-        description: "Silakan daftarkan wajah Anda terlebih dahulu di halaman Profil sebelum dapat melakukan absensi."
-      });
-      return;
-    }
-
-    // Check if models loaded (face capture perlu model)
-    if (isFaceRequired && !hasLoadedModels) {
-      toast({ 
-        variant: "destructive", 
-        title: "Model Wajah Belum Siap", 
-        description: "Silakan tunggu hingga model face detection selesai dimuat."
-      });
-      return;
-    }
-
-    // Start face verification (sama seperti desktop)
-    setFaceCaptureMode("verify");
-    setFaceCapturedForAction("clockin");
-    setIsCapturingClockIn(true);
-    setShowFaceCapture(true);
-    return;
-
-    // Psychological Security Step: Verification (tidak akan tercapai karena return di atas)
-    setIsVerifying(true);
-    setVerificationText("Menganalisis lokasi dan kredensial perangkat...");
-
-    // Simulate complex checking processes (2 seconds total)
-    await new Promise(resolve => setTimeout(resolve, 800));
-    setVerificationText("Memverifikasi sidik jari/wajah digital...");
-    await new Promise(resolve => setTimeout(resolve, 800));
-    setVerificationText("Mengenkripsi data kehadiran...");
-    await new Promise(resolve => setTimeout(resolve, 400));
-
-    setIsLoading(true);
-
-    try {
-      // Direct DB operation (no edge functions for MySQL)
-      const now = new Date();
-      const limitTime = new Date();
-      const [limitH, limitM] = (settings.clockInStart || "08:00").split(":").map(Number);
-      limitTime.setHours(limitH, limitM, 0, 0);
-
-      let status = "present";
-      if (now > limitTime) status = "late";
-
-      const todayStr = formatJakartaDate(now, 'yyyy-MM-dd');
-
-      // Check if already clocked in today using API
-      const allAttendance = await attendanceApi.getAll();
-      const existing = allAttendance?.filter((a: any) => 
-        a.user_id === user.id && a.date === todayStr
-      ) || [];
-
-      if (existing && existing.length > 0) {
-        toast({ variant: "destructive", title: "Sudah Clock In", description: "Anda sudah melakukan Clock In hari ini." });
-        fetchTodayAttendance();
-        setIsLoading(false);
-        setIsVerifying(false);
-        return;
-      }
-
-      // Insert new attendance record using API
-      await attendanceApi.create({
-        id: crypto.randomUUID(),
-        user_id: user.id,
-        date: todayStr,
-        clock_in: toMySQLDateTime(now),
-        clock_in_lat: coordinates?.lat,
-        clock_in_lng: coordinates?.lng,
-        status: status
-      });
-
-      toast({ title: "Clock In Berhasil", description: `Anda masuk pada ${now.toLocaleTimeString("id-ID")}` });
-      fetchTodayAttendance();
-
-    } catch (finalError: any) {
-      toast({
-        variant: "destructive",
-        title: "Gagal Clock In",
-        description: finalError.message || "Gagal menghubungi server.",
-      });
-    } finally {
-      setIsLoading(false);
-      setIsVerifying(false);
-    }
-  };
+  // handleClockIn sudah didefinisikan sebagai alias dari startClockIn di atas
 
   const [showJournalModal, setShowJournalModal] = useState(false);
 
