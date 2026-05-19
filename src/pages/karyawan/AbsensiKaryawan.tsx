@@ -41,8 +41,11 @@ interface AttendanceRecord {
 
 const AbsensiKaryawan = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, role } = useAuth();
   const { settings } = useSystemSettings();
+
+  // Face recognition hanya wajib untuk employee biasa, bukan admin/manager
+  const isFaceRequired = role === 'employee';
   const isMobile = useIsMobile();
   const [isLoading, setIsLoading] = useState(false);
   const [todayAttendance, setTodayAttendance] = useState<AttendanceRecord | null>(null);
@@ -172,6 +175,16 @@ const AbsensiKaryawan = () => {
     if (!user) return;
     
     async function initFace() {
+      // Jika role bukan employee, face recognition tidak diperlukan
+      if (!isFaceRequired) {
+        setHasLoadedModels(true);
+        setFaceRegistered(true);
+        setFaceDescriptor([]); // Dummy array agar tidak null
+        setProfileChecked(true);
+        setModelsLoading(false);
+        return;
+      }
+
       try {
         setModelsLoading(true);
         await loadFaceDetectionModels();
@@ -200,7 +213,7 @@ const AbsensiKaryawan = () => {
       }
     }
     initFace();
-  }, [user]);
+  }, [user, role, isFaceRequired]);
 
   // Fetch today's attendance
   useEffect(() => {
@@ -286,12 +299,12 @@ const AbsensiKaryawan = () => {
       return;
     }
 
-    // Check if user has registered face
-    if (!faceRegistered || !faceDescriptor) {
+    // Check if user has registered face - BLOCK ABSOLUTE (hanya untuk employee)
+    if (isFaceRequired && (!faceRegistered || !faceDescriptor)) {
       toast({ 
         variant: "destructive", 
         title: "Wajah Belum Terdaftar", 
-        description: "Silakan daftarkan wajah Anda terlebih dahulu di halaman Profil." 
+        description: "Silakan daftarkan wajah Anda terlebih dahulu di halaman Profil sebelum dapat melakukan absensi."
       });
       return;
     }
@@ -737,12 +750,19 @@ const AbsensiKaryawan = () => {
                 {!todayAttendance ? (
                   <button
                     onClick={handleClockInClick}
-                    disabled={isLoading || !hasLoadedModels}
-                    className="w-full h-20 sm:h-24 rounded-[24px] bg-slate-900 hover:bg-slate-800 active:scale-95 transition-all duration-300 flex items-center justify-between px-8 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.3)] group"
+                    disabled={isLoading || (isFaceRequired && (!hasLoadedModels || !faceRegistered || !faceDescriptor))}
+                    className={`w-full h-20 sm:h-24 rounded-[24px] flex items-center justify-between px-8 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.3)] group transition-all duration-300 active:scale-95 ${
+                      isFaceRequired && (!faceRegistered || !faceDescriptor)
+                        ? 'bg-slate-600 cursor-not-allowed opacity-60' 
+                        : 'bg-slate-900 hover:bg-slate-800'
+                    }`}
+                    title={isFaceRequired && !faceRegistered ? 'Daftarkan wajah terlebih dahulu di Profil' : ''}
                   >
                     <div className="flex flex-col items-start">
                       <span className="text-xl sm:text-2xl font-extrabold text-white">Clock In</span>
-                      <span className="text-slate-300 text-sm sm:text-base font-medium">Catat kehadiran hari ini</span>
+                      <span className="text-slate-300 text-sm sm:text-base font-medium">
+                        {isFaceRequired && !faceRegistered ? 'Wajib daftar wajah dulu' : 'Catat kehadiran hari ini'}
+                      </span>
                     </div>
                     <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-white dark:bg-slate-900/10 flex items-center justify-center group-hover:rotate-12 transition-transform border border-white/20">
                       {isLoading ? <div className="h-6 w-6 animate-spin rounded-full border-2 border-white border-t-transparent" /> : <LogIn className="h-6 w-6 sm:h-7 sm:w-7 text-white" />}
@@ -871,14 +891,37 @@ const AbsensiKaryawan = () => {
         )}
       </div>
 
-      {/* Face Capture Registration Banner */}
-      {!faceRegistered && !modelsLoading && profileChecked && !todayAttendance && (
+      {/* Face Capture Registration Banner - Desktop (hanya untuk employee) */}
+      {isFaceRequired && !faceRegistered && !modelsLoading && profileChecked && !todayAttendance && (
         <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 hidden md:block">
-          <div className="bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 rounded-2xl px-6 py-3 shadow-lg flex items-center gap-3">
-            <ScanFace className="h-5 w-5 text-amber-600 shrink-0" />
-            <p className="text-sm font-semibold text-amber-800 dark:text-amber-200">
-              Daftarkan wajah Anda di <button onClick={() => navigate("/karyawan/profil")} className="underline font-bold">Profil</button> untuk bisa absensi
-            </p>
+          <div className="bg-amber-50 dark:bg-amber-900/30 border-2 border-amber-400 dark:border-amber-700 rounded-2xl px-6 py-4 shadow-lg flex items-center gap-3 animate-pulse">
+            <ScanFace className="h-6 w-6 text-amber-600 shrink-0" />
+            <div>
+              <p className="text-sm font-bold text-amber-800 dark:text-amber-200">
+                Wajah Belum Terdaftar
+              </p>
+              <p className="text-xs text-amber-700 dark:text-amber-400">
+                Anda <strong>tidak dapat melakukan absensi</strong> sebelum mendaftarkan wajah.
+                Klik <button onClick={() => navigate("/karyawan/profil")} className="underline font-bold">di sini</button> untuk daftar.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Face Capture Registration Banner - Mobile (hanya untuk employee) */}
+      {isFaceRequired && !faceRegistered && !modelsLoading && profileChecked && !todayAttendance && isMobile && (
+        <div className="fixed bottom-[100px] left-4 right-4 z-50 md:hidden">
+          <div className="bg-amber-50 dark:bg-amber-900/30 border-2 border-amber-400 dark:border-amber-700 rounded-2xl px-5 py-4 shadow-lg flex items-center gap-3">
+            <ScanFace className="h-6 w-6 text-amber-600 shrink-0" />
+            <div>
+              <p className="text-sm font-bold text-amber-800 dark:text-amber-200">
+                Wajah Belum Terdaftar
+              </p>
+              <p className="text-[11px] text-amber-700 dark:text-amber-400">
+                Absensi diblokir. <button onClick={() => navigate("/karyawan/profil")} className="underline font-bold">Daftarkan wajah</button> dulu.
+              </p>
+            </div>
           </div>
         </div>
       )}
@@ -963,15 +1006,22 @@ const AbsensiKaryawan = () => {
             </div>
 
             {/* Action Button */}
-            {!todayAttendance ? (
+                        {!todayAttendance ? (
               <button
                 onClick={handleClockIn}
-                disabled={isLoading}
-                className="w-full h-16 rounded-[20px] bg-[#0B1528] active:bg-slate-900 transition-all flex items-center justify-between px-5 shadow-sm"
+                disabled={isLoading || (isFaceRequired && (!faceRegistered || !faceDescriptor))}
+                className={`w-full h-16 rounded-[20px] transition-all flex items-center justify-between px-5 shadow-sm ${
+                  isFaceRequired && (!faceRegistered || !faceDescriptor)
+                    ? 'bg-slate-500 cursor-not-allowed'
+                    : 'bg-[#0B1528] active:bg-slate-900'
+                }`}
+                title={isFaceRequired && !faceRegistered ? 'Daftarkan wajah terlebih dahulu di Profil' : ''}
               >
                 <div className="flex flex-col items-start px-1">
                   <span className="text-white font-bold text-lg">Clock In</span>
-                  <span className="text-slate-400 text-[10px] font-medium tracking-wide">Catat kehadiran hari ini</span>
+                  <span className="text-slate-400 text-[10px] font-medium tracking-wide">
+                    {isFaceRequired && !faceRegistered ? 'Daftarkan wajah di Profil' : 'Catat kehadiran hari ini'}
+                  </span>
                 </div>
                 <div className="w-10 h-10 rounded-xl border border-white/10 flex items-center justify-center">
                   {isLoading ? <div className="h-4 w-4 animate-spin rounded-full border-2 border-slate-400 border-t-transparent" /> : <LogIn className="h-4 w-4 text-white" />}
