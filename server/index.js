@@ -16,6 +16,7 @@ import usersRoutes from './routes/users.js';
 import dbRoutes from './routes/db.js';
 import holidayRoutes from './routes/holidays.js';
 import attendanceRequestRoutes from './routes/attendance_requests.js';
+import seedRoutes from './routes/seed.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -94,6 +95,7 @@ app.use('/api/leave', leaveRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/db', dbRoutes);
 app.use('/api/holidays', holidayRoutes);
+app.use('/api/seed', seedRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

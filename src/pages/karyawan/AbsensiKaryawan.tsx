@@ -384,7 +384,7 @@ const AbsensiKaryawan = () => {
     }
   };
 
-  // Keep original handleClockIn for backward compatibility, but it won't be called directly anymore
+  // handleClockIn - Mobile fallback with face check, diarahkan ke handleClockInClick
   const handleClockIn = async () => {
     if (!user) return;
 
@@ -394,7 +394,24 @@ const AbsensiKaryawan = () => {
       return;
     }
 
-    // Psychological Security Step: Verification
+    // Check if user has registered face - BLOCK ABSOLUTE (hanya untuk employee)
+    if (isFaceRequired && (!faceRegistered || !faceDescriptor)) {
+      toast({ 
+        variant: "destructive", 
+        title: "Wajah Belum Terdaftar", 
+        description: "Silakan daftarkan wajah Anda terlebih dahulu di halaman Profil sebelum dapat melakukan absensi."
+      });
+      return;
+    }
+
+    // Start face verification (sama seperti desktop)
+    setFaceCaptureMode("verify");
+    setFaceCapturedForAction("clockin");
+    setIsCapturingClockIn(true);
+    setShowFaceCapture(true);
+    return;
+
+    // Psychological Security Step: Verification (tidak akan tercapai karena return di atas)
     setIsVerifying(true);
     setVerificationText("Menganalisis lokasi dan kredensial perangkat...");
 

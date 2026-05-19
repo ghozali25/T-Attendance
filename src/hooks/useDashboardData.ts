@@ -199,14 +199,15 @@ export const useDashboardStats = (karyawanUserIds: Set<string> | undefined) => {
                     ...relevantLeavesToday.map((l: any) => l.user_id)
                 ]);
 
-                const targetProfiles = profiles.filter((p: any) => filterIds.has(p.id));
+                // Fix: Gunakan user_id bukan id untuk filter profiles
+                const targetProfiles = profiles.filter((p: any) => filterIds.has(p.user_id || p.id));
                 
                 // Check if today is weekend (Saturday = 6, Sunday = 0)
                 const isWeekend = today.getDay() === 0 || today.getDay() === 6;
                 console.log('[useDashboardStats] Is weekend:', isWeekend);
                 
-                // Only count as absent if it's not a weekend
-                const absent = isWeekend ? 0 : targetProfiles.filter((p: any) => !accountedForUserIds.has(p.id)).length;
+                // Fix: Gunakan user_id bukan id untuk absent calculation
+                const absent = isWeekend ? 0 : targetProfiles.filter((p: any) => !accountedForUserIds.has(p.user_id || p.id)).length;
                 console.log('[useDashboardStats] Absent count:', absent);
 
                 // Calculate daily attendance rate (present / total employees)
