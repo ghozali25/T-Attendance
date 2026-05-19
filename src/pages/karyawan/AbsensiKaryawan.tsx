@@ -309,6 +309,16 @@ const AbsensiKaryawan = () => {
       return;
     }
 
+    // Check if models loaded
+    if (isFaceRequired && !hasLoadedModels) {
+      toast({ 
+        variant: "destructive", 
+        title: "Model Wajah Belum Siap", 
+        description: "Silakan tunggu hingga model face detection selesai dimuat."
+      });
+      return;
+    }
+
     // Start face verification
     setFaceCaptureMode("verify");
     setFaceCapturedForAction("clockin");
@@ -319,6 +329,17 @@ const AbsensiKaryawan = () => {
   // Separate the actual clock in logic after face verification
   const proceedClockIn = async () => {
     if (!user) return;
+
+    // SAFETY NET: Pastikan face sudah terverifikasi sebelum absen (hanya untuk employee)
+    if (isFaceRequired && (!faceRegistered || !faceDescriptor)) {
+      toast({ 
+        variant: "destructive", 
+        title: "Wajah Belum Terdaftar", 
+        description: "Silakan daftarkan wajah Anda terlebih dahulu di halaman Profil sebelum dapat melakukan absensi."
+      });
+      setIsCapturingClockIn(false);
+      return;
+    }
 
     // Psychological Security Step: Verification
     setIsVerifying(true);
@@ -400,6 +421,16 @@ const AbsensiKaryawan = () => {
         variant: "destructive", 
         title: "Wajah Belum Terdaftar", 
         description: "Silakan daftarkan wajah Anda terlebih dahulu di halaman Profil sebelum dapat melakukan absensi."
+      });
+      return;
+    }
+
+    // Check if models loaded (face capture perlu model)
+    if (isFaceRequired && !hasLoadedModels) {
+      toast({ 
+        variant: "destructive", 
+        title: "Model Wajah Belum Siap", 
+        description: "Silakan tunggu hingga model face detection selesai dimuat."
       });
       return;
     }
