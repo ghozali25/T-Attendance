@@ -107,6 +107,8 @@ export const profilesApi = {
     api.get<any>(`/profiles/${userId}`),
   update: (userId: string, data: any) =>
     api.put<{ message: string }>(`/profiles/${userId}`, data),
+  saveFaceDescriptor: (userId: string, faceDescriptor: number[]) =>
+    api.put<{ message: string }>(`/profiles/${userId}`, { face_descriptor: JSON.stringify(faceDescriptor) }),
 };
 
 // Journals API

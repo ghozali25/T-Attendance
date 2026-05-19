@@ -60,7 +60,7 @@ router.get('/:user_id', async (req, res) => {
 router.put('/:user_id', async (req, res) => {
   try {
     const fields = req.body;
-    const allowedFields = ['full_name', 'department', 'position', 'phone', 'address', 'avatar_url'];
+    const allowedFields = ['full_name', 'department', 'position', 'phone', 'address', 'avatar_url', 'face_descriptor'];
     
     const updateParts = [];
     const params = [];

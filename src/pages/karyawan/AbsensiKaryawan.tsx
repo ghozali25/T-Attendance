@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Clock, ArrowLeft, MapPin, CheckCircle2, XCircle,
-  LogIn, LogOut, Calendar, Timer, Fingerprint, FileText
+  LogIn, LogOut, Calendar, Timer, Fingerprint, FileText, ScanFace
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { db } from "@/integrations/mysql/client";
-import { attendanceApi, journalsApi } from "@/lib/api";
+import { attendanceApi, journalsApi, profilesApi } from "@/lib/api";
 import { useSystemSettings } from "@/hooks/useSystemSettings";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import MobileNavigation from "@/components/MobileNavigation";
@@ -26,6 +26,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { JournalEntryModal } from "@/components/journal/JournalEntryModal";
+import { FaceCapture } from "@/components/attendance/FaceCapture";
+import { loadFaceDetectionModels } from "@/lib/faceDetection";
 
 
 interface AttendanceRecord {
@@ -48,6 +50,19 @@ const AbsensiKaryawan = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [location, setLocation] = useState<string | null>(null);
   const [coordinates, setCoordinates] = useState<{ lat: number; lng: number } | null>(null);
+
+  // Face Detection States
+  const [showFaceCapture, setShowFaceCapture] = useState(false);
+  const [faceCaptureMode, setFaceCaptureMode] = useState<"register" | "verify">("verify");
+  const [faceCapturedForAction, setFaceCapturedForAction] = useState<"clockin" | "clockout" | null>(null);
+  const [faceDescriptor, setFaceDescriptor] = useState<number[] | null>(null);
+  const [modelsLoading, setModelsLoading] = useState(true);
+  const [hasLoadedModels, setHasLoadedModels] = useState(false);
+  const [faceRegistered, setFaceRegistered] = useState(false);
+  const [isCheckingFace, setIsCheckingFace] = useState(false);
+  const [profileChecked, setProfileChecked] = useState(false);
+  const [isCapturingClockIn, setIsCapturingClockIn] = useState(false);
+  const [isCapturingClockOut, setIsCapturingClockOut] = useState(false);
 
   // Safe Clock Out State
   const [showClockOutConfirm, setShowClockOutConfirm] = useState(false);
@@ -152,16 +167,45 @@ const AbsensiKaryawan = () => {
   }, [settings.enableLocationTracking]);
 
 
+  // Load face detection models and check profile
+  useEffect(() => {
+    if (!user) return;
+    
+    async function initFace() {
+      try {
+        setModelsLoading(true);
+        await loadFaceDetectionModels();
+        setHasLoadedModels(true);
+        
+        // Check if user has registered face
+        const profile = await profilesApi.getById(user.id);
+        if (profile) {
+          if (profile.face_descriptor) {
+            const parsed = typeof profile.face_descriptor === 'string' 
+              ? JSON.parse(profile.face_descriptor) 
+              : profile.face_descriptor;
+            setFaceDescriptor(parsed);
+            setFaceRegistered(true);
+          } else {
+            setFaceRegistered(false);
+            setFaceDescriptor(null);
+          }
+        }
+        setProfileChecked(true);
+      } catch (error) {
+        console.error('[FaceDetection] Init error:', error);
+        setProfileChecked(true);
+      } finally {
+        setModelsLoading(false);
+      }
+    }
+    initFace();
+  }, [user]);
+
   // Fetch today's attendance
   useEffect(() => {
     if (user) {
       fetchTodayAttendance();
-
-      // Setup realtime subscription - DISABLED for MySQL migration
-      /*
-      // Realtime subscriptions not available in MySQL
-      // Use manual refresh instead
-      */
     }
   }, [user]);
 
@@ -219,6 +263,115 @@ const AbsensiKaryawan = () => {
     }
   };
 
+  const handleFaceCaptureResult = async (descriptor: number[]) => {
+    setShowFaceCapture(false);
+    
+    if (faceCapturedForAction === "clockin") {
+      // Face verified, proceed with clock in
+      await proceedClockIn();
+    } else if (faceCapturedForAction === "clockout") {
+      // Face verified for clock out
+      setShowClockOutConfirm(true);
+    }
+    
+    setFaceCapturedForAction(null);
+  };
+
+  const handleClockInClick = () => {
+    if (!user) return;
+
+    // Validate location
+    if (settings.enableLocationTracking && !coordinates) {
+      toast({ variant: "destructive", title: "Lokasi Belum Terdeteksi", description: "Mohon tunggu hingga indikator lokasi muncul." });
+      return;
+    }
+
+    // Check if user has registered face
+    if (!faceRegistered || !faceDescriptor) {
+      toast({ 
+        variant: "destructive", 
+        title: "Wajah Belum Terdaftar", 
+        description: "Silakan daftarkan wajah Anda terlebih dahulu di halaman Profil." 
+      });
+      return;
+    }
+
+    // Start face verification
+    setFaceCaptureMode("verify");
+    setFaceCapturedForAction("clockin");
+    setIsCapturingClockIn(true);
+    setShowFaceCapture(true);
+  };
+
+  // Separate the actual clock in logic after face verification
+  const proceedClockIn = async () => {
+    if (!user) return;
+
+    // Psychological Security Step: Verification
+    setIsVerifying(true);
+    setVerificationText("Menganalisis lokasi dan kredensial perangkat...");
+
+    await new Promise(resolve => setTimeout(resolve, 800));
+    setVerificationText("Memverifikasi sidik jari/wajah digital...");
+    await new Promise(resolve => setTimeout(resolve, 800));
+    setVerificationText("Mengenkripsi data kehadiran...");
+    await new Promise(resolve => setTimeout(resolve, 400));
+
+    setIsLoading(true);
+
+    try {
+      const now = new Date();
+      const limitTime = new Date();
+      const [limitH, limitM] = (settings.clockInStart || "08:00").split(":").map(Number);
+      limitTime.setHours(limitH, limitM, 0, 0);
+
+      let status = "present";
+      if (now > limitTime) status = "late";
+
+      const todayStr = formatJakartaDate(now, 'yyyy-MM-dd');
+
+      // Check if already clocked in today using API
+      const allAttendance = await attendanceApi.getAll();
+      const existing = allAttendance?.filter((a: any) => 
+        a.user_id === user.id && a.date === todayStr
+      ) || [];
+
+      if (existing && existing.length > 0) {
+        toast({ variant: "destructive", title: "Sudah Clock In", description: "Anda sudah melakukan Clock In hari ini." });
+        fetchTodayAttendance();
+        setIsLoading(false);
+        setIsVerifying(false);
+        return;
+      }
+
+      // Insert new attendance record using API
+      await attendanceApi.create({
+        id: crypto.randomUUID(),
+        user_id: user.id,
+        date: todayStr,
+        clock_in: toMySQLDateTime(now),
+        clock_in_lat: coordinates?.lat,
+        clock_in_lng: coordinates?.lng,
+        status: status
+      });
+
+      toast({ title: "Clock In Berhasil", description: `Anda masuk pada ${now.toLocaleTimeString("id-ID")}` });
+      fetchTodayAttendance();
+
+    } catch (finalError: any) {
+      toast({
+        variant: "destructive",
+        title: "Gagal Clock In",
+        description: finalError.message || "Gagal menghubungi server.",
+      });
+    } finally {
+      setIsLoading(false);
+      setIsVerifying(false);
+      setIsCapturingClockIn(false);
+    }
+  };
+
+  // Keep original handleClockIn for backward compatibility, but it won't be called directly anymore
   const handleClockIn = async () => {
     if (!user) return;
 
@@ -583,8 +736,8 @@ const AbsensiKaryawan = () => {
               <div className="space-y-4">
                 {!todayAttendance ? (
                   <button
-                    onClick={handleClockIn}
-                    disabled={isLoading}
+                    onClick={handleClockInClick}
+                    disabled={isLoading || !hasLoadedModels}
                     className="w-full h-20 sm:h-24 rounded-[24px] bg-slate-900 hover:bg-slate-800 active:scale-95 transition-all duration-300 flex items-center justify-between px-8 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.3)] group"
                   >
                     <div className="flex flex-col items-start">
@@ -684,6 +837,19 @@ const AbsensiKaryawan = () => {
           onSkip={() => confirmClockOut()}
         />
 
+        {/* Face Capture Modal */}
+        <FaceCapture
+          mode={faceCaptureMode}
+          isOpen={showFaceCapture}
+          onCapture={handleFaceCaptureResult}
+          onCancel={() => {
+            setShowFaceCapture(false);
+            setFaceCapturedForAction(null);
+            setIsCapturingClockIn(false);
+          }}
+          existingDescriptor={faceDescriptor || undefined}
+        />
+
         {/* Verification Modal (Psychological Security) */}
         {isVerifying && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
@@ -704,6 +870,18 @@ const AbsensiKaryawan = () => {
           </div>
         )}
       </div>
+
+      {/* Face Capture Registration Banner */}
+      {!faceRegistered && !modelsLoading && profileChecked && !todayAttendance && (
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 hidden md:block">
+          <div className="bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 rounded-2xl px-6 py-3 shadow-lg flex items-center gap-3">
+            <ScanFace className="h-5 w-5 text-amber-600 shrink-0" />
+            <p className="text-sm font-semibold text-amber-800 dark:text-amber-200">
+              Daftarkan wajah Anda di <button onClick={() => navigate("/karyawan/profil")} className="underline font-bold">Profil</button> untuk bisa absensi
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* MOBILE VIEW (Strict design match) */}
       <div className="flex md:hidden min-h-screen bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-['Inter',sans-serif] flex-col overflow-x-hidden relative pb-[100px]">

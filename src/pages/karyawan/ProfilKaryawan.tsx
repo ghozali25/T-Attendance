@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { ArrowLeft, User, Phone, MapPin, Building2, Briefcase, Save, Mail, ChevronRight, LogOut, Key, Camera, Lock, QrCode } from "lucide-react";
+import { ArrowLeft, User, Phone, MapPin, Building2, Briefcase, Save, Mail, ChevronRight, LogOut, Key, Camera, Lock, QrCode, ScanFace, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,6 +19,7 @@ import KaryawanWorkspaceLayout from "@/components/layout/KaryawanWorkspaceLayout
 import EnterpriseLayout from "@/components/layout/EnterpriseLayout";
 import { ADMIN_MENU_SECTIONS, MANAGER_MENU_SECTIONS } from "@/config/menu";
 import { cn } from "@/lib/utils";
+import { FaceCapture } from "@/components/attendance/FaceCapture";
 
 const profileSchema = z.object({
   full_name: z.string().min(2, "Nama minimal 2 karakter"),
@@ -41,6 +42,7 @@ interface Profile {
   position: string | null;
   join_date: string | null;
   avatar_url: string | null;
+  face_descriptor?: string | null;
 }
 
 const ProfilKaryawan = () => {
@@ -50,6 +52,8 @@ const ProfilKaryawan = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isFetching, setIsFetching] = useState(true);
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [isSavingFace, setIsSavingFace] = useState(false);
+  const [showFaceCapture, setShowFaceCapture] = useState(false);
 
   const form = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
@@ -144,6 +148,31 @@ const ProfilKaryawan = () => {
       toast({ variant: "destructive", title: "Gagal menyimpan profil", description: "Terjadi kesalahan saat menyimpan profil." });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleFaceRegistration = async (descriptor: number[]) => {
+    if (!user || !profile) return;
+    
+    setIsSavingFace(true);
+    setShowFaceCapture(false);
+    
+    try {
+      await profilesApi.saveFaceDescriptor(user.id, descriptor);
+      setProfile(prev => prev ? { ...prev, face_descriptor: JSON.stringify(descriptor) } : prev);
+      toast({ 
+        title: "Wajah Berhasil Didaftarkan", 
+        description: "Data wajah Anda telah disimpan. Sekarang Anda bisa melakukan absensi menggunakan face detection." 
+      });
+    } catch (error: any) {
+      console.error('Error saving face descriptor:', error);
+      toast({ 
+        variant: "destructive", 
+        title: "Gagal Mendaftarkan Wajah", 
+        description: error.message || "Terjadi kesalahan saat menyimpan data wajah." 
+      });
+    } finally {
+      setIsSavingFace(false);
     }
   };
 
@@ -250,8 +279,33 @@ const ProfilKaryawan = () => {
           </div>
         </div>
 
+        {/* Face Registration Button */}
+        <div className="px-6 mt-6">
+          <button
+            onClick={() => setShowFaceCapture(true)}
+            disabled={isSavingFace}
+            className={`w-full h-16 rounded-[20px] flex items-center justify-between px-5 shadow-sm active:scale-95 transition-all ${
+              profile?.face_descriptor 
+                ? 'bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800' 
+                : 'bg-blue-600 active:bg-blue-700'
+            }`}
+          >
+            <div className="flex flex-col items-start px-1">
+              <span className={`font-bold text-lg ${profile?.face_descriptor ? 'text-emerald-700 dark:text-emerald-300' : 'text-white'}`}>
+                {profile?.face_descriptor ? '✓ Wajah Terdaftar' : 'Daftarkan Wajah'}
+              </span>
+              <span className={`text-[10px] font-medium tracking-wide ${profile?.face_descriptor ? 'text-emerald-600/70 dark:text-emerald-400/70' : 'text-blue-200'}`}>
+                {profile?.face_descriptor ? 'Klik untuk daftar ulang' : 'Wajib untuk absensi face detection'}
+              </span>
+            </div>
+            <div className="w-10 h-10 rounded-xl border border-white/20 flex items-center justify-center">
+              <ScanFace className={`h-4 w-4 ${profile?.face_descriptor ? 'text-emerald-500' : 'text-white'}`} />
+            </div>
+          </button>
+        </div>
+
         {/* Data Formulir Bawah */}
-        <div className="px-6 mt-14 space-y-5">
+        <div className="px-6 mt-6 space-y-5">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-[24px] p-5 shadow-[0_2px_10px_rgba(0,0,0,0.02)] border border-slate-200/50 dark:border-slate-800/80 space-y-4">
@@ -286,18 +340,17 @@ const ProfilKaryawan = () => {
                   </FormItem>
                 )} />
               </div>
-
-              <div className="flex gap-3">
-                <button type="button" onClick={() => navigate("/edit-password")} className="flex-1 h-[52px] rounded-[16px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-center gap-2 text-sm font-bold shadow-sm active:scale-95 transition-all text-slate-700 dark:text-slate-300">
-                  <Key className="w-[18px] h-[18px] text-slate-400" />
-                </button>
-                <Button type="submit" disabled={isLoading} className="flex-[3] h-[52px] rounded-[16px] bg-indigo-600 hover:bg-indigo-700 text-white flex items-center justify-center gap-2 text-[15px] font-bold shadow-[0_8px_20px_rgba(79,70,229,0.25)] active:scale-95 transition-all">
-                  {isLoading ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <><Save className="w-[18px] h-[18px]" /> Simpan Data</>}
-                </Button>
-              </div>
             </form>
           </Form>
         </div>
+
+        {/* Face Capture Modal */}
+        <FaceCapture
+          mode="register"
+          isOpen={showFaceCapture}
+          onCapture={handleFaceRegistration}
+          onCancel={() => setShowFaceCapture(false)}
+        />
 
         <MobileNavigation />
       </div>
@@ -346,6 +399,22 @@ const ProfilKaryawan = () => {
               <div className="w-full mt-8 space-y-3">
                 <Button variant="outline" className="w-full justify-between h-12 rounded-xl border-slate-200 dark:border-slate-800 shadow-sm font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:bg-slate-800" onClick={() => navigate("/edit-password")}>
                   Ubah Password <Key className="h-[18px] w-[18px] text-slate-400" />
+                </Button>
+                <Button 
+                  variant={profile?.face_descriptor ? "outline" : "default"} 
+                  className={`w-full justify-between h-12 rounded-xl font-bold ${
+                    profile?.face_descriptor 
+                      ? 'border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 bg-emerald-50/50 dark:bg-emerald-900/20 hover:bg-emerald-50 dark:hover:bg-emerald-900/30' 
+                      : 'bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/20'
+                  }`}
+                  onClick={() => setShowFaceCapture(true)}
+                  disabled={isSavingFace}
+                >
+                  {profile?.face_descriptor ? (
+                    <><CheckCircle2 className="h-4 w-4 text-emerald-500" /> Wajah Terdaftar</>
+                  ) : (
+                    <><ScanFace className="h-4 w-4" /> Daftarkan Wajah</>
+                  )}
                 </Button>
                 <Button variant="ghost" className="w-full justify-between h-12 rounded-xl text-red-600 hover:text-red-700 hover:bg-red-50 border border-transparent hover:border-red-100 font-bold" onClick={handleLogout}>
                   Keluar Akun <LogOut className="h-[18px] w-[18px]" />
@@ -407,6 +476,14 @@ const ProfilKaryawan = () => {
             </Form>
           </div>
         </div>
+
+        {/* Face Capture Modal */}
+        <FaceCapture
+          mode="register"
+          isOpen={showFaceCapture}
+          onCapture={handleFaceRegistration}
+          onCancel={() => setShowFaceCapture(false)}
+        />
       </EnterpriseLayout>
     );
   }
@@ -469,6 +546,22 @@ const ProfilKaryawan = () => {
             </div>
 
             <div className="w-full mt-8 space-y-3">
+              <Button 
+                variant={profile?.face_descriptor ? "outline" : "default"} 
+                className={`w-full justify-between h-12 rounded-xl font-bold ${
+                  profile?.face_descriptor 
+                    ? 'border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 bg-emerald-50/50 dark:bg-emerald-900/20 hover:bg-emerald-50 dark:hover:bg-emerald-900/30' 
+                    : 'bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/20'
+                }`}
+                onClick={() => setShowFaceCapture(true)}
+                disabled={isSavingFace}
+              >
+                {profile?.face_descriptor ? (
+                  <><CheckCircle2 className="h-4 w-4 text-emerald-500" /> Wajah Terdaftar</>
+                ) : (
+                  <><ScanFace className="h-4 w-4" /> Daftarkan Wajah</>
+                )}
+              </Button>
               <Button variant="outline" className="w-full justify-between h-12 rounded-xl border-slate-200 dark:border-slate-800 shadow-sm font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:bg-slate-800" onClick={() => navigate("/edit-password")}>
                 Ubah Password <Key className="h-[18px] w-[18px] text-slate-400" />
               </Button>
@@ -570,6 +663,14 @@ const ProfilKaryawan = () => {
           </div>
         </div>
       </div>
+
+      {/* Face Capture Registration Modal */}
+      <FaceCapture
+        mode="register"
+        isOpen={showFaceCapture}
+        onCapture={handleFaceRegistration}
+        onCancel={() => setShowFaceCapture(false)}
+      />
     </KaryawanWorkspaceLayout>
   );
 };
