@@ -17,6 +17,7 @@ import dbRoutes from './routes/db.js';
 import holidayRoutes from './routes/holidays.js';
 import attendanceRequestRoutes from './routes/attendance_requests.js';
 import seedRoutes from './routes/seed.js';
+import { requireAuth, requireRoles } from './middleware/auth.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -87,13 +88,13 @@ pool.getConnection()
 
 // API Routes
 app.use('/api/auth', authRoutes);
-app.use('/api/attendance', attendanceRoutes);
-app.use('/api/attendance-requests', attendanceRequestRoutes);
-app.use('/api/profiles', profilesRoutes);
-app.use('/api/journals', journalsRoutes);
-app.use('/api/leave', leaveRoutes);
-app.use('/api/users', usersRoutes);
-app.use('/api/db', dbRoutes);
+app.use('/api/attendance', requireAuth, attendanceRoutes);
+app.use('/api/attendance-requests', requireAuth, attendanceRequestRoutes);
+app.use('/api/profiles', requireAuth, profilesRoutes);
+app.use('/api/journals', requireAuth, journalsRoutes);
+app.use('/api/leave', requireAuth, leaveRoutes);
+app.use('/api/users', requireAuth, requireRoles('admin'), usersRoutes);
+app.use('/api/db', requireAuth, requireRoles('admin'), dbRoutes);
 app.use('/api/holidays', holidayRoutes);
 app.use('/api/seed', seedRoutes);
 

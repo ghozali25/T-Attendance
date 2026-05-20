@@ -1,18 +1,21 @@
 import express from 'express';
 import crypto from 'crypto';
+import { isAdminOrManager } from '../middleware/auth.js';
 const router = express.Router();
 
 // GET /api/attendance - Get attendance records
 router.get('/', async (req, res) => {
   try {
     const { user_id, date, start_date, end_date, clock_in_start, clock_in_end } = req.query;
+    const canViewAll = isAdminOrManager(req);
+    const scopedUserId = canViewAll ? user_id : req.auth.userId;
     
     let query = 'SELECT * FROM attendance WHERE 1=1';
     const params = [];
     
-    if (user_id) {
+    if (scopedUserId) {
       query += ' AND user_id = ?';
-      params.push(user_id);
+      params.push(scopedUserId);
     }
     
     if (date) {
@@ -44,13 +47,14 @@ router.get('/', async (req, res) => {
 router.post('/', async (req, res) => {
   try {
     const { user_id, date, clock_in, clock_out, clock_in_lat, clock_in_lng, clock_out_lat, clock_out_lng, status, notes } = req.body;
+    const safeUserId = isAdminOrManager(req) && user_id ? user_id : req.auth.userId;
     
     const id = crypto.randomUUID();
     
     await req.db.query(
       `INSERT INTO attendance (id, user_id, date, clock_in, clock_out, clock_in_lat, clock_in_lng, clock_out_lat, clock_out_lng, status, notes) 
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [id, user_id, date, clock_in, clock_out, clock_in_lat, clock_in_lng, clock_out_lat, clock_out_lng, status, notes]
+      [id, safeUserId, date, clock_in, clock_out, clock_in_lat, clock_in_lng, clock_out_lat, clock_out_lng, status, notes]
     );
     
     res.status(201).json({ message: 'Attendance created successfully', id });
@@ -64,11 +68,19 @@ router.post('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
   try {
     const { clock_out, clock_out_lat, clock_out_lng, notes } = req.body;
-    
-    await req.db.query(
-      'UPDATE attendance SET clock_out = ?, clock_out_lat = ?, clock_out_lng = ?, notes = ? WHERE id = ?',
-      [clock_out, clock_out_lat, clock_out_lng, notes, req.params.id]
-    );
+    const canManageAll = isAdminOrManager(req);
+
+    const sql = canManageAll
+      ? 'UPDATE attendance SET clock_out = ?, clock_out_lat = ?, clock_out_lng = ?, notes = ? WHERE id = ?'
+      : 'UPDATE attendance SET clock_out = ?, clock_out_lat = ?, clock_out_lng = ?, notes = ? WHERE id = ? AND user_id = ?';
+    const sqlParams = canManageAll
+      ? [clock_out, clock_out_lat, clock_out_lng, notes, req.params.id]
+      : [clock_out, clock_out_lat, clock_out_lng, notes, req.params.id, req.auth.userId];
+
+    const [result] = await req.db.query(sql, sqlParams);
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Attendance not found' });
+    }
     
     res.json({ message: 'Attendance updated successfully' });
   } catch (error) {

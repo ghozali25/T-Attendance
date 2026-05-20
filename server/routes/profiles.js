@@ -1,10 +1,12 @@
 import express from 'express';
+import { isAdminOrManager } from '../middleware/auth.js';
 const router = express.Router();
 
 // GET /api/profiles - Get all profiles
 router.get('/', async (req, res) => {
   try {
     const { department } = req.query;
+    const canViewAll = isAdminOrManager(req);
     
     let query = `
       SELECT p.*, ur.role, u.email 
@@ -18,6 +20,11 @@ router.get('/', async (req, res) => {
     if (department) {
       query += ' AND p.department = ?';
       params.push(department);
+    }
+
+    if (!canViewAll) {
+      query += ' AND p.user_id = ?';
+      params.push(req.auth.userId);
     }
     
     query += ' ORDER BY p.created_at DESC';
@@ -36,6 +43,10 @@ router.get('/', async (req, res) => {
 // GET /api/profiles/:user_id - Get single profile
 router.get('/:user_id', async (req, res) => {
   try {
+    if (!isAdminOrManager(req) && req.params.user_id !== req.auth.userId) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+
     const [rows] = await req.db.query(
       `SELECT p.*, ur.role, u.email 
        FROM profiles p 
@@ -59,6 +70,10 @@ router.get('/:user_id', async (req, res) => {
 // PUT /api/profiles/:user_id - Update profile
 router.put('/:user_id', async (req, res) => {
   try {
+    if (!isAdminOrManager(req) && req.params.user_id !== req.auth.userId) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+
     const fields = req.body;
     const allowedFields = ['full_name', 'department', 'position', 'phone', 'address', 'avatar_url', 'face_descriptor'];
     

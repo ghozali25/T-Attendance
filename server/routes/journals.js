@@ -1,18 +1,21 @@
 import express from 'express';
 import crypto from 'crypto';
+import { isAdminOrManager } from '../middleware/auth.js';
 const router = express.Router();
 
 // GET /api/journals - Get work journals
 router.get('/', async (req, res) => {
   try {
     const { user_id, start_date, end_date, verification_status } = req.query;
+    const canViewAll = isAdminOrManager(req);
+    const scopedUserId = canViewAll ? user_id : req.auth.userId;
     
     let query = 'SELECT * FROM work_journals WHERE deleted_at IS NULL';
     const params = [];
     
-    if (user_id) {
+    if (scopedUserId) {
       query += ' AND user_id = ?';
-      params.push(user_id);
+      params.push(scopedUserId);
     }
     
     if (start_date) {
@@ -44,13 +47,14 @@ router.get('/', async (req, res) => {
 router.post('/', async (req, res) => {
   try {
     const { user_id, date, title, description, obstacles, work_result, mood, verification_status } = req.body;
+    const safeUserId = isAdminOrManager(req) && user_id ? user_id : req.auth.userId;
     
     const id = crypto.randomUUID();
     
     await req.db.query(
       `INSERT INTO work_journals (id, user_id, date, title, description, obstacles, work_result, mood, verification_status) 
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [id, user_id, date, title, description, obstacles, work_result, mood, verification_status || 'submitted']
+      [id, safeUserId, date, title, description, obstacles, work_result, mood, verification_status || 'submitted']
     );
     
     res.status(201).json({ message: 'Journal created successfully', id });
@@ -64,12 +68,22 @@ router.post('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
   try {
     const { title, description, obstacles, work_result, mood, verification_status, manager_notes } = req.body;
-    
-    await req.db.query(
-      `UPDATE work_journals SET title = ?, description = ?, obstacles = ?, work_result = ?, mood = ?, verification_status = ?, manager_notes = ? 
-       WHERE id = ?`,
-      [title, description, obstacles, work_result, mood, verification_status, manager_notes, req.params.id]
-    );
+    const canManageAll = isAdminOrManager(req);
+
+    const sql = canManageAll
+      ? `UPDATE work_journals SET title = ?, description = ?, obstacles = ?, work_result = ?, mood = ?, verification_status = ?, manager_notes = ? 
+       WHERE id = ?`
+      : `UPDATE work_journals SET title = ?, description = ?, obstacles = ?, work_result = ?, mood = ? 
+       WHERE id = ? AND user_id = ?`;
+
+    const sqlParams = canManageAll
+      ? [title, description, obstacles, work_result, mood, verification_status, manager_notes, req.params.id]
+      : [title, description, obstacles, work_result, mood, req.params.id, req.auth.userId];
+
+    const [result] = await req.db.query(sql, sqlParams);
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Journal not found' });
+    }
     
     res.json({ message: 'Journal updated successfully' });
   } catch (error) {
@@ -81,10 +95,16 @@ router.put('/:id', async (req, res) => {
 // DELETE /api/journals/:id - Soft delete journal
 router.delete('/:id', async (req, res) => {
   try {
-    await req.db.query(
-      'UPDATE work_journals SET deleted_at = NOW() WHERE id = ?',
-      [req.params.id]
-    );
+    const canManageAll = isAdminOrManager(req);
+    const sql = canManageAll
+      ? 'UPDATE work_journals SET deleted_at = NOW() WHERE id = ?'
+      : 'UPDATE work_journals SET deleted_at = NOW() WHERE id = ? AND user_id = ?';
+    const sqlParams = canManageAll ? [req.params.id] : [req.params.id, req.auth.userId];
+
+    const [result] = await req.db.query(sql, sqlParams);
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Journal not found' });
+    }
     
     res.json({ message: 'Journal deleted successfully' });
   } catch (error) {
