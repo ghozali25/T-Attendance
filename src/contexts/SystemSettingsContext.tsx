@@ -66,23 +66,17 @@ export const SystemSettingsProvider = ({ children }: { children: ReactNode }) =>
     const fetchSettings = useCallback(async () => {
         setLoadError(null);
         try {
-            // Fetch settings from database
-            const rows = await api.post<any[]>('/db/query', { 
-                sql: 'SELECT setting_value FROM system_settings WHERE setting_key = ?',
-                params: ['current_settings']
-            });
+            // Fetch settings from public endpoint
+            const dbSettings = await api.get<any>('/settings');
             
-            if (rows && rows.length > 0) {
-                const dbSettings = JSON.parse(rows[0].setting_value);
+            if (dbSettings && Object.keys(dbSettings).length > 0) {
                 // Merge with defaults to handle new fields
                 setSettings({ ...defaultSettings, ...dbSettings });
             } else {
                 // No settings in DB, use defaults and save them
                 setSettings(defaultSettings);
-                await api.post('/db/execute', {
-                    sql: 'INSERT INTO system_settings (id, setting_key, setting_value) VALUES (UUID(), ?, ?)',
-                    params: ['current_settings', JSON.stringify(defaultSettings)]
-                });
+                // We shouldn't save defaults here if it's a public endpoint fetch because only admin can write
+                // But we can just use defaultSettings gracefully
             }
         } catch (error: any) {
             console.error("Error fetching settings:", error);

@@ -61,7 +61,12 @@ const queryClient = new QueryClient({
       refetchOnWindowFocus: false,
       refetchOnMount: false,
       refetchOnReconnect: false,
-      retry: 1,
+      retry: (failureCount: number, error: any) => {
+        if (error?.message?.includes('401') || error?.message?.includes('Unauthorized') || error?.message?.includes('Invalid token')) {
+          return false;
+        }
+        return failureCount < 1;
+      },
     },
   },
 });

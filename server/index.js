@@ -98,6 +98,20 @@ app.use('/api/db', requireAuth, requireRoles('admin'), dbRoutes);
 app.use('/api/holidays', holidayRoutes);
 app.use('/api/seed', seedRoutes);
 
+// Public settings endpoint
+app.get('/api/settings', async (req, res) => {
+  try {
+    const [rows] = await req.db.query('SELECT setting_value FROM system_settings WHERE setting_key = ?', ['current_settings']);
+    if (rows && rows.length > 0) {
+      res.json(JSON.parse(rows[0].setting_value));
+    } else {
+      res.json({});
+    }
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to load settings' });
+  }
+});
+
 // Health check
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'API server is running' });

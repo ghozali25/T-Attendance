@@ -7,7 +7,6 @@ const PWAUpdatePrompt = () => {
     const [offlineReady, setOfflineReady] = useState(false);
     const [needRefresh, setNeedRefresh] = useState(false);
     const [isOnline, setIsOnline] = useState(navigator.onLine);
-    const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
 
     // CRITICAL FIX: Store interval ID for proper cleanup
     const updateIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -51,34 +50,18 @@ const PWAUpdatePrompt = () => {
         };
     }, []);
 
-    // Track online/offline status and PWA Install Prompt
     useEffect(() => {
         const handleOnline = () => setIsOnline(true);
         const handleOffline = () => setIsOnline(false);
-        const handleBeforeInstallPrompt = (e: any) => {
-            e.preventDefault();
-            setDeferredPrompt(e);
-        };
 
         window.addEventListener("online", handleOnline);
         window.addEventListener("offline", handleOffline);
-        window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
 
         return () => {
             window.removeEventListener("online", handleOnline);
             window.removeEventListener("offline", handleOffline);
-            window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
         };
     }, []);
-
-    const handleInstallApp = async () => {
-        if (!deferredPrompt) return;
-        deferredPrompt.prompt();
-        const { outcome } = await deferredPrompt.userChoice;
-        if (outcome === 'accepted') {
-            setDeferredPrompt(null);
-        }
-    };
 
     const close = () => {
         setOfflineReady(false);
