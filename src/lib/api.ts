@@ -46,6 +46,14 @@ class ApiClient {
       if (!response.ok) {
         const error = await response.json().catch(() => ({ error: 'Request failed' }));
         console.error('API Error Detail:', error);
+        
+        // Handle unauthorized / invalid token
+        if (response.status === 401 || error.error === 'Invalid token') {
+          this.clearToken();
+          localStorage.removeItem('user');
+          window.dispatchEvent(new Event('auth-error'));
+        }
+        
         throw new Error(error.error || error.message || 'Request failed');
       }
 

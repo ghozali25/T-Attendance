@@ -80,6 +80,15 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   useEffect(() => {
     initializeAuth();
+
+    // Listen for auth errors from API client (e.g. 401 Unauthorized, Invalid token)
+    const handleAuthError = () => {
+      console.warn('Auth error detected, signing out...');
+      signOut();
+    };
+
+    window.addEventListener('auth-error', handleAuthError);
+    return () => window.removeEventListener('auth-error', handleAuthError);
   }, []);
 
   const updateUser = (data: Partial<User>) => {
