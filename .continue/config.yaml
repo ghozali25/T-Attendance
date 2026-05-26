@@ -1,6 +1,0 @@
-models:
-  - name: 9router
-    provider: openai
-    model: coding-stack
-    apiBase: http://127.0.0.1:20128/v1
-    apiKey: sk-e65b3e30630e47d0-cxcd2b-173194e1
