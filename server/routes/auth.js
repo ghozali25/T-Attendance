@@ -87,7 +87,7 @@ router.get('/me', async (req, res) => {
     }
 
     // Verify token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
     // Get user with role
     const [users] = await req.db.query(
