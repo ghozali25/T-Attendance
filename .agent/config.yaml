@@ -4,4 +4,4 @@ openai:
   base_url: http://127.0.0.1:20128/v1
   api_key: sk-e65b3e30630e47d0-cxcd2b-173194e1
 
-model: coding-stack
+model: cf/@cf/qwen/qwen2.5-coder-32b-instruct
