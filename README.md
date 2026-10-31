@@ -6,6 +6,8 @@
 
 Sistem manajemen absensi berbasis web yang dibangun dengan React, TypeScript, dan MySQL.
 
+> Panduan ringkas: lihat [docs/QUICK_START.md](docs/QUICK_START.md).
+
 ## Tech Stack
 
 - **Frontend**: React 18, TypeScript, Vite
@@ -30,8 +32,8 @@ Sistem manajemen absensi berbasis web yang dibangun dengan React, TypeScript, da
 ### 1. Clone Repository
 
 ```bash
-git clone <YOUR_GIT_URL>
-cd t-absensi
+git clone https://github.com/ghozali25/T-Attendance.git
+cd T-Attendance
 ```
 
 ### 2. Install Dependencies
@@ -45,7 +47,7 @@ npm install
 Buat file `.env` di root project dengan meng-copy dari `.env Example`:
 
 ```bash
-cp ".env Example" .env
+cp ".env example" .env
 ```
 
 Edit file `.env` dan isi dengan konfigurasi MySQL Anda:
@@ -171,7 +173,7 @@ npm run lint
 ## Struktur Project
 
 ```
-t-absensi/
+T-Attendance/
 ├── src/
 │   ├── components/       # Komponen UI reusable
 │   ├── pages/           # Halaman aplikasi
